@@ -13,6 +13,7 @@ class _AdminServicesState extends State<AdminServices> {
   List<Map<String, dynamic>> _allServices = [];
   List<Map<String, dynamic>> _filteredServices = [];
   bool _isLoading = true;
+  bool _hasError = false;
   final TextEditingController _searchController = TextEditingController();
 
   final List<String> _serviceCategories = [
@@ -31,27 +32,40 @@ class _AdminServicesState extends State<AdminServices> {
 
   Future<void> _fetchServices() async {
     setState(() => _isLoading = true);
+    _hasError = false;
     try {
       final response = await _supabase
           .from('services')
           .select()
           .order('created_at', ascending: false);
-      setState(() {
-        _allServices = List<Map<String, dynamic>>.from(response);
-        _filteredServices = _allServices;
-      });
+      if (mounted) {
+        setState(() {
+          _allServices = List<Map<String, dynamic>>.from(response);
+          _filteredServices = _allServices;
+        });
+      }
     } catch (e) {
       if (mounted) {
+        setState(() => _hasError = true);
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ).showSnackBar(
+          const SnackBar(
+            content: Text('Unable to load services. Please check your internet connection.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
       }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
   void _filterServices(String query) {
+    if (_hasError) return; // Don't filter if there's an error
+    
     setState(() {
       if (query.isEmpty) {
         _filteredServices = _allServices;
@@ -355,6 +369,44 @@ class _AdminServicesState extends State<AdminServices> {
                           ? const Center(
                               child: CircularProgressIndicator(
                                 color: Color(0xFFB71C1C),
+                              ),
+                            )
+                          : _hasError
+                          ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.cloud_off,
+                                    size: 48,
+                                    color: Colors.grey[400],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  const Text(
+                                    'Unable to load services',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF333333),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  const Text(
+                                    'Please check your internet connection',
+                                    style: TextStyle(color: Colors.grey),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  ElevatedButton(
+                                    onPressed: _fetchServices,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFFB71C1C),
+                                    ),
+                                    child: const Text(
+                                      'Retry',
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                  ),
+                                ],
                               ),
                             )
                           : _filteredServices.isEmpty

@@ -16,6 +16,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
   int _pendingRequests = 0;
   List<Map<String, dynamic>> _recentActivities = [];
   bool _isLoading = true;
+  bool _hasError = false;
 
   @override
   void initState() {
@@ -25,6 +26,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
   Future<void> _fetchDashboardStats() async {
     setState(() => _isLoading = true);
+    _hasError = false;
     try {
       // 1. Bilangin ang total products
       final productsRes = await _supabase.from('products').select('id');
@@ -55,6 +57,15 @@ class _AdminDashboardState extends State<AdminDashboard> {
       }
     } catch (e) {
       debugPrint('Dashboard Error: $e');
+      if (mounted) {
+        setState(() => _hasError = true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Unable to load dashboard data. Please check your internet connection.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -80,55 +91,93 @@ class _AdminDashboardState extends State<AdminDashboard> {
               ? const Center(
                   child: CircularProgressIndicator(color: Color(0xFFB71C1C)),
                 )
+              : _hasError
+              ? Center(
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.cloud_off,
+                        size: 64,
+                        color: Colors.grey[400],
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Unable to load dashboard data',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF333333),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Please check your internet connection and try again',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _fetchDashboardStats,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFB71C1C),
+                        ),
+                        child: const Text(
+                          'Retry',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
               : _buildStatsRow(isDesktop), // Ipinasa natin ang isDesktop dito
-          const SizedBox(height: 32),
+          if (!_hasError) const SizedBox(height: 32),
 
           // CHARTS SECTION (Magiging patayo pag mobile)
-          isDesktop
-              ? Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: _buildPlaceholderChart('Request Volume Trend'),
-                    ),
-                    const SizedBox(width: 24),
-                    Expanded(
-                      flex: 1,
-                      child: _buildPlaceholderChart('Status Distribution'),
-                    ),
-                  ],
-                )
-              : Column(
-                  children: [
-                    _buildPlaceholderChart('Request Volume Trend'),
-                    const SizedBox(height: 16),
-                    _buildPlaceholderChart('Status Distribution'),
-                  ],
-                ),
+          if (!_hasError) ...[
+            isDesktop
+                ? Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        flex: 2,
+                        child: _buildPlaceholderChart('Request Volume Trend'),
+                      ),
+                      const SizedBox(width: 24),
+                      Expanded(
+                        flex: 1,
+                        child: _buildPlaceholderChart('Status Distribution'),
+                      ),
+                    ],
+                  )
+                : Column(
+                    children: [
+                      _buildPlaceholderChart('Request Volume Trend'),
+                      const SizedBox(height: 16),
+                      _buildPlaceholderChart('Status Distribution'),
+                    ],
+                  ),
+            const SizedBox(height: 32),
 
-          const SizedBox(height: 32),
-
-          // TABLES & RECENT ACTIVITY SECTION (Magiging patayo pag mobile)
-          isDesktop
-              ? Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: _buildPlaceholderTable('Upcoming Appointments'),
-                    ),
-                    const SizedBox(width: 24),
-                    Expanded(flex: 1, child: _buildRecentActivity()),
-                  ],
-                )
-              : Column(
-                  children: [
-                    _buildPlaceholderTable('Upcoming Appointments'),
-                    const SizedBox(height: 16),
-                    _buildRecentActivity(),
-                  ],
-                ),
+            // TABLES & RECENT ACTIVITY SECTION (Magiging patayo pag mobile)
+            isDesktop
+                ? Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        flex: 2,
+                        child: _buildPlaceholderTable('Upcoming Appointments'),
+                      ),
+                      const SizedBox(width: 24),
+                      Expanded(flex: 1, child: _buildRecentActivity()),
+                    ],
+                  )
+                : Column(
+                    children: [
+                      _buildPlaceholderTable('Upcoming Appointments'),
+                      const SizedBox(height: 16),
+                      _buildRecentActivity(),
+                    ],
+                  ),
+          ],
         ],
       ),
     );

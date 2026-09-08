@@ -25,11 +25,16 @@ class _ProductCatalogState extends State<ProductCatalog> {
   ];
 
   Future<List<Map<String, dynamic>>> _fetchProducts() async {
-    final response = await _supabase
-        .from('products')
-        .select()
-        .order('created_at', ascending: false);
-    return List<Map<String, dynamic>>.from(response);
+    try {
+      final response = await _supabase
+          .from('products')
+          .select()
+          .order('created_at', ascending: false);
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      debugPrint('Error fetching products: $e');
+      return [];
+    }
   }
 
   // 1. PRODUCT DETAILS WITH QUANTITY AND FULFILLMENT SELECTION
@@ -291,10 +296,9 @@ class _ProductCatalogState extends State<ProductCatalog> {
                           IconButton(
                             icon: const Icon(Icons.arrow_back),
                             onPressed: () {
-                              // Return to the customer app shell, not the
-                              // authentication screen. Doing this in one
-                              // navigation call also avoids using the dialog's
-                              // disposed context after it is closed.
+                              // Homepage is hosted by MainLayout at its
+                              // default (index 0). Navigate there instead of
+                              // returning to the authentication screen.
                               Navigator.of(context, rootNavigator: true)
                                   .pushNamedAndRemoveUntil(
                                     '/main',
@@ -583,8 +587,21 @@ class _ProductCatalogState extends State<ProductCatalog> {
       padding: const EdgeInsets.all(16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          Text(
+        children: [
+          TextButton.icon(
+            onPressed: () => Navigator.of(context).pushNamedAndRemoveUntil(
+              '/main',
+              (route) => false,
+            ),
+            icon: const Icon(Icons.arrow_back, size: 18),
+            label: const Text('Back to Homepage'),
+            style: TextButton.styleFrom(
+              foregroundColor: const Color(0xFFB71C1C),
+              padding: EdgeInsets.zero,
+            ),
+          ),
+          const SizedBox(height: 12),
+          const Text(
             'Technical Equipment Catalog',
             style: TextStyle(
               fontSize: 22,
@@ -673,9 +690,38 @@ class _ProductCatalogState extends State<ProductCatalog> {
               ),
             );
           }
-          if (snapshot.hasError ||
-              !snapshot.hasData ||
-              snapshot.data!.isEmpty) {
+          if (snapshot.hasError) {
+            return const Padding(
+              padding: EdgeInsets.symmetric(vertical: 40.0),
+              child: Center(
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.cloud_off,
+                      size: 48,
+                      color: Colors.grey,
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      'Unable to load products',
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Please check your internet connection and try again',
+                      style: TextStyle(color: Colors.grey),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return const Padding(
               padding: EdgeInsets.symmetric(vertical: 40.0),
               child: Center(
@@ -698,9 +744,22 @@ class _ProductCatalogState extends State<ProductCatalog> {
             return const Padding(
               padding: EdgeInsets.symmetric(vertical: 40.0),
               child: Center(
-                child: Text(
-                  'No products in this category.',
-                  style: TextStyle(color: Colors.grey),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.search_off,
+                      size: 48,
+                      color: Colors.grey,
+                    ),
+                    SizedBox(height: 16),
+                    Text(
+                      'No products in this category',
+                      style: TextStyle(
+                        color: Colors.grey,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             );

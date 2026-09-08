@@ -275,11 +275,22 @@ class _MainLayoutState extends State<MainLayout> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      appBar: _buildCustomAppBar(),
-      endDrawer: _buildNavigationDrawer(context),
-      body: _buildBodyContent(),
+    return WillPopScope(
+      onWillPop: () async {
+        // Back from a section returns to Homepage instead of leaving the
+        // main layout and revealing the login page.
+        if (_currentIndex != 0) {
+          setState(() => _currentIndex = 0);
+          return false;
+        }
+        return true;
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF8F9FA),
+        appBar: _buildCustomAppBar(),
+        endDrawer: _buildNavigationDrawer(context),
+        body: _buildBodyContent(),
+      ),
     );
   }
 
@@ -288,6 +299,13 @@ class _MainLayoutState extends State<MainLayout> {
       backgroundColor: Colors.white,
       elevation: 0,
       surfaceTintColor: Colors.transparent,
+      leading: _currentIndex == 0
+          ? null
+          : IconButton(
+              tooltip: 'Back to Homepage',
+              icon: const Icon(Icons.arrow_back, color: Color(0xFFB71C1C)),
+              onPressed: () => setState(() => _currentIndex = 0),
+            ),
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: const [

@@ -12,6 +12,7 @@ class _CustomerOrdersState extends State<CustomerOrders> {
   final _supabase = Supabase.instance.client;
   List<Map<String, dynamic>> _myOrders = [];
   bool _isLoading = true;
+  bool _hasError = false;
 
   @override
   void initState() {
@@ -21,6 +22,7 @@ class _CustomerOrdersState extends State<CustomerOrders> {
 
   Future<void> _fetchMyOrders() async {
     setState(() => _isLoading = true);
+    _hasError = false;
     try {
       final user = _supabase.auth.currentUser;
 
@@ -32,14 +34,27 @@ class _CustomerOrdersState extends State<CustomerOrders> {
             .eq('email', user.email!)
             .order('created_at', ascending: false);
 
-        setState(() {
-          _myOrders = List<Map<String, dynamic>>.from(response);
-        });
+        if (mounted) {
+          setState(() {
+            _myOrders = List<Map<String, dynamic>>.from(response);
+          });
+        }
       }
     } catch (e) {
       debugPrint('Error fetching orders: $e');
+      if (mounted) {
+        setState(() => _hasError = true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Unable to load orders. Please check your internet connection.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+      }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -78,6 +93,44 @@ class _CustomerOrdersState extends State<CustomerOrders> {
       body: _isLoading
           ? const Center(
               child: CircularProgressIndicator(color: Color(0xFFB71C1C)),
+            )
+          : _hasError
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.cloud_off,
+                    size: 64,
+                    color: Colors.grey[400],
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Unable to load orders',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF333333),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Please check your internet connection and try again',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: _fetchMyOrders,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFB71C1C),
+                    ),
+                    child: const Text(
+                      'Retry',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
             )
           : _myOrders.isEmpty
           ? Center(

@@ -13,6 +13,7 @@ class _AdminProductsState extends State<AdminProducts> {
   List<Map<String, dynamic>> _allProducts = [];
   List<Map<String, dynamic>> _filteredProducts = [];
   bool _isLoading = true;
+  bool _hasError = false;
   final TextEditingController _searchController = TextEditingController();
 
   final List<String> _productCategories = [
@@ -30,27 +31,40 @@ class _AdminProductsState extends State<AdminProducts> {
 
   Future<void> _fetchProducts() async {
     setState(() => _isLoading = true);
+    _hasError = false;
     try {
       final response = await _supabase
           .from('products')
           .select()
           .order('created_at', ascending: false);
-      setState(() {
-        _allProducts = List<Map<String, dynamic>>.from(response);
-        _filteredProducts = _allProducts;
-      });
+      if (mounted) {
+        setState(() {
+          _allProducts = List<Map<String, dynamic>>.from(response);
+          _filteredProducts = _allProducts;
+        });
+      }
     } catch (e) {
       if (mounted) {
+        setState(() => _hasError = true);
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ).showSnackBar(
+          const SnackBar(
+            content: Text('Unable to load products. Please check your internet connection.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
       }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
   void _filterProducts(String query) {
+    if (_hasError) return; // Don't filter if there's an error
+    
     setState(() {
       if (query.isEmpty) {
         _filteredProducts = _allProducts;
@@ -422,6 +436,44 @@ class _AdminProductsState extends State<AdminProducts> {
                           ? const Center(
                               child: CircularProgressIndicator(
                                 color: Color(0xFFB71C1C),
+                              ),
+                            )
+                          : _hasError
+                          ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.cloud_off,
+                                    size: 48,
+                                    color: Colors.grey[400],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  const Text(
+                                    'Unable to load products',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF333333),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  const Text(
+                                    'Please check your internet connection',
+                                    style: TextStyle(color: Colors.grey),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  ElevatedButton(
+                                    onPressed: _fetchProducts,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFFB71C1C),
+                                    ),
+                                    child: const Text(
+                                      'Retry',
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                  ),
+                                ],
                               ),
                             )
                           : _filteredProducts.isEmpty
