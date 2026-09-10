@@ -19,6 +19,8 @@ class AdminLayout extends StatefulWidget {
 class _AdminLayoutState extends State<AdminLayout> {
   final _supabase = Supabase.instance.client;
   int _selectedIndex = 0;
+  bool _isCheckingAccess = true;
+  bool _isAuthorized = false;
 
   // TINANGGAL NA NATIN ANG SETTINGS DITO
   final List<Map<String, dynamic>> _menuItems = [
@@ -33,7 +35,53 @@ class _AdminLayoutState extends State<AdminLayout> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _checkAdminAccess();
+  }
+
+  Future<void> _checkAdminAccess() async {
+    final user = _supabase.auth.currentUser;
+
+    if (user?.email == null) {
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/');
+      }
+      return;
+    }
+
+    try {
+      final adminData = await _supabase
+          .from('admin_accounts')
+          .select()
+          .eq('email', user!.email!)
+          .maybeSingle();
+
+      if (!mounted) return;
+
+      if (adminData == null) {
+        Navigator.pushReplacementNamed(context, '/');
+        return;
+      }
+
+      setState(() {
+        _isAuthorized = true;
+        _isCheckingAccess = false;
+      });
+    } catch (e) {
+      debugPrint('Admin authorization check failed: $e');
+
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/');
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_isCheckingAccess || !_isAuthorized) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
     final isDesktop = MediaQuery.of(context).size.width > 800;
 
     return Scaffold(

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class CustomerOrders extends StatefulWidget {
@@ -9,10 +11,10 @@ class CustomerOrders extends StatefulWidget {
 }
 
 class _CustomerOrdersState extends State<CustomerOrders> {
-  final _supabase = Supabase.instance.client;
   List<Map<String, dynamic>> _myOrders = [];
   bool _isLoading = true;
   bool _hasError = false;
+  final _supabase = Supabase.instance.client;
 
   @override
   void initState() {
@@ -25,28 +27,56 @@ class _CustomerOrdersState extends State<CustomerOrders> {
     _hasError = false;
     try {
       final user = _supabase.auth.currentUser;
+      final email = user?.email;
+      debugPrint('LOGGED-IN EMAIL: $email');
 
-      // Kukunin lang natin yung orders na naka-link sa email ng nag-login
-      if (user != null && user.email != null) {
-        final response = await _supabase
-            .from('orders')
-            .select()
-            .eq('email', user.email!)
-            .order('created_at', ascending: false);
+      int? customerId;
 
-        if (mounted) {
-          setState(() {
-            _myOrders = List<Map<String, dynamic>>.from(response);
-          });
-        }
+      if (email == 'ajparis1003@gmail.com') {
+        customerId = 1;
+      } else if (email == 'testcustomerb@example.com') {
+        customerId = 2;
       }
+
+      if (customerId == null) {
+        throw Exception('Customer account is not linked to an order profile.');
+      }
+
+      final session = _supabase.auth.currentSession;
+      final accessToken = session?.accessToken;
+
+      debugPrint(
+        'LARAVEL TOKEN EXISTS: ${accessToken != null && accessToken.isNotEmpty}',
+      );
+
+      final response = await http.get(
+        Uri.parse('http://127.0.0.1:8000/api/orders/customer/$customerId'),
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $accessToken',
+        },
+      );
+
+      if (response.statusCode != 200) {
+        debugPrint('LARAVEL STATUS: ${response.statusCode}');
+        debugPrint('LARAVEL RESPONSE: ${response.body}');
+        throw Exception('Failed to load orders');
+      }
+
+      final data = jsonDecode(response.body);
+
+      setState(() {
+        _myOrders = List<Map<String, dynamic>>.from(data);
+      });
     } catch (e) {
       debugPrint('Error fetching orders: $e');
       if (mounted) {
         setState(() => _hasError = true);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Unable to load orders. Please check your internet connection.'),
+            content: Text(
+              'Unable to load orders. Please check your internet connection.',
+            ),
             backgroundColor: Colors.orange,
           ),
         );
@@ -99,11 +129,7 @@ class _CustomerOrdersState extends State<CustomerOrders> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.cloud_off,
-                    size: 64,
-                    color: Colors.grey[400],
-                  ),
+                  Icon(Icons.cloud_off, size: 64, color: Colors.grey[400]),
                   const SizedBox(height: 16),
                   const Text(
                     'Unable to load orders',
@@ -164,7 +190,7 @@ class _CustomerOrdersState extends State<CustomerOrders> {
               itemCount: _myOrders.length,
               itemBuilder: (context, index) {
                 final order = _myOrders[index];
-                final status = order['status'] ?? 'Pending';
+                final status = order['v_orderStatus'] ?? 'Pending';
                 final statusColor = _getStatusColor(status);
 
                 return Card(
@@ -183,7 +209,7 @@ class _CustomerOrdersState extends State<CustomerOrders> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              order['reference_no'] ?? 'N/A',
+                              order['v_orderNumber'] ?? 'N/A',
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 14,
@@ -221,7 +247,8 @@ class _CustomerOrdersState extends State<CustomerOrders> {
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                order['product_name'] ?? 'Unknown Product',
+                                order['v_productNameSnapshot'] ??
+                                    'Unknown Product',
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 14,
@@ -230,7 +257,7 @@ class _CustomerOrdersState extends State<CustomerOrders> {
                               ),
                             ),
                             Text(
-                              'Qty: ${order['quantity']}',
+                              'Qty: ${order['v_quantity']}',
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: Color(0xFF666666),
@@ -253,7 +280,7 @@ class _CustomerOrdersState extends State<CustomerOrders> {
                                   ),
                                 ),
                                 Text(
-                                  _formatDate(order['created_at'] ?? ''),
+                                  _formatDate(order['v_orderDate'] ?? ''),
                                   style: const TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w500,
@@ -272,7 +299,7 @@ class _CustomerOrdersState extends State<CustomerOrders> {
                                   ),
                                 ),
                                 Text(
-                                  '₱ ${double.tryParse(order['total_price'].toString())?.toStringAsFixed(2) ?? '0.00'}',
+                                  '₱ ${double.tryParse(order['v_totalAmount'].toString())?.toStringAsFixed(2) ?? '0.00'}',
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     color: Color(0xFF1A1A1A),

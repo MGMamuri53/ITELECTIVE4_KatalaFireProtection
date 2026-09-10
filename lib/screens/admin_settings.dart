@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AdminSettings extends StatefulWidget {
   const AdminSettings({super.key});
@@ -15,6 +16,17 @@ class _AdminSettingsState extends State<AdminSettings> {
   bool _emailNotifications = true;
   bool _pushNotifications = false;
   bool _isActionLoading = false;
+
+  Future<void> _loadNotificationSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    if (!mounted) return;
+
+    setState(() {
+      _emailNotifications = prefs.getBool('email_notifications') ?? true;
+      _pushNotifications = prefs.getBool('push_notifications') ?? false;
+    });
+  }
 
   // 1. CHANGE PASSWORD FUNCTION
   void _showChangePasswordDialog() {
@@ -248,6 +260,12 @@ class _AdminSettingsState extends State<AdminSettings> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _loadNotificationSettings();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final isDesktop = MediaQuery.of(context).size.width > 800;
 
@@ -312,18 +330,24 @@ class _AdminSettingsState extends State<AdminSettings> {
                   'Email Notifications',
                   'Receive daily summaries of new requests.',
                   _emailNotifications,
-                  (val) => setState(
-                    () => _emailNotifications = val,
-                  ), // WORKING SWITCH
+                  (val) async {
+                    setState(() => _emailNotifications = val);
+
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.setBool('email_notifications', val);
+                  }, // WORKING SWITCH
                 ),
                 _buildSwitchTile(
                   Icons.notifications_active_outlined,
                   'Push Notifications',
                   'Real-time alerts for incoming appointments.',
                   _pushNotifications,
-                  (val) => setState(
-                    () => _pushNotifications = val,
-                  ), // WORKING SWITCH
+                  (val) async {
+                    setState(() => _pushNotifications = val);
+
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.setBool('push_notifications', val);
+                  }, // WORKING SWITCH
                 ),
 
                 const SizedBox(height: 24),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'dart:math';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'homepage.dart';
 import 'product_catalog.dart';
 import 'services_page.dart';
@@ -22,6 +23,8 @@ class _MainLayoutState extends State<MainLayout> {
 
   // UPDATED: DETAILED REQUEST QUOTE FORM
   void _showRequestQuoteDialog(BuildContext context) {
+    print('REQUEST QUOTE DIALOG OPENED');
+
     final nameController = TextEditingController();
     final emailController = TextEditingController();
     final phoneController = TextEditingController();
@@ -162,37 +165,60 @@ class _MainLayoutState extends State<MainLayout> {
                           return;
                         }
 
-                        final String refNo =
-                            'REQ-${Random().nextInt(9000) + 1000}';
+                        final session = _supabase.auth.currentSession;
+                        final accessToken = session?.accessToken;
 
                         try {
-                          await _supabase.from('quotations').insert({
-                            'reference_no': refNo,
-                            'customer_name': nameController.text,
-                            'email': emailController.text,
-                            'contact_number': phoneController.text,
-                            'request_type': selectedService,
-                            'location': locationController.text,
-                            'details': detailsController.text,
-                            'status': 'Pending',
-                          });
+                          final response = await http.post(
+                            Uri.parse(
+                              'http://127.0.0.1:8000/api/service-requests',
+                            ),
+                            headers: {
+                              'Accept': 'application/json',
+                              'Content-Type': 'application/json',
+                              'Authorization': 'Bearer $accessToken',
+                            },
+                            body: jsonEncode({
+                              'customer_id': 1,
+                              'name': nameController.text.trim(),
+                              'email': emailController.text.trim(),
+                              'contact_number': phoneController.text.trim(),
+                              'service': selectedService,
+                              'location': locationController.text.trim(),
+                              'details': detailsController.text.trim(),
+                            }),
+                          );
 
-                          if (context.mounted) {
-                            Navigator.pop(context);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Request Submitted! We will email you shortly.',
+                          if (response.statusCode == 201) {
+                            if (context.mounted) {
+                              Navigator.pop(context);
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Request Submitted! We will email you shortly.',
+                                  ),
+                                  backgroundColor: Colors.green,
                                 ),
-                                backgroundColor: Colors.green,
-                              ),
-                            );
+                              );
+                            }
+                          } else {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Request failed: ${response.body}',
+                                  ),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
                           }
                         } catch (e) {
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('Error: $e'),
+                                content: Text('Request failed: $e'),
                                 backgroundColor: Colors.red,
                               ),
                             );

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:math'; // Para sa Order Reference Number
 
@@ -12,6 +14,7 @@ class ProductCatalog extends StatefulWidget {
 class _ProductCatalogState extends State<ProductCatalog> {
   final _supabase = Supabase.instance.client;
   String _selectedCategory = 'All';
+  String _searchQuery = '';
 
   final List<Map<String, dynamic>> _categories = [
     {'name': 'All', 'icon': Icons.apps},
@@ -43,16 +46,31 @@ class _ProductCatalogState extends State<ProductCatalog> {
     String fulfillmentMethod = 'Delivery';
 
     // Parse price safely (fallback to 0 if not set in DB yet)
-    double price = double.tryParse(product['price']?.toString() ?? '0') ?? 0.0;
+    double price =
+        double.tryParse(product['v_currentPrice']?.toString() ?? '0') ?? 0.0;
 
-    final String sku = product['sku'] ?? 'N/A';
-    final String name = product['name'] ?? 'Unknown Product';
-    final String status = product['stock_status'] ?? 'UNKNOWN';
+    final String sku = product['v_productCode'] ?? 'N/A';
+
+    final String name = product['v_productName'] ?? 'Unknown Product';
+    final String description =
+        product['v_productDescription'] ?? 'No description available';
+
+    final double stockQuantity =
+        double.tryParse(product['v_quantityAvailable']?.toString() ?? '0') ?? 0;
+    print('STOCK DATA: ${product['v_quantityAvailable']}');
+
+    final String status;
+
+    if (stockQuantity <= 0) {
+      status = 'OUT OF STOCK';
+    } else if (stockQuantity <= 5) {
+      status = 'LOW STOCK';
+    } else {
+      status = 'AVAILABLE';
+    }
+
     final String imageUrl =
-        (product['image_url'] != null &&
-            product['image_url'].toString().isNotEmpty)
-        ? product['image_url']
-        : 'https://images.unsplash.com/photo-1629853904944-11883395b035?q=80&w=200&auto=format&fit=crop';
+        'https://upload.wikimedia.org/wikipedia/commons/7/7e/A_Fire_Extinguisher.jpg';
 
     showDialog(
       context: context,
@@ -135,8 +153,34 @@ class _ProductCatalogState extends State<ProductCatalog> {
                         ),
                       ),
                       const SizedBox(height: 16),
-                      const Divider(),
 
+                      // Product Description
+                      const Text(
+                        'Description',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+
+                      const SizedBox(height: 6),
+
+                      Text(
+                        description,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey,
+                          height: 1.4,
+                        ),
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Availability / Stock Status
+                      _buildDetailRow('Availability', status),
+
+                      const SizedBox(height: 16),
+                      const Divider(),
                       // QUANTITY SELECTOR
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -177,6 +221,14 @@ class _ProductCatalogState extends State<ProductCatalog> {
                             ],
                           ),
                         ],
+                      ),
+
+                      // DELIVERY OR PICKUP
+                      // TOTAL PRICE
+                      const SizedBox(height: 8),
+                      _buildDetailRow(
+                        'Total Amount',
+                        '₱ ${totalPrice.toStringAsFixed(2)}',
                       ),
 
                       // DELIVERY OR PICKUP
@@ -270,6 +322,8 @@ class _ProductCatalogState extends State<ProductCatalog> {
     final phoneController = TextEditingController();
     final addressController = TextEditingController();
     String paymentMethod = 'Bank Transfer';
+    bool showValidationError = false;
+    bool isPlacingOrder = false;
 
     showDialog(
       context: context,
@@ -296,14 +350,13 @@ class _ProductCatalogState extends State<ProductCatalog> {
                           IconButton(
                             icon: const Icon(Icons.arrow_back),
                             onPressed: () {
-                              // Homepage is hosted by MainLayout at its
-                              // default (index 0). Navigate there instead of
-                              // returning to the authentication screen.
-                              Navigator.of(context, rootNavigator: true)
-                                  .pushNamedAndRemoveUntil(
-                                    '/main',
-                                    (route) => false,
-                                  );
+                              Navigator.of(
+                                context,
+                                rootNavigator: true,
+                              ).pushNamedAndRemoveUntil(
+                                '/main',
+                                (route) => false,
+                              );
                             },
                           ),
                           const Expanded(
@@ -348,13 +401,30 @@ class _ProductCatalogState extends State<ProductCatalog> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Expanded(
-                                        child: Text(
-                                          '${product['name']}',
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                          ),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              product['v_productName'] ??
+                                                  'Unknown Product',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              product['v_productDescription'] ??
+                                                  'No description available',
+                                              style: const TextStyle(
+                                                fontSize: 13,
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                          ],
                                         ),
                                       ),
+                                      const SizedBox(width: 12),
                                       Text('x$quantity'),
                                     ],
                                   ),
@@ -445,6 +515,16 @@ class _ProductCatalogState extends State<ProductCatalog> {
                                 }
                               },
                             ),
+                            if (showValidationError) ...[
+                              const SizedBox(height: 12),
+                              const Text(
+                                'Please fill in your Name and Phone Number.',
+                                style: TextStyle(
+                                  color: Colors.red,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                       ),
@@ -466,62 +546,113 @@ class _ProductCatalogState extends State<ProductCatalog> {
                       child: SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: () async {
-                            if (nameController.text.isEmpty ||
-                                phoneController.text.isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Please fill in your Name and Phone Number.',
-                                  ),
-                                ),
-                              );
-                              return;
-                            }
+                          onPressed: isPlacingOrder
+                              ? null
+                              : () async {
+                                  if (nameController.text.isEmpty ||
+                                      phoneController.text.isEmpty) {
+                                    setCheckoutState(() {
+                                      showValidationError = true;
+                                    });
+                                    return;
+                                  }
+                                  setCheckoutState(() {
+                                    isPlacingOrder = true;
+                                  });
 
-                            final String refNo =
-                                'ORD-${Random().nextInt(90000) + 10000}';
+                                  final String refNo =
+                                      'ORD-${Random().nextInt(90000) + 10000}';
 
-                            try {
-                              // Insert sa orders table! (Make sure gagawin natin itong table sa Supabase)
-                              await _supabase.from('orders').insert({
-                                'reference_no': refNo,
-                                'customer_name': nameController.text,
-                                'email': emailController.text,
-                                'contact_number': phoneController.text,
-                                'address': addressController.text,
-                                'product_name': product['name'],
-                                'sku': product['sku'],
-                                'quantity': quantity,
-                                'total_price': totalPrice,
-                                'fulfillment_method': fulfillment,
-                                'payment_method': paymentMethod,
-                                'status': 'Pending Confirmation',
-                              });
+                                  try {
+                                    // Send order to Laravel backend
+                                    final user = _supabase.auth.currentUser;
 
-                              if (context.mounted) {
-                                Navigator.pop(context); // Close Checkout
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      'Order Placed Successfully! Ref: $refNo',
-                                    ),
-                                    backgroundColor: Colors.green,
-                                    duration: const Duration(seconds: 4),
-                                  ),
-                                );
-                              }
-                            } catch (e) {
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text('Failed to place order: $e'),
-                                    backgroundColor: Colors.red,
-                                  ),
-                                );
-                              }
-                            }
-                          },
+                                    int? customerId;
+
+                                    if (user?.email ==
+                                        'ajparis1003@gmail.com') {
+                                      customerId = 1;
+                                    } else if (user?.email ==
+                                        'testcustomerb@example.com') {
+                                      customerId = 2;
+                                    }
+
+                                    if (customerId == null) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Customer account is not linked to an order profile.',
+                                          ),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                      return;
+                                    }
+                                    final response = await http.post(
+                                      Uri.parse(
+                                        'http://127.0.0.1:8000/api/orders',
+                                      ),
+                                      headers: {
+                                        'Content-Type': 'application/json',
+                                        'Accept': 'application/json',
+                                      },
+                                      body: jsonEncode({
+                                        'customer_id': customerId,
+                                        'product_id': product['v_productId'],
+                                        'customer_name': nameController.text,
+                                        'email': emailController.text,
+                                        'contact_number': phoneController.text,
+                                        'address': addressController.text,
+                                        'quantity': quantity,
+                                        'fulfillment_method': fulfillment,
+                                        'payment_method': paymentMethod,
+                                      }),
+                                    );
+
+                                    if (response.statusCode != 201) {
+                                      throw Exception(
+                                        'Failed to place order: ${response.body}',
+                                      );
+                                    }
+
+                                    final orderData = jsonDecode(response.body);
+                                    final orderNumber =
+                                        orderData['order_number'];
+
+                                    if (context.mounted) {
+                                      Navigator.pop(context); // Close Checkout
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'Order Placed Successfully! Ref: $orderNumber',
+                                          ),
+                                          backgroundColor: Colors.green,
+                                          duration: const Duration(seconds: 4),
+                                        ),
+                                      );
+                                    }
+                                  } catch (e) {
+                                    setCheckoutState(() {
+                                      isPlacingOrder = false;
+                                    });
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'Failed to place order:\n$e',
+                                          ),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                    }
+                                  }
+                                },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFB71C1C),
                             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -574,6 +705,7 @@ class _ProductCatalogState extends State<ProductCatalog> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildHeaderSection(),
+          _buildSearchBox(),
           _buildCategoryChips(),
           _buildProductList(),
           _buildFooter(),
@@ -589,10 +721,9 @@ class _ProductCatalogState extends State<ProductCatalog> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           TextButton.icon(
-            onPressed: () => Navigator.of(context).pushNamedAndRemoveUntil(
-              '/main',
-              (route) => false,
-            ),
+            onPressed: () => Navigator.of(
+              context,
+            ).pushNamedAndRemoveUntil('/main', (route) => false),
             icon: const Icon(Icons.arrow_back, size: 18),
             label: const Text('Back to Homepage'),
             style: TextButton.styleFrom(
@@ -620,6 +751,24 @@ class _ProductCatalogState extends State<ProductCatalog> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSearchBox() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: TextField(
+        onChanged: (value) {
+          setState(() {
+            _searchQuery = value.trim().toLowerCase();
+          });
+        },
+        decoration: InputDecoration(
+          hintText: 'Search products...',
+          prefixIcon: const Icon(Icons.search),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        ),
       ),
     );
   }
@@ -696,11 +845,7 @@ class _ProductCatalogState extends State<ProductCatalog> {
               child: Center(
                 child: Column(
                   children: [
-                    Icon(
-                      Icons.cloud_off,
-                      size: 48,
-                      color: Colors.grey,
-                    ),
+                    Icon(Icons.cloud_off, size: 48, color: Colors.grey),
                     SizedBox(height: 16),
                     Text(
                       'Unable to load products',
@@ -734,6 +879,25 @@ class _ProductCatalogState extends State<ProductCatalog> {
           }
 
           var products = snapshot.data!;
+
+          // SEARCH FILTER
+          if (_searchQuery.isNotEmpty) {
+            products = products.where((p) {
+              final name = (p['v_productName'] ?? '').toString().toLowerCase();
+
+              final sku = (p['v_productCode'] ?? '').toString().toLowerCase();
+
+              final description = (p['v_productDescription'] ?? '')
+                  .toString()
+                  .toLowerCase();
+
+              return name.contains(_searchQuery) ||
+                  sku.contains(_searchQuery) ||
+                  description.contains(_searchQuery);
+            }).toList();
+          }
+
+          // CATEGORY FILTER
           if (_selectedCategory != 'All') {
             products = products
                 .where((p) => p['category'] == _selectedCategory)
@@ -746,11 +910,7 @@ class _ProductCatalogState extends State<ProductCatalog> {
               child: Center(
                 child: Column(
                   children: [
-                    Icon(
-                      Icons.search_off,
-                      size: 48,
-                      color: Colors.grey,
-                    ),
+                    Icon(Icons.search_off, size: 48, color: Colors.grey),
                     SizedBox(height: 16),
                     Text(
                       'No products in this category',
@@ -767,23 +927,41 @@ class _ProductCatalogState extends State<ProductCatalog> {
 
           return Column(
             children: products.map((product) {
-              final sku = product['sku'] ?? 'N/A';
-              final name = product['name'] ?? 'Unknown Product';
-              final status = product['stock_status'] ?? 'UNKNOWN';
+              final sku = product['v_productCode'] ?? 'N/A';
+              final name = product['v_productName'] ?? 'Unknown Product';
+              final double stockQuantity =
+                  double.tryParse(
+                    product['v_quantityAvailable']?.toString() ?? '0',
+                  ) ??
+                  0;
+              print('LIST STOCK DATA: ${product['v_quantityAvailable']}');
+
+              final String status;
+
+              if (stockQuantity <= 0) {
+                status = 'OUT OF STOCK';
+              } else if (stockQuantity <= 5) {
+                status = 'LOW STOCK';
+              } else {
+                status = 'AVAILABLE';
+              }
 
               // NEW: Kunin ang presyo para idisplay sa card
               double price =
-                  double.tryParse(product['price']?.toString() ?? '0') ?? 0.0;
+                  double.tryParse(
+                    product['v_currentPrice']?.toString() ?? '0',
+                  ) ??
+                  0.0;
 
               final imageUrl =
-                  (product['image_url'] != null &&
-                      product['image_url'].toString().isNotEmpty)
-                  ? product['image_url']
-                  : 'https://images.unsplash.com/photo-1629853904944-11883395b035?q=80&w=200&auto=format&fit=crop';
+                  'https://upload.wikimedia.org/wikipedia/commons/7/7e/A_Fire_Extinguisher.jpg';
 
               Color statusColor = Colors.grey;
-              if (status == 'IN STOCK') statusColor = Colors.green;
+
+              if (status == 'AVAILABLE') statusColor = Colors.green;
+
               if (status == 'LOW STOCK') statusColor = Colors.orange;
+
               if (status == 'OUT OF STOCK') statusColor = Colors.red;
 
               return Container(
