@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../services/api_client.dart';
 import 'admin_dashboard.dart';
 import 'admin_products.dart';
 import 'admin_services.dart';
@@ -17,7 +17,6 @@ class AdminLayout extends StatefulWidget {
 }
 
 class _AdminLayoutState extends State<AdminLayout> {
-  final _supabase = Supabase.instance.client;
   int _selectedIndex = 0;
   bool _isCheckingAccess = true;
   bool _isAuthorized = false;
@@ -41,25 +40,14 @@ class _AdminLayoutState extends State<AdminLayout> {
   }
 
   Future<void> _checkAdminAccess() async {
-    final user = _supabase.auth.currentUser;
-
-    if (user?.email == null) {
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, '/');
-      }
-      return;
-    }
-
     try {
-      final adminData = await _supabase
-          .from('admin_accounts')
-          .select()
-          .eq('email', user!.email!)
-          .maybeSingle();
+      final response = await ApiClient.get('/me');
+      final user = Map<String, dynamic>.from(response['user'] ?? {});
+      final role = user['role']?.toString().toLowerCase() ?? '';
 
       if (!mounted) return;
 
-      if (adminData == null) {
+      if (!role.contains('admin')) {
         Navigator.pushReplacementNamed(context, '/');
         return;
       }
@@ -225,7 +213,12 @@ class _AdminLayoutState extends State<AdminLayout> {
           const Divider(color: Colors.white12, height: 1),
           InkWell(
             onTap: () async {
-              await _supabase.auth.signOut();
+              try {
+                await ApiClient.post('/logout', {});
+              } catch (_) {
+                // Local logout still clears the stale token if the server is unavailable.
+              }
+              await ApiClient.clearSession();
               if (context.mounted) {
                 Navigator.pushReplacementNamed(
                   context,

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../services/api_client.dart';
 
 class AdminPortfolio extends StatefulWidget {
   const AdminPortfolio({super.key});
@@ -9,7 +9,6 @@ class AdminPortfolio extends StatefulWidget {
 }
 
 class _AdminPortfolioState extends State<AdminPortfolio> {
-  final _supabase = Supabase.instance.client;
   List<Map<String, dynamic>> _allProjects = [];
   List<Map<String, dynamic>> _filteredProjects = [];
   bool _isLoading = true;
@@ -30,10 +29,7 @@ class _AdminPortfolioState extends State<AdminPortfolio> {
   Future<void> _fetchProjects() async {
     setState(() => _isLoading = true);
     try {
-      final response = await _supabase
-          .from('portfolio')
-          .select()
-          .order('created_at', ascending: false);
+      final response = await ApiClient.get('/admin/projects');
       setState(() {
         _allProjects = List<Map<String, dynamic>>.from(response);
         _filteredProjects = _allProjects;
@@ -160,23 +156,10 @@ class _AdminPortfolioState extends State<AdminPortfolio> {
               onPressed: () async {
                 if (nameController.text.isEmpty) return;
 
-                final data = {
-                  'project_name': nameController.text,
-                  'category': selectedCategory,
-                  'location': locationController.text,
-                  'completion_date': dateController.text,
-                  'image_url': imageController.text,
-                };
-
                 try {
-                  if (isEditing) {
-                    await _supabase
-                        .from('portfolio')
-                        .update(data)
-                        .eq('id', project['id']);
-                  } else {
-                    await _supabase.from('portfolio').insert(data);
-                  }
+                  throw Exception(
+                    'Portfolio editing needs Laravel project create/update endpoints.',
+                  );
 
                   if (mounted) {
                     Navigator.pop(context);
@@ -210,7 +193,9 @@ class _AdminPortfolioState extends State<AdminPortfolio> {
 
   void _deleteProject(String id) async {
     try {
-      await _supabase.from('portfolio').delete().eq('id', id);
+      throw Exception(
+        'Portfolio deletion needs a Laravel project delete endpoint.',
+      );
       _fetchProjects();
     } catch (e) {
       debugPrint(e.toString());

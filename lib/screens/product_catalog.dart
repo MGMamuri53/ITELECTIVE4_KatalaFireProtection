@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'dart:math'; // Para sa Order Reference Number
+import '../services/api_client.dart';
 
 class ProductCatalog extends StatefulWidget {
   const ProductCatalog({super.key});
@@ -12,7 +11,6 @@ class ProductCatalog extends StatefulWidget {
 }
 
 class _ProductCatalogState extends State<ProductCatalog> {
-  final _supabase = Supabase.instance.client;
   String _selectedCategory = 'All';
   String _searchQuery = '';
 
@@ -29,11 +27,17 @@ class _ProductCatalogState extends State<ProductCatalog> {
 
   Future<List<Map<String, dynamic>>> _fetchProducts() async {
     try {
-      final response = await _supabase
-          .from('products')
-          .select()
-          .order('created_at', ascending: false);
-      return List<Map<String, dynamic>>.from(response);
+      final response = await http.get(
+        Uri.parse('http://127.0.0.1:8000/api/products'),
+        headers: {'Accept': 'application/json'},
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to load products: ${response.body}');
+      }
+
+      final data = jsonDecode(response.body);
+      return List<Map<String, dynamic>>.from(data);
     } catch (e) {
       debugPrint('Error fetching products: $e');
       return [];
@@ -57,7 +61,6 @@ class _ProductCatalogState extends State<ProductCatalog> {
 
     final double stockQuantity =
         double.tryParse(product['v_quantityAvailable']?.toString() ?? '0') ?? 0;
-    print('STOCK DATA: ${product['v_quantityAvailable']}');
 
     final String status;
 
@@ -211,7 +214,9 @@ class _ProductCatalogState extends State<ProductCatalog> {
                               ),
                               IconButton(
                                 onPressed: () {
-                                  setDialogState(() => quantity++);
+                                  if (quantity < stockQuantity.floor()) {
+                                    setDialogState(() => quantity++);
+                                  }
                                 },
                                 icon: const Icon(
                                   Icons.add_circle_outline,
@@ -560,36 +565,28 @@ class _ProductCatalogState extends State<ProductCatalog> {
                                     isPlacingOrder = true;
                                   });
 
-                                  final String refNo =
-                                      'ORD-${Random().nextInt(90000) + 10000}';
-
                                   try {
-                                    // Send order to Laravel backend
-                                    final user = _supabase.auth.currentUser;
+                                    final accessToken =
+                                        await ApiClient.token();
 
-                                    int? customerId;
-
-                                    if (user?.email ==
-                                        'ajparis1003@gmail.com') {
-                                      customerId = 1;
-                                    } else if (user?.email ==
-                                        'testcustomerb@example.com') {
-                                      customerId = 2;
-                                    }
-
-                                    if (customerId == null) {
+                                    if (accessToken == null ||
+                                        accessToken.isEmpty) {
                                       ScaffoldMessenger.of(
                                         context,
                                       ).showSnackBar(
                                         const SnackBar(
                                           content: Text(
-                                            'Customer account is not linked to an order profile.',
+                                            'Please sign in before placing an order.',
                                           ),
                                           backgroundColor: Colors.red,
                                         ),
                                       );
+                                      setCheckoutState(() {
+                                        isPlacingOrder = false;
+                                      });
                                       return;
                                     }
+
                                     final response = await http.post(
                                       Uri.parse(
                                         'http://127.0.0.1:8000/api/orders',
@@ -597,9 +594,10 @@ class _ProductCatalogState extends State<ProductCatalog> {
                                       headers: {
                                         'Content-Type': 'application/json',
                                         'Accept': 'application/json',
+                                        'Authorization':
+                                            'Bearer $accessToken',
                                       },
                                       body: jsonEncode({
-                                        'customer_id': customerId,
                                         'product_id': product['v_productId'],
                                         'customer_name': nameController.text,
                                         'email': emailController.text,
@@ -900,7 +898,7 @@ class _ProductCatalogState extends State<ProductCatalog> {
           // CATEGORY FILTER
           if (_selectedCategory != 'All') {
             products = products
-                .where((p) => p['category'] == _selectedCategory)
+                .where((p) => p['v_productCategory'] == _selectedCategory)
                 .toList();
           }
 
@@ -934,7 +932,6 @@ class _ProductCatalogState extends State<ProductCatalog> {
                     product['v_quantityAvailable']?.toString() ?? '0',
                   ) ??
                   0;
-              print('LIST STOCK DATA: ${product['v_quantityAvailable']}');
 
               final String status;
 

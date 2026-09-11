@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../services/api_client.dart';
 
 class CustomerOrders extends StatefulWidget {
   const CustomerOrders({super.key});
@@ -14,7 +14,6 @@ class _CustomerOrdersState extends State<CustomerOrders> {
   List<Map<String, dynamic>> _myOrders = [];
   bool _isLoading = true;
   bool _hasError = false;
-  final _supabase = Supabase.instance.client;
 
   @override
   void initState() {
@@ -26,31 +25,14 @@ class _CustomerOrdersState extends State<CustomerOrders> {
     setState(() => _isLoading = true);
     _hasError = false;
     try {
-      final user = _supabase.auth.currentUser;
-      final email = user?.email;
-      debugPrint('LOGGED-IN EMAIL: $email');
+      final accessToken = await ApiClient.token();
 
-      int? customerId;
-
-      if (email == 'ajparis1003@gmail.com') {
-        customerId = 1;
-      } else if (email == 'testcustomerb@example.com') {
-        customerId = 2;
+      if (accessToken == null || accessToken.isEmpty) {
+        throw Exception('Please sign in before viewing orders.');
       }
-
-      if (customerId == null) {
-        throw Exception('Customer account is not linked to an order profile.');
-      }
-
-      final session = _supabase.auth.currentSession;
-      final accessToken = session?.accessToken;
-
-      debugPrint(
-        'LARAVEL TOKEN EXISTS: ${accessToken != null && accessToken.isNotEmpty}',
-      );
 
       final response = await http.get(
-        Uri.parse('http://127.0.0.1:8000/api/orders/customer/$customerId'),
+        Uri.parse('http://127.0.0.1:8000/api/orders/my'),
         headers: {
           'Accept': 'application/json',
           'Authorization': 'Bearer $accessToken',

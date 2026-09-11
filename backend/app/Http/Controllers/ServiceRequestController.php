@@ -9,6 +9,10 @@ class ServiceRequestController extends Controller
 {
     public function store(Request $request)
     {
+        $request->merge([
+            'customer_id' => $request->user()->v_customerId,
+        ]);
+
         $validated = $request->validate([
             'customer_id' => 'required|integer',
             'name' => 'required|string',

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../services/api_client.dart';
 
 class AdminProducts extends StatefulWidget {
   const AdminProducts({super.key});
@@ -9,7 +9,6 @@ class AdminProducts extends StatefulWidget {
 }
 
 class _AdminProductsState extends State<AdminProducts> {
-  final _supabase = Supabase.instance.client;
   List<Map<String, dynamic>> _allProducts = [];
   List<Map<String, dynamic>> _filteredProducts = [];
   bool _isLoading = true;
@@ -33,10 +32,7 @@ class _AdminProductsState extends State<AdminProducts> {
     setState(() => _isLoading = true);
     _hasError = false;
     try {
-      final response = await _supabase
-          .from('products')
-          .select()
-          .order('created_at', ascending: false);
+      final response = await ApiClient.get('/products');
       if (mounted) {
         setState(() {
           _allProducts = List<Map<String, dynamic>>.from(response);
@@ -70,8 +66,8 @@ class _AdminProductsState extends State<AdminProducts> {
         _filteredProducts = _allProducts;
       } else {
         _filteredProducts = _allProducts.where((product) {
-          final name = (product['name'] ?? '').toString().toLowerCase();
-          final sku = (product['sku'] ?? '').toString().toLowerCase();
+          final name = (product['v_productName'] ?? '').toString().toLowerCase();
+          final sku = (product['v_productCode'] ?? '').toString().toLowerCase();
           final searchLower = query.toLowerCase();
           return name.contains(searchLower) || sku.contains(searchLower);
         }).toList();
@@ -82,27 +78,22 @@ class _AdminProductsState extends State<AdminProducts> {
   void _showProductDialog({Map<String, dynamic>? product}) {
     final isEditing = product != null;
     final skuController = TextEditingController(
-      text: isEditing ? product['sku'] : '',
+      text: isEditing ? product['v_productCode'] : '',
     );
     final nameController = TextEditingController(
-      text: isEditing ? product['name'] : '',
+      text: isEditing ? product['v_productName'] : '',
     );
     // BAGONG CONTROLLER PARA SA PRICE
     final priceController = TextEditingController(
-      text: isEditing ? (product['price']?.toString() ?? '0') : '',
-    );
-    final imageController = TextEditingController(
-      text: isEditing ? product['image_url'] : '',
+      text: isEditing ? (product['v_currentPrice']?.toString() ?? '0') : '',
     );
 
     String selectedCategory =
-        (isEditing && _productCategories.contains(product['category']))
-        ? product['category']
+        (isEditing && _productCategories.contains(product['v_productCategory']))
+        ? product['v_productCategory']
         : _productCategories.first;
 
-    String selectedStatus = isEditing
-        ? (product['stock_status'] ?? 'IN STOCK')
-        : 'IN STOCK';
+    String selectedStatus = isEditing ? _statusFor(product) : 'IN STOCK';
 
     showDialog(
       context: context,
@@ -178,14 +169,6 @@ class _AdminProductsState extends State<AdminProducts> {
                     if (val != null) selectedStatus = val;
                   },
                 ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: imageController,
-                  decoration: const InputDecoration(
-                    labelText: 'Image URL',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
               ],
             ),
           ),
@@ -210,17 +193,16 @@ class _AdminProductsState extends State<AdminProducts> {
                   'price': parsedPrice, // ISINAMA NA ANG PRICE SA DATABASE
                   'category': selectedCategory,
                   'stock_status': selectedStatus,
-                  'image_url': imageController.text,
                 };
 
                 try {
                   if (isEditing) {
-                    await _supabase
-                        .from('products')
-                        .update(data)
-                        .eq('id', product['id']);
+                    await ApiClient.put(
+                      '/admin/products/${product['v_productId']}',
+                      data,
+                    );
                   } else {
-                    await _supabase.from('products').insert(data);
+                    await ApiClient.post('/admin/products', data);
                   }
                   if (mounted) {
                     Navigator.pop(context);
@@ -254,7 +236,7 @@ class _AdminProductsState extends State<AdminProducts> {
 
   void _deleteProduct(String id) async {
     try {
-      await _supabase.from('products').delete().eq('id', id);
+      await ApiClient.delete('/admin/products/$id');
       _fetchProducts();
     } catch (e) {
       debugPrint(e.toString());
@@ -488,11 +470,11 @@ class _AdminProductsState extends State<AdminProducts> {
                               itemBuilder: (context, index) {
                                 final product = _filteredProducts[index];
                                 final status =
-                                    product['stock_status'] ?? 'IN STOCK';
+                                    _statusFor(product);
                                 // KUNIN ANG PRICE PARA IDISPLAY
                                 final double price =
                                     double.tryParse(
-                                      product['price']?.toString() ?? '0',
+                                      product['v_currentPrice']?.toString() ?? '0',
                                     ) ??
                                     0.0;
 
@@ -521,7 +503,7 @@ class _AdminProductsState extends State<AdminProducts> {
                                       Expanded(
                                         flex: 1,
                                         child: Text(
-                                          product['sku'] ?? '',
+                                          product['v_productCode'] ?? '',
                                           style: const TextStyle(
                                             fontSize: 13,
                                             color: Color(0xFF666666),
@@ -530,50 +512,19 @@ class _AdminProductsState extends State<AdminProducts> {
                                       ),
                                       Expanded(
                                         flex: 2,
-                                        child: Row(
-                                          children: [
-                                            if (product['image_url'] != null &&
-                                                product['image_url']
-                                                    .toString()
-                                                    .isNotEmpty)
-                                              Padding(
-                                                padding: const EdgeInsets.only(
-                                                  right: 8.0,
-                                                ),
-                                                child: ClipRRect(
-                                                  borderRadius:
-                                                      BorderRadius.circular(4),
-                                                  child: Image.network(
-                                                    product['image_url'],
-                                                    width: 30,
-                                                    height: 30,
-                                                    fit: BoxFit.cover,
-                                                    errorBuilder: (c, e, s) =>
-                                                        const Icon(
-                                                          Icons.image,
-                                                          size: 30,
-                                                          color: Colors.grey,
-                                                        ),
-                                                  ),
-                                                ),
-                                              ),
-                                            Expanded(
-                                              child: Text(
-                                                product['name'] ?? '',
-                                                style: const TextStyle(
-                                                  fontSize: 13,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Color(0xFF1A1A1A),
-                                                ),
-                                              ),
-                                            ),
-                                          ],
+                                        child: Text(
+                                          product['v_productName'] ?? '',
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.bold,
+                                            color: Color(0xFF1A1A1A),
+                                          ),
                                         ),
                                       ),
                                       Expanded(
                                         flex: 2,
                                         child: Text(
-                                          product['category'] ?? '',
+                                          product['v_productCategory'] ?? '',
                                           style: const TextStyle(
                                             fontSize: 13,
                                             color: Color(0xFF666666),
@@ -643,7 +594,10 @@ class _AdminProductsState extends State<AdminProducts> {
                                                 size: 18,
                                               ),
                                               onPressed: () =>
-                                                  _deleteProduct(product['id']),
+                                                  _deleteProduct(
+                                                    product['v_productId']
+                                                        .toString(),
+                                                  ),
                                             ),
                                           ],
                                         ),
@@ -662,5 +616,16 @@ class _AdminProductsState extends State<AdminProducts> {
         ],
       ),
     );
+  }
+
+  String _statusFor(Map<String, dynamic> product) {
+    final quantity = double.tryParse(
+          product['v_quantityAvailable']?.toString() ?? '0',
+        ) ??
+        0;
+
+    if (quantity <= 0) return 'OUT OF STOCK';
+    if (quantity <= 5) return 'LOW STOCK';
+    return 'IN STOCK';
   }
 }

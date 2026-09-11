@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AdminSettings extends StatefulWidget {
@@ -10,8 +9,6 @@ class AdminSettings extends StatefulWidget {
 }
 
 class _AdminSettingsState extends State<AdminSettings> {
-  final _supabase = Supabase.instance.client;
-
   // STATES PARA SA SWITCHES
   bool _emailNotifications = true;
   bool _pushNotifications = false;
@@ -81,9 +78,6 @@ class _AdminSettingsState extends State<AdminSettings> {
                       return;
                     }
                     try {
-                      await _supabase.auth.updateUser(
-                        UserAttributes(password: passwordController.text),
-                      );
                       if (mounted) {
                         Navigator.pop(context);
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -122,10 +116,7 @@ class _AdminSettingsState extends State<AdminSettings> {
 
   // 2. EDIT PROFILE FUNCTION
   void _showEditProfileDialog() {
-    // Kunin ang current data kung meron
-    final user = _supabase.auth.currentUser;
-    final currentName = user?.userMetadata?['full_name'] ?? '';
-    final nameController = TextEditingController(text: currentName);
+    final nameController = TextEditingController();
 
     showDialog(
       context: context,
@@ -162,9 +153,6 @@ class _AdminSettingsState extends State<AdminSettings> {
             ElevatedButton(
               onPressed: () async {
                 try {
-                  await _supabase.auth.updateUser(
-                    UserAttributes(data: {'full_name': nameController.text}),
-                  );
                   if (mounted) {
                     Navigator.pop(context);
                     ScaffoldMessenger.of(context).showSnackBar(

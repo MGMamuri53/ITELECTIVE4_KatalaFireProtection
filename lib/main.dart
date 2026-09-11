@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart';
 
 import 'screens/auth_page.dart';
@@ -10,11 +9,6 @@ import 'web/web_home_page.dart'; // BAGONG IMPORT PARA SA BLANK PAGE
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  await Supabase.initialize(
-    url: 'https://incnalxljpsinkqabxmw.supabase.co',
-    anonKey: 'sb_publishable_tumZWU5cyBzz0sSx66D-lg_Mss7EaYl',
-  );
 
   runApp(const KatalaApp());
 }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../services/api_client.dart';
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
@@ -9,8 +9,6 @@ class AdminDashboard extends StatefulWidget {
 }
 
 class _AdminDashboardState extends State<AdminDashboard> {
-  final _supabase = Supabase.instance.client;
-
   int _totalProducts = 0;
   int _totalServices = 0;
   int _pendingRequests = 0;
@@ -28,31 +26,16 @@ class _AdminDashboardState extends State<AdminDashboard> {
     setState(() => _isLoading = true);
     _hasError = false;
     try {
-      // 1. Bilangin ang total products
-      final productsRes = await _supabase.from('products').select('id');
-      _totalProducts = productsRes.length;
-
-      // 2. Bilangin ang total services
-      final servicesRes = await _supabase.from('services').select('id');
-      _totalServices = servicesRes.length;
-
-      // 3. Bilangin ang pending requests
-      final quotesRes = await _supabase
-          .from('quotations')
-          .select('id')
-          .eq('status', 'Pending');
-      _pendingRequests = quotesRes.length;
-
-      // 4. Kunin ang 5 pinakabagong requests para sa "Recent Activity"
-      final recentRes = await _supabase
-          .from('quotations')
-          .select()
-          .order('date_submitted', ascending: false)
-          .limit(5);
+      final response = await ApiClient.get('/admin/dashboard');
+      _totalProducts = response['total_products'] ?? 0;
+      _totalServices = response['total_services'] ?? 0;
+      _pendingRequests = response['pending_quotes'] ?? 0;
 
       if (mounted) {
         setState(() {
-          _recentActivities = List<Map<String, dynamic>>.from(recentRes);
+          _recentActivities = List<Map<String, dynamic>>.from(
+            response['recent_activities'] ?? [],
+          );
         });
       }
     } catch (e) {

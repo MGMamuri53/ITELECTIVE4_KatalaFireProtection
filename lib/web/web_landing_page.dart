@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../services/api_client.dart';
 
 class WebLandingPage extends StatefulWidget {
   const WebLandingPage({super.key});
@@ -9,7 +9,6 @@ class WebLandingPage extends StatefulWidget {
 }
 
 class _WebLandingPageState extends State<WebLandingPage> {
-  final _supabase = Supabase.instance.client;
   bool _isLogin = true;
   bool _isLoading = false;
 
@@ -24,10 +23,15 @@ class _WebLandingPageState extends State<WebLandingPage> {
     setState(() => _isLoading = true);
     try {
       if (_isLogin) {
-        // WEB LOGIN LOGIC
-        await _supabase.auth.signInWithPassword(
-          email: _emailController.text.trim(),
-          password: _passwordController.text,
+        final response = await ApiClient.post('/login', {
+          'email': _emailController.text.trim(),
+          'password': _passwordController.text,
+        });
+        final token = response['token']?.toString() ?? '';
+        final user = Map<String, dynamic>.from(response['user'] ?? {});
+        await ApiClient.saveSession(
+          token,
+          user['role']?.toString() ?? 'Customer',
         );
         if (mounted) {
           Navigator.pushReplacementNamed(context, '/web-home');
@@ -44,24 +48,15 @@ class _WebLandingPageState extends State<WebLandingPage> {
           return;
         }
 
-        final response = await _supabase.auth.signUp(
-          email: _emailController.text.trim(),
-          password: _passwordController.text,
-        );
+        await ApiClient.post('/register', {
+          'first_name': _firstNameController.text.trim(),
+          'last_name': _lastNameController.text.trim(),
+          'email': _emailController.text.trim(),
+          'contact_number': _phoneController.text.trim(),
+          'password': _passwordController.text,
+        });
 
-        if (mounted && response.user != null) {
-          try {
-            await _supabase.from('customers').insert({
-              'id': response.user!.id,
-              'first_name': _firstNameController.text.trim(),
-              'last_name': _lastNameController.text.trim(),
-              'email': _emailController.text.trim(),
-              'contact_number': _phoneController.text.trim(),
-            });
-          } catch (e) {
-            debugPrint('Error: $e');
-          }
-
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Web Account created! You can now log in.'),

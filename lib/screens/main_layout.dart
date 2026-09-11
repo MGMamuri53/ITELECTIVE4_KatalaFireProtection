@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../services/api_client.dart';
 import 'homepage.dart';
 import 'product_catalog.dart';
 import 'services_page.dart';
@@ -19,12 +19,9 @@ class MainLayout extends StatefulWidget {
 
 class _MainLayoutState extends State<MainLayout> {
   int _currentIndex = 0;
-  final _supabase = Supabase.instance.client;
 
   // UPDATED: DETAILED REQUEST QUOTE FORM
   void _showRequestQuoteDialog(BuildContext context) {
-    print('REQUEST QUOTE DIALOG OPENED');
-
     final nameController = TextEditingController();
     final emailController = TextEditingController();
     final phoneController = TextEditingController();
@@ -165,8 +162,19 @@ class _MainLayoutState extends State<MainLayout> {
                           return;
                         }
 
-                        final session = _supabase.auth.currentSession;
-                        final accessToken = session?.accessToken;
+                        final accessToken = await ApiClient.token();
+
+                        if (accessToken == null || accessToken.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Please sign in before requesting a quote.',
+                              ),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                          return;
+                        }
 
                         try {
                           final response = await http.post(
@@ -179,7 +187,6 @@ class _MainLayoutState extends State<MainLayout> {
                               'Authorization': 'Bearer $accessToken',
                             },
                             body: jsonEncode({
-                              'customer_id': 1,
                               'name': nameController.text.trim(),
                               'email': emailController.text.trim(),
                               'contact_number': phoneController.text.trim(),
@@ -542,7 +549,12 @@ class _MainLayoutState extends State<MainLayout> {
             const Divider(color: Color(0xFFEEEEEE), height: 1),
             InkWell(
               onTap: () async {
-                await _supabase.auth.signOut();
+                try {
+                  await ApiClient.post('/logout', {});
+                } catch (_) {
+                  // Local logout still clears the stale token if the server is unavailable.
+                }
+                await ApiClient.clearSession();
                 if (context.mounted) {
                   Navigator.pushReplacementNamed(context, '/');
                 }

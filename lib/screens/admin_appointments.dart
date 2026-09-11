@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../services/api_client.dart';
 
 class AdminAppointments extends StatefulWidget {
   const AdminAppointments({super.key});
@@ -9,7 +9,6 @@ class AdminAppointments extends StatefulWidget {
 }
 
 class _AdminAppointmentsState extends State<AdminAppointments> {
-  final _supabase = Supabase.instance.client;
   List<Map<String, dynamic>> _appointments = [];
   bool _isLoading = true;
   int _selectedTab = 0;
@@ -30,10 +29,7 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
   Future<void> _fetchAppointments() async {
     setState(() => _isLoading = true);
     try {
-      final response = await _supabase
-          .from('appointments')
-          .select()
-          .order('created_at', ascending: false);
+      final response = await ApiClient.get('/admin/appointments');
       setState(() {
         _appointments = List<Map<String, dynamic>>.from(response);
       });
@@ -133,13 +129,9 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
                 }
 
                 try {
-                  await _supabase.from('appointments').insert({
-                    'project_ref': projectRefController.text,
-                    'client_name': clientController.text,
-                    'appt_type': selectedType,
-                    'appointment_date': dateController.text,
-                    'status': 'Pending',
-                  });
+                  throw Exception(
+                    'Appointments are not available in the Laravel schema yet.',
+                  );
                   if (mounted) {
                     Navigator.pop(context);
                     _fetchAppointments();
@@ -211,10 +203,9 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
             ElevatedButton(
               onPressed: () async {
                 try {
-                  await _supabase
-                      .from('appointments')
-                      .update({'status': newStatus})
-                      .eq('id', id);
+                  throw Exception(
+                    'Appointments are not available in the Laravel schema yet.',
+                  );
                   if (mounted) {
                     Navigator.pop(context);
                     _fetchAppointments();

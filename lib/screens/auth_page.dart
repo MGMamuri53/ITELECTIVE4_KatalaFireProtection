@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../services/api_client.dart';
 import 'main_layout.dart';
 import 'admin_layout.dart'; // IN-IMPORT NATIN ANG ADMIN LAYOUT DITO
 
@@ -11,7 +11,6 @@ class AuthPage extends StatefulWidget {
 }
 
 class _AuthPageState extends State<AuthPage> {
-  final _supabase = Supabase.instance.client;
   bool _isLogin = true;
   bool _isLoading = false;
 
@@ -26,54 +25,28 @@ class _AuthPageState extends State<AuthPage> {
     setState(() => _isLoading = true);
     try {
       if (_isLogin) {
-        // ==========================================
-        // LOGIN LOGIC WITH ROLE-BASED ROUTING
-        // ==========================================
-        final authResponse = await _supabase.auth.signInWithPassword(
-          email: _emailController.text.trim(),
-          password: _passwordController.text,
-        );
+        final response = await ApiClient.post('/login', {
+          'email': _emailController.text.trim(),
+          'password': _passwordController.text,
+        });
 
-        final user = authResponse.user;
+        final token = response['token']?.toString() ?? '';
+        final user = Map<String, dynamic>.from(response['user'] ?? {});
+        final role = user['role']?.toString() ?? 'Customer';
+        await ApiClient.saveSession(token, role);
 
-        if (user != null) {
-          bool isAdmin = false;
-
-          // CHECK KUNG NASA ADMIN_ACCOUNTS TABLE ANG EMAIL NILA
-          try {
-            final adminData = await _supabase
-                .from('admin_accounts')
-                .select()
-                .eq('email', user.email!)
-                .maybeSingle();
-
-            if (adminData != null) {
-              isAdmin = true;
-            }
-          } catch (adminCheckError) {
-            debugPrint('Error checking admin role: $adminCheckError');
-          }
-
-          if (mounted) {
-            if (isAdmin) {
-              // KUNG ADMIN, ROUTE TO ADMIN PORTAL
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const AdminLayout()),
-              );
-            } else {
-              // KUNG NORMAL USER, ROUTE TO CUSTOMER PORTAL
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const MainLayout()),
-              );
-            }
-          }
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  role.toLowerCase().contains('admin')
+                      ? const AdminLayout()
+                      : const MainLayout(),
+            ),
+          );
         }
       } else {
-        // ==========================================
-        // SIGN UP LOGIC
-        // ==========================================
         if (_passwordController.text != _confirmPasswordController.text) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -84,29 +57,15 @@ class _AuthPageState extends State<AuthPage> {
           return;
         }
 
-        final response = await _supabase.auth.signUp(
-          email: _emailController.text.trim(),
-          password: _passwordController.text,
-          data: {
-            'first_name': _firstNameController.text.trim(),
-            'last_name': _lastNameController.text.trim(),
-            'contact_number': _phoneController.text.trim(),
-          },
-        );
+        await ApiClient.post('/register', {
+          'first_name': _firstNameController.text.trim(),
+          'last_name': _lastNameController.text.trim(),
+          'email': _emailController.text.trim(),
+          'contact_number': _phoneController.text.trim(),
+          'password': _passwordController.text,
+        });
 
-        if (mounted && response.user != null) {
-          try {
-            await _supabase.from('customers').insert({
-              'id': response.user!.id,
-              'first_name': _firstNameController.text.trim(),
-              'last_name': _lastNameController.text.trim(),
-              'email': _emailController.text.trim(),
-              'contact_number': _phoneController.text.trim(),
-            });
-          } catch (insertError) {
-            debugPrint('Error saving to customers table: $insertError');
-          }
-
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Account created! You can now log in.'),

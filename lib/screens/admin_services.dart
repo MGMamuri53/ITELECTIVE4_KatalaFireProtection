@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../services/api_client.dart';
 
 class AdminServices extends StatefulWidget {
   const AdminServices({super.key});
@@ -9,7 +9,6 @@ class AdminServices extends StatefulWidget {
 }
 
 class _AdminServicesState extends State<AdminServices> {
-  final _supabase = Supabase.instance.client;
   List<Map<String, dynamic>> _allServices = [];
   List<Map<String, dynamic>> _filteredServices = [];
   bool _isLoading = true;
@@ -34,10 +33,7 @@ class _AdminServicesState extends State<AdminServices> {
     setState(() => _isLoading = true);
     _hasError = false;
     try {
-      final response = await _supabase
-          .from('services')
-          .select()
-          .order('created_at', ascending: false);
+      final response = await ApiClient.get('/admin/services');
       if (mounted) {
         setState(() {
           _allServices = List<Map<String, dynamic>>.from(response);
@@ -87,9 +83,6 @@ class _AdminServicesState extends State<AdminServices> {
     );
     final descController = TextEditingController(
       text: isEditing ? service['description'] : '',
-    );
-    final imageController = TextEditingController(
-      text: isEditing ? service['image_url'] : '',
     );
 
     String selectedCategory =
@@ -143,14 +136,6 @@ class _AdminServicesState extends State<AdminServices> {
                     border: OutlineInputBorder(),
                   ),
                 ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: imageController,
-                  decoration: const InputDecoration(
-                    labelText: 'Image URL',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
               ],
             ),
           ),
@@ -167,17 +152,13 @@ class _AdminServicesState extends State<AdminServices> {
                   'service_name': nameController.text,
                   'category': selectedCategory,
                   'description': descController.text,
-                  'image_url': imageController.text,
                 };
 
                 try {
                   if (isEditing) {
-                    await _supabase
-                        .from('services')
-                        .update(data)
-                        .eq('id', service['id']);
+                    await ApiClient.put('/admin/services/${service['id']}', data);
                   } else {
-                    await _supabase.from('services').insert(data);
+                    await ApiClient.post('/admin/services', data);
                   }
                   if (mounted) {
                     Navigator.pop(context);
@@ -211,7 +192,7 @@ class _AdminServicesState extends State<AdminServices> {
 
   void _deleteService(String id) async {
     try {
-      await _supabase.from('services').delete().eq('id', id);
+      await ApiClient.delete('/admin/services/$id');
       _fetchServices();
     } catch (e) {
       debugPrint(e.toString());

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../services/api_client.dart';
 
 class AdminRequests extends StatefulWidget {
   const AdminRequests({super.key});
@@ -9,7 +9,6 @@ class AdminRequests extends StatefulWidget {
 }
 
 class _AdminRequestsState extends State<AdminRequests> {
-  final _supabase = Supabase.instance.client;
   List<Map<String, dynamic>> _requests = [];
   bool _isLoading = true;
   int _selectedTab = 0;
@@ -44,10 +43,7 @@ class _AdminRequestsState extends State<AdminRequests> {
   Future<void> _fetchRequests() async {
     setState(() => _isLoading = true);
     try {
-      final response = await _supabase
-          .from('quotations')
-          .select()
-          .order('created_at', ascending: false);
+      final response = await ApiClient.get('/admin/requests');
       setState(() {
         _requests = List<Map<String, dynamic>>.from(response);
       });
@@ -188,13 +184,10 @@ class _AdminRequestsState extends State<AdminRequests> {
                 ElevatedButton(
                   onPressed: () async {
                     try {
-                      await _supabase
-                          .from('quotations')
-                          .update({
-                            'status': newStatus,
-                            'admin_response': responseController.text,
-                          })
-                          .eq('id', request['id']);
+                      await ApiClient.put('/admin/requests/${request['id']}', {
+                        'status': newStatus,
+                        'admin_response': responseController.text,
+                      });
 
                       if (mounted) {
                         Navigator.pop(context);

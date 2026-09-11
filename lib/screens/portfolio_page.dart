@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../services/api_client.dart';
 
 class PortfolioPage extends StatefulWidget {
   const PortfolioPage({super.key});
@@ -9,7 +9,6 @@ class PortfolioPage extends StatefulWidget {
 }
 
 class _PortfolioPageState extends State<PortfolioPage> {
-  final _supabase = Supabase.instance.client;
   String _selectedSector = 'All';
   final List<String> _sectors = [
     'All',
@@ -19,10 +18,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
   ];
 
   Future<List<Map<String, dynamic>>> _fetchProjects() async {
-    final response = await _supabase
-        .from('portfolio')
-        .select()
-        .order('created_at', ascending: false);
+    final response = await ApiClient.get('/admin/projects');
     return List<Map<String, dynamic>>.from(response);
   }
 

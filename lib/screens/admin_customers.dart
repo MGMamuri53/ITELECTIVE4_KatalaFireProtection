@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../services/api_client.dart';
 
 class AdminCustomers extends StatefulWidget {
   const AdminCustomers({super.key});
@@ -9,7 +9,6 @@ class AdminCustomers extends StatefulWidget {
 }
 
 class _AdminCustomersState extends State<AdminCustomers> {
-  final _supabase = Supabase.instance.client;
   List<Map<String, dynamic>> _allCustomers = [];
   List<Map<String, dynamic>> _filteredCustomers = [];
   bool _isLoading = true;
@@ -24,10 +23,7 @@ class _AdminCustomersState extends State<AdminCustomers> {
   Future<void> _fetchCustomers() async {
     setState(() => _isLoading = true);
     try {
-      final response = await _supabase
-          .from('customers')
-          .select()
-          .order('created_at', ascending: false);
+      final response = await ApiClient.get('/admin/customers');
 
       if (mounted) {
         setState(() {
