@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_client.dart';
+import 'package:katala/theme/app_theme.dart';
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
@@ -72,7 +73,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
           const SizedBox(height: 32),
           _isLoading
               ? const Center(
-                  child: CircularProgressIndicator(color: Color(0xFFB71C1C)),
+                  child: CircularProgressIndicator(color: AppColors.brand),
                 )
               : _hasError
               ? Center(
@@ -89,7 +90,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF333333),
+                          color: AppColors.inkSoft,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -101,7 +102,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       ElevatedButton(
                         onPressed: _fetchDashboardStats,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFB71C1C),
+                          backgroundColor: AppColors.brand,
                         ),
                         child: const Text(
                           'Retry',
@@ -181,31 +182,22 @@ class _AdminDashboardState extends State<AdminDashboard> {
               'System Overview',
               style: TextStyle(
                 fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1A1A1A),
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.5,
+                color: AppColors.ink,
               ),
             ),
             SizedBox(height: 4),
             Text(
               'High-level operational metrics and recent activity for Katala Fire Protection.',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
+              style: TextStyle(fontSize: 14, color: AppColors.inkMuted),
             ),
           ],
         ),
         OutlinedButton.icon(
           onPressed: _fetchDashboardStats,
-          icon: const Icon(Icons.refresh, color: Color(0xFFB71C1C), size: 18),
-          label: const Text(
-            'Refresh Data',
-            style: TextStyle(color: Color(0xFFB71C1C)),
-          ),
-          style: OutlinedButton.styleFrom(
-            side: const BorderSide(color: Color(0xFFB71C1C)),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(6),
-            ),
-          ),
+          icon: const Icon(Icons.refresh, size: 18),
+          label: const Text('Refresh Data'),
         ),
       ],
     );
@@ -287,17 +279,17 @@ class _AdminDashboardState extends State<AdminDashboard> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(KataUi.radiusCard),
         border: Border.all(
           color: isHighlight
-              ? const Color(0xFFB71C1C).withValues(alpha: 0.3)
-              : const Color(0xFFE0E0E0),
+              ? AppColors.brand.withValues(alpha: 0.35)
+              : AppColors.divider,
         ),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Color(0x0A12151C),
+            blurRadius: 14,
+            offset: Offset(0, 4),
           ),
         ],
       ),
@@ -311,13 +303,22 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 child: Text(
                   title,
                   style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: isHighlight ? const Color(0xFFB71C1C) : Colors.grey,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.6,
+                    color: isHighlight ? AppColors.brand : AppColors.inkMuted,
                   ),
                 ),
               ),
-              Icon(icon, size: 16, color: Colors.grey.withValues(alpha: 0.5)),
+              KataUi.iconTile(
+                icon,
+                size: 16,
+                background: isHighlight
+                    ? AppColors.brandTint
+                    : AppColors.surfaceMuted,
+                foreground:
+                    isHighlight ? AppColors.brand : AppColors.inkMuted,
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -325,8 +326,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
             count,
             style: const TextStyle(
               fontSize: 32,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF1A1A1A),
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.5,
+              color: AppColors.ink,
             ),
           ),
         ],
@@ -338,23 +340,23 @@ class _AdminDashboardState extends State<AdminDashboard> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE0E0E0)),
-      ),
+      decoration: KataUi.cardBox(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
             'Recent Activity',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.2,
+            ),
           ),
           const SizedBox(height: 16),
           if (_recentActivities.isEmpty)
             const Text(
               'No recent activities.',
-              style: TextStyle(color: Colors.grey, fontSize: 13),
+              style: TextStyle(color: AppColors.inkMuted, fontSize: 13),
             )
           else
             ..._recentActivities.map((activity) {
@@ -363,10 +365,17 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(
-                      Icons.info_outline,
-                      size: 16,
-                      color: Color(0xFFB71C1C),
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: AppColors.brandTint,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.info_outline,
+                        size: 16,
+                        color: AppColors.brand,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -377,7 +386,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                             'New quotation requested by ${activity['customer_name']}',
                             style: const TextStyle(
                               fontSize: 13,
-                              color: Color(0xFF333333),
+                              color: AppColors.inkSoft,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -389,7 +398,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                 '',
                             style: const TextStyle(
                               fontSize: 10,
-                              color: Colors.grey,
+                              color: AppColors.inkMuted,
                             ),
                           ),
                         ],
@@ -409,23 +418,23 @@ class _AdminDashboardState extends State<AdminDashboard> {
       height: 250,
       width: double.infinity,
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE0E0E0)),
-      ),
+      decoration: KataUi.cardBox(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.2,
+            ),
           ),
           const Expanded(
             child: Center(
               child: Text(
                 'Chart Visualization UI Pending',
-                style: TextStyle(color: Colors.grey),
+                style: TextStyle(color: AppColors.inkMuted),
               ),
             ),
           ),
@@ -439,23 +448,23 @@ class _AdminDashboardState extends State<AdminDashboard> {
       height: 250,
       width: double.infinity,
       padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE0E0E0)),
-      ),
+      decoration: KataUi.cardBox(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.2,
+            ),
           ),
           const Expanded(
             child: Center(
               child: Text(
                 'Table UI Pending',
-                style: TextStyle(color: Colors.grey),
+                style: TextStyle(color: AppColors.inkMuted),
               ),
             ),
           ),

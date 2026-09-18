@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_client.dart';
+import 'package:katala/theme/app_theme.dart';
 
 class AdminServices extends StatefulWidget {
   const AdminServices({super.key});
@@ -177,7 +178,7 @@ class _AdminServicesState extends State<AdminServices> {
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFB71C1C),
+                backgroundColor: AppColors.brand,
               ),
               child: Text(
                 isEditing ? 'Update' : 'Save',
@@ -206,7 +207,7 @@ class _AdminServicesState extends State<AdminServices> {
       padding: const EdgeInsets.all(32.0),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -240,7 +241,7 @@ class _AdminServicesState extends State<AdminServices> {
                   style: TextStyle(color: Colors.white),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFB71C1C),
+                  backgroundColor: AppColors.brand,
                 ),
               ),
             ],
@@ -252,8 +253,8 @@ class _AdminServicesState extends State<AdminServices> {
                 child: Container(
                   height: 40,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF5F6FA),
-                    borderRadius: BorderRadius.circular(6),
+                    color: AppColors.canvas,
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: TextField(
                     controller: _searchController,
@@ -290,7 +291,7 @@ class _AdminServicesState extends State<AdminServices> {
                       decoration: const BoxDecoration(
                         border: Border(
                           bottom: BorderSide(
-                            color: Color(0xFFE0E0E0),
+                            color: AppColors.divider,
                             width: 2,
                           ),
                         ),
@@ -349,7 +350,7 @@ class _AdminServicesState extends State<AdminServices> {
                       child: _isLoading
                           ? const Center(
                               child: CircularProgressIndicator(
-                                color: Color(0xFFB71C1C),
+                                color: AppColors.brand,
                               ),
                             )
                           : _hasError
@@ -368,7 +369,7 @@ class _AdminServicesState extends State<AdminServices> {
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
-                                      color: Color(0xFF333333),
+                                      color: AppColors.inkSoft,
                                     ),
                                   ),
                                   const SizedBox(height: 8),
@@ -380,7 +381,7 @@ class _AdminServicesState extends State<AdminServices> {
                                   ElevatedButton(
                                     onPressed: _fetchServices,
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFFB71C1C),
+                                      backgroundColor: AppColors.brand,
                                     ),
                                     child: const Text(
                                       'Retry',
@@ -409,7 +410,7 @@ class _AdminServicesState extends State<AdminServices> {
                                   decoration: const BoxDecoration(
                                     border: Border(
                                       bottom: BorderSide(
-                                        color: Color(0xFFF0F0F0),
+                                        color: AppColors.surfaceMuted,
                                       ),
                                     ),
                                   ),
@@ -422,7 +423,7 @@ class _AdminServicesState extends State<AdminServices> {
                                           style: const TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 13,
-                                            color: Color(0xFF1A1A1A),
+                                            color: AppColors.ink,
                                           ),
                                         ),
                                       ),
@@ -432,7 +433,7 @@ class _AdminServicesState extends State<AdminServices> {
                                           service['category'] ?? '',
                                           style: const TextStyle(
                                             fontSize: 13,
-                                            color: Color(0xFF666666),
+                                            color: AppColors.inkMuted,
                                           ),
                                         ),
                                       ),
@@ -444,7 +445,7 @@ class _AdminServicesState extends State<AdminServices> {
                                           overflow: TextOverflow.ellipsis,
                                           style: const TextStyle(
                                             fontSize: 12,
-                                            color: Color(0xFF999999),
+                                            color: AppColors.inkFaint,
                                           ),
                                         ),
                                       ),

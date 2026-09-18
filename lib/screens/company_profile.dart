@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:katala/theme/app_theme.dart';
 
 class CompanyProfile extends StatelessWidget {
   final VoidCallback onRequestQuote;
@@ -33,7 +34,7 @@ class CompanyProfile extends StatelessWidget {
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w900,
-              color: Color(0xFF1A1A1A),
+              color: AppColors.ink,
               height: 1.2,
             ),
           ),
@@ -42,7 +43,7 @@ class CompanyProfile extends StatelessWidget {
             'Katala Fire Protection Product Trading is a premier provider of life-safety equipment and highly engineered fire suppression solutions, dedicated to uncompromising reliability.',
             style: TextStyle(
               fontSize: 12,
-              color: Color(0xFF666666),
+              color: AppColors.inkMuted,
               height: 1.5,
             ),
           ),
@@ -62,7 +63,7 @@ class CompanyProfile extends StatelessWidget {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF1A1A1A),
+              color: AppColors.ink,
             ),
           ),
           Container(
@@ -70,7 +71,7 @@ class CompanyProfile extends StatelessWidget {
             width: 40,
             height: 3,
             decoration: BoxDecoration(
-              color: const Color(0xFFB71C1C),
+              color: AppColors.brand,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -78,7 +79,7 @@ class CompanyProfile extends StatelessWidget {
             'Founded on the principle of absolute structural integrity and uncompromising safety, Katala emerged as a critical response to the growing demand for dependable, industrial-grade fire protection systems in modern facilities.\n\nWe don\'t just sell equipment; we engineer peace of mind through rigorous testing, certified deployment, and steadfast maintenance protocols.',
             style: TextStyle(
               fontSize: 12,
-              color: Color(0xFF666666),
+              color: AppColors.inkMuted,
               height: 1.6,
             ),
           ),
@@ -119,8 +120,8 @@ class CompanyProfile extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE0E0E0)),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.divider),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.02),
@@ -135,10 +136,10 @@ class CompanyProfile extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: const BoxDecoration(
-              color: Color(0xFFFFF0F0),
+              color: AppColors.brandTint,
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: const Color(0xFFB71C1C), size: 24),
+            child: Icon(icon, color: AppColors.brand, size: 24),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -150,7 +151,7 @@ class CompanyProfile extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFFB71C1C),
+                    color: AppColors.brand,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -158,7 +159,7 @@ class CompanyProfile extends StatelessWidget {
                   description,
                   style: const TextStyle(
                     fontSize: 12,
-                    color: Color(0xFF666666),
+                    color: AppColors.inkMuted,
                     height: 1.5,
                   ),
                 ),
@@ -180,7 +181,7 @@ class CompanyProfile extends StatelessWidget {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF1A1A1A),
+              color: AppColors.ink,
             ),
           ),
           const SizedBox(height: 8),
@@ -246,26 +247,26 @@ class CompanyProfile extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE0E0E0)),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.divider),
       ),
       child: Column(
         children: [
-          Icon(icon, color: const Color(0xFFB71C1C), size: 28),
+          Icon(icon, color: AppColors.brand, size: 28),
           const SizedBox(height: 12),
           Text(
             title,
             style: const TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF1A1A1A),
+              color: AppColors.ink,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             subtitle,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 9, color: Color(0xFF666666)),
+            style: const TextStyle(fontSize: 9, color: AppColors.inkMuted),
           ),
         ],
       ),
@@ -277,7 +278,7 @@ class CompanyProfile extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-      color: const Color(0xFFF5F5F5),
+      color: AppColors.surfaceMuted,
       child: Column(
         children: [
           const Text(
@@ -285,13 +286,13 @@ class CompanyProfile extends StatelessWidget {
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 18,
-              color: Color(0xFF1A1A1A),
+              color: AppColors.ink,
             ),
           ),
           const SizedBox(height: 8),
           const Text(
             'Consult with our safety engineers today.',
-            style: TextStyle(fontSize: 12, color: Color(0xFF666666)),
+            style: TextStyle(fontSize: 12, color: AppColors.inkMuted),
           ),
           const SizedBox(height: 24),
           SizedBox(
@@ -311,10 +312,10 @@ class CompanyProfile extends StatelessWidget {
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFB71C1C),
+                backgroundColor: AppColors.brand,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
             ),
@@ -329,11 +330,11 @@ class CompanyProfile extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
-      color: const Color(0xFF1A1A1A),
+      color: AppColors.ink,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const Icon(Icons.shield, color: Color(0xFFB71C1C), size: 36),
+          const Icon(Icons.shield, color: AppColors.brand, size: 36),
           const SizedBox(height: 16),
           const Text(
             'Katala Fire Protection',
@@ -353,7 +354,7 @@ class CompanyProfile extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 32),
-          const Divider(color: Color(0xFF333333)),
+          const Divider(color: AppColors.inkSoft),
           const SizedBox(height: 16),
           const Text(
             '© 2026 Katala Fire Protection Product Trading.\nAll rights reserved.',

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../services/api_client.dart';
+import 'package:katala/theme/app_theme.dart';
 
 class ProductCatalog extends StatefulWidget {
   const ProductCatalog({super.key});
@@ -83,10 +84,6 @@ class _ProductCatalogState extends State<ProductCatalog> {
             double totalPrice = price * quantity;
 
             return Dialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              backgroundColor: Colors.white,
               child: SingleChildScrollView(
                 child: Padding(
                   padding: const EdgeInsets.all(24.0),
@@ -101,7 +98,7 @@ class _ProductCatalogState extends State<ProductCatalog> {
                             sku,
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFFB71C1C),
+                              color: AppColors.brand,
                               fontSize: 12,
                             ),
                           ),
@@ -109,7 +106,7 @@ class _ProductCatalogState extends State<ProductCatalog> {
                             onTap: () => Navigator.pop(context),
                             child: const Icon(
                               Icons.close,
-                              color: Colors.grey,
+                              color: AppColors.inkMuted,
                               size: 20,
                             ),
                           ),
@@ -118,7 +115,7 @@ class _ProductCatalogState extends State<ProductCatalog> {
                       const SizedBox(height: 16),
                       Center(
                         child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(12),
                           child: Image.network(
                             imageUrl,
                             height: 150,
@@ -141,7 +138,7 @@ class _ProductCatalogState extends State<ProductCatalog> {
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF1A1A1A),
+                          color: AppColors.ink,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -152,7 +149,7 @@ class _ProductCatalogState extends State<ProductCatalog> {
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFFB71C1C),
+                          color: AppColors.brand,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -220,7 +217,7 @@ class _ProductCatalogState extends State<ProductCatalog> {
                                 },
                                 icon: const Icon(
                                   Icons.add_circle_outline,
-                                  color: Color(0xFFB71C1C),
+                                  color: AppColors.brand,
                                 ),
                               ),
                             ],
@@ -286,10 +283,10 @@ class _ProductCatalogState extends State<ProductCatalog> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: status == 'OUT OF STOCK'
                                 ? Colors.grey
-                                : const Color(0xFFB71C1C),
+                                : AppColors.brand,
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(6),
+                              borderRadius: BorderRadius.circular(12),
                             ),
                           ),
                           child: Text(
@@ -347,7 +344,7 @@ class _ProductCatalogState extends State<ProductCatalog> {
                       padding: const EdgeInsets.all(16),
                       decoration: const BoxDecoration(
                         border: Border(
-                          bottom: BorderSide(color: Color(0xFFEEEEEE)),
+                          bottom: BorderSide(color: AppColors.surfaceMuted),
                         ),
                       ),
                       child: Row(
@@ -389,15 +386,15 @@ class _ProductCatalogState extends State<ProductCatalog> {
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
-                                color: Color(0xFFB71C1C),
+                                color: AppColors.brand,
                               ),
                             ),
                             const SizedBox(height: 12),
                             Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFF5F6FA),
-                                borderRadius: BorderRadius.circular(8),
+                                color: AppColors.canvas,
+                                borderRadius: BorderRadius.circular(12),
                               ),
                               child: Column(
                                 children: [
@@ -652,10 +649,10 @@ class _ProductCatalogState extends State<ProductCatalog> {
                                   }
                                 },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFB71C1C),
+                            backgroundColor: AppColors.brand,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(12),
                             ),
                           ),
                           child: const Text(
@@ -689,7 +686,7 @@ class _ProductCatalogState extends State<ProductCatalog> {
           style: const TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF333333),
+            color: AppColors.inkSoft,
           ),
         ),
       ],
@@ -725,7 +722,7 @@ class _ProductCatalogState extends State<ProductCatalog> {
             icon: const Icon(Icons.arrow_back, size: 18),
             label: const Text('Back to Homepage'),
             style: TextButton.styleFrom(
-              foregroundColor: const Color(0xFFB71C1C),
+              foregroundColor: AppColors.brand,
               padding: EdgeInsets.zero,
             ),
           ),
@@ -735,7 +732,7 @@ class _ProductCatalogState extends State<ProductCatalog> {
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w900,
-              color: Color(0xFF1A1A1A),
+              color: AppColors.ink,
               height: 1.2,
             ),
           ),
@@ -744,7 +741,7 @@ class _ProductCatalogState extends State<ProductCatalog> {
             'Browse our comprehensive range of certified fire protection and life-safety equipment.',
             style: TextStyle(
               fontSize: 12,
-              color: Color(0xFF666666),
+              color: AppColors.inkMuted,
               height: 1.4,
             ),
           ),
@@ -783,14 +780,14 @@ class _ProductCatalogState extends State<ProductCatalog> {
                 setState(() => _selectedCategory = cat['name'] as String),
             child: Container(
               margin: const EdgeInsets.only(right: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
               decoration: BoxDecoration(
-                color: isActive ? const Color(0xFFFFF0F0) : Colors.white,
-                borderRadius: BorderRadius.circular(8),
+                color: isActive ? AppColors.brandTint : Colors.white,
+                borderRadius: BorderRadius.circular(KataTheme.radiusControl),
                 border: Border.all(
                   color: isActive
-                      ? const Color(0xFFB71C1C)
-                      : const Color(0xFFE0E0E0),
+                      ? AppColors.brand
+                      : AppColors.divider,
                 ),
               ),
               child: Row(
@@ -800,8 +797,8 @@ class _ProductCatalogState extends State<ProductCatalog> {
                     cat['icon'] as IconData,
                     size: 16,
                     color: isActive
-                        ? const Color(0xFFB71C1C)
-                        : const Color(0xFF666666),
+                        ? AppColors.brand
+                        : AppColors.inkMuted,
                   ),
                   const SizedBox(width: 8),
                   Text(
@@ -810,8 +807,8 @@ class _ProductCatalogState extends State<ProductCatalog> {
                       fontSize: 11,
                       fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
                       color: isActive
-                          ? const Color(0xFFB71C1C)
-                          : const Color(0xFF666666),
+                          ? AppColors.brand
+                          : AppColors.inkMuted,
                     ),
                   ),
                 ],
@@ -833,7 +830,7 @@ class _ProductCatalogState extends State<ProductCatalog> {
             return const Padding(
               padding: EdgeInsets.symmetric(vertical: 40.0),
               child: Center(
-                child: CircularProgressIndicator(color: Color(0xFFB71C1C)),
+                child: CircularProgressIndicator(color: AppColors.brand),
               ),
             );
           }
@@ -953,20 +950,27 @@ class _ProductCatalogState extends State<ProductCatalog> {
               final imageUrl =
                   'https://upload.wikimedia.org/wikipedia/commons/7/7e/A_Fire_Extinguisher.jpg';
 
-              Color statusColor = Colors.grey;
+              Color statusColor = AppColors.inkMuted;
 
-              if (status == 'AVAILABLE') statusColor = Colors.green;
+              if (status == 'AVAILABLE') statusColor = AppColors.success;
 
-              if (status == 'LOW STOCK') statusColor = Colors.orange;
+              if (status == 'LOW STOCK') statusColor = AppColors.warning;
 
-              if (status == 'OUT OF STOCK') statusColor = Colors.red;
+              if (status == 'OUT OF STOCK') statusColor = AppColors.danger;
 
               return Container(
                 margin: const EdgeInsets.only(bottom: 16, top: 8),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFE0E0E0)),
+                  borderRadius: BorderRadius.circular(KataUi.radiusCard),
+                  border: Border.all(color: AppColors.divider),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x0A12151C),
+                      blurRadius: 14,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -974,7 +978,7 @@ class _ProductCatalogState extends State<ProductCatalog> {
                     Padding(
                       padding: const EdgeInsets.all(12.0),
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(12),
                         child: Image.network(
                           imageUrl,
                           width: 90,
@@ -983,8 +987,11 @@ class _ProductCatalogState extends State<ProductCatalog> {
                           errorBuilder: (c, e, s) => Container(
                             width: 90,
                             height: 120,
-                            color: Colors.grey[200],
-                            child: const Icon(Icons.image, color: Colors.grey),
+                            color: AppColors.surfaceMuted,
+                            child: const Icon(
+                              Icons.image,
+                              color: AppColors.inkFaint,
+                            ),
                           ),
                         ),
                       ),
@@ -1002,7 +1009,7 @@ class _ProductCatalogState extends State<ProductCatalog> {
                                   sku,
                                   style: const TextStyle(
                                     fontSize: 10,
-                                    color: Color(0xFF999999),
+                                    color: AppColors.inkFaint,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -1032,7 +1039,7 @@ class _ProductCatalogState extends State<ProductCatalog> {
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 14,
-                                color: Color(0xFF1A1A1A),
+                                color: AppColors.ink,
                               ),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
@@ -1046,41 +1053,38 @@ class _ProductCatalogState extends State<ProductCatalog> {
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13,
-                                color: Color(0xFFB71C1C),
+                                color: AppColors.brand,
                               ),
                             ),
                             const SizedBox(height: 12),
                             SizedBox(
                               width: double.infinity,
-                              height: 32,
+                              height: 34,
                               child: OutlinedButton(
                                 onPressed: () =>
                                     _showProductDetails(context, product),
                                 style: OutlinedButton.styleFrom(
                                   side: const BorderSide(
-                                    color: Color(0xFFE0E0E0),
+                                    color: AppColors.divider,
                                   ),
+                                  foregroundColor: AppColors.inkSoft,
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(6),
+                                    borderRadius: BorderRadius.circular(10),
                                   ),
                                   padding: EdgeInsets.zero,
+                                  textStyle: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
-                                child: Row(
+                                child: const Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
-                                  children: const [
-                                    Text(
-                                      'View Details & Order',
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        fontWeight: FontWeight.bold,
-                                        color: Color(0xFF333333),
-                                      ),
-                                    ),
+                                  children: [
+                                    Text('View Details & Order'),
                                     SizedBox(width: 4),
                                     Icon(
                                       Icons.shopping_cart_checkout,
                                       size: 12,
-                                      color: Color(0xFF333333),
                                     ),
                                   ],
                                 ),
@@ -1104,11 +1108,11 @@ class _ProductCatalogState extends State<ProductCatalog> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
-      color: const Color(0xFF1A1A1A),
+      color: AppColors.ink,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const Icon(Icons.shield, color: Color(0xFFB71C1C), size: 36),
+          const Icon(Icons.shield, color: AppColors.brand, size: 36),
           const SizedBox(height: 16),
           const Text(
             'Katala Fire Protection',
@@ -1128,7 +1132,7 @@ class _ProductCatalogState extends State<ProductCatalog> {
             ),
           ),
           const SizedBox(height: 32),
-          const Divider(color: Color(0xFF333333)),
+          const Divider(color: AppColors.inkSoft),
           const SizedBox(height: 16),
           const Text(
             '© 2026 Katala Fire Protection Product Trading.\nAll rights reserved.',

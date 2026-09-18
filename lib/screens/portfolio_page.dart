@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_client.dart';
+import 'package:katala/theme/app_theme.dart';
 
 class PortfolioPage extends StatefulWidget {
   const PortfolioPage({super.key});
@@ -95,15 +96,15 @@ class _PortfolioPageState extends State<PortfolioPage> {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF5F5F5),
+                          color: AppColors.surfaceMuted,
                           borderRadius: BorderRadius.circular(4),
-                          border: Border.all(color: const Color(0xFFE0E0E0)),
+                          border: Border.all(color: AppColors.divider),
                         ),
                         child: Text(
                           category,
                           style: const TextStyle(
                             fontSize: 10,
-                            color: Color(0xFF666666),
+                            color: AppColors.inkMuted,
                           ),
                         ),
                       ),
@@ -113,7 +114,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF1A1A1A),
+                          color: AppColors.ink,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -129,7 +130,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                             location,
                             style: const TextStyle(
                               fontSize: 13,
-                              color: Color(0xFF666666),
+                              color: AppColors.inkMuted,
                             ),
                           ),
                         ],
@@ -147,7 +148,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                             'Completed: $date',
                             style: const TextStyle(
                               fontSize: 13,
-                              color: Color(0xFF666666),
+                              color: AppColors.inkMuted,
                             ),
                           ),
                         ],
@@ -206,7 +207,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w900,
-              color: Color(0xFF1A1A1A),
+              color: AppColors.ink,
               height: 1.2,
             ),
           ),
@@ -215,7 +216,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
             'Documenting our commitment to life-safety infrastructure.',
             style: TextStyle(
               fontSize: 12,
-              color: Color(0xFF666666),
+              color: AppColors.inkMuted,
               height: 1.4,
             ),
           ),
@@ -234,7 +235,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF666666),
+              color: AppColors.inkMuted,
             ),
           ),
           const SizedBox(width: 8),
@@ -254,13 +255,13 @@ class _PortfolioPageState extends State<PortfolioPage> {
                       ),
                       decoration: BoxDecoration(
                         color: isActive
-                            ? const Color(0xFFFFF0F0)
+                            ? AppColors.brandTint
                             : Colors.white,
                         borderRadius: BorderRadius.circular(4),
                         border: Border.all(
                           color: isActive
-                              ? const Color(0xFFB71C1C)
-                              : const Color(0xFFE0E0E0),
+                              ? AppColors.brand
+                              : AppColors.divider,
                         ),
                       ),
                       child: Text(
@@ -271,8 +272,8 @@ class _PortfolioPageState extends State<PortfolioPage> {
                               ? FontWeight.bold
                               : FontWeight.w500,
                           color: isActive
-                              ? const Color(0xFFB71C1C)
-                              : const Color(0xFF666666),
+                              ? AppColors.brand
+                              : AppColors.inkMuted,
                         ),
                       ),
                     ),
@@ -294,7 +295,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
           return const Padding(
             padding: EdgeInsets.symmetric(vertical: 40.0),
             child: Center(
-              child: CircularProgressIndicator(color: Color(0xFFB71C1C)),
+              child: CircularProgressIndicator(color: AppColors.brand),
             ),
           );
         }
@@ -343,7 +344,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFE0E0E0)),
+                  border: Border.all(color: AppColors.divider),
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withValues(alpha: 0.02),
@@ -381,17 +382,17 @@ class _PortfolioPageState extends State<PortfolioPage> {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF5F5F5),
+                              color: AppColors.surfaceMuted,
                               borderRadius: BorderRadius.circular(4),
                               border: Border.all(
-                                color: const Color(0xFFE0E0E0),
+                                color: AppColors.divider,
                               ),
                             ),
                             child: Text(
                               category,
                               style: const TextStyle(
                                 fontSize: 10,
-                                color: Color(0xFF666666),
+                                color: AppColors.inkMuted,
                               ),
                             ),
                           ),
@@ -401,7 +402,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF1A1A1A),
+                              color: AppColors.ink,
                             ),
                           ),
                           const SizedBox(height: 12),
@@ -417,7 +418,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                                 location,
                                 style: const TextStyle(
                                   fontSize: 12,
-                                  color: Color(0xFF666666),
+                                  color: AppColors.inkMuted,
                                 ),
                               ),
                             ],
@@ -435,7 +436,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                                 'Completed: $date',
                                 style: const TextStyle(
                                   fontSize: 12,
-                                  color: Color(0xFF666666),
+                                  color: AppColors.inkMuted,
                                 ),
                               ),
                             ],
@@ -458,14 +459,14 @@ class _PortfolioPageState extends State<PortfolioPage> {
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
-                                    color: Color(0xFFB71C1C),
+                                    color: AppColors.brand,
                                   ),
                                 ),
                                 SizedBox(width: 4),
                                 Icon(
                                   Icons.arrow_forward,
                                   size: 14,
-                                  color: Color(0xFFB71C1C),
+                                  color: AppColors.brand,
                                 ),
                               ],
                             ),
@@ -499,11 +500,11 @@ class _PortfolioPageState extends State<PortfolioPage> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
-      color: const Color(0xFF1A1A1A),
+      color: AppColors.ink,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const Icon(Icons.shield, color: Color(0xFFB71C1C), size: 36),
+          const Icon(Icons.shield, color: AppColors.brand, size: 36),
           const SizedBox(height: 16),
           const Text(
             'Katala Fire Protection',
@@ -523,7 +524,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
             ),
           ),
           const SizedBox(height: 32),
-          const Divider(color: Color(0xFF333333)),
+          const Divider(color: AppColors.inkSoft),
           const SizedBox(height: 16),
           const Text(
             '© 2026 Katala Fire Protection Product Trading.\nAll rights reserved.',

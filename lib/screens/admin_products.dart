@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_client.dart';
+import 'package:katala/theme/app_theme.dart';
 
 class AdminProducts extends StatefulWidget {
   const AdminProducts({super.key});
@@ -221,7 +222,7 @@ class _AdminProductsState extends State<AdminProducts> {
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFB71C1C),
+                backgroundColor: AppColors.brand,
               ),
               child: Text(
                 isEditing ? 'Update' : 'Save',
@@ -250,7 +251,7 @@ class _AdminProductsState extends State<AdminProducts> {
       padding: const EdgeInsets.all(32.0),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -283,7 +284,7 @@ class _AdminProductsState extends State<AdminProducts> {
                   style: TextStyle(color: Colors.white),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFB71C1C),
+                  backgroundColor: AppColors.brand,
                 ),
               ),
             ],
@@ -295,8 +296,8 @@ class _AdminProductsState extends State<AdminProducts> {
                 child: Container(
                   height: 40,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF5F6FA),
-                    borderRadius: BorderRadius.circular(6),
+                    color: AppColors.canvas,
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: TextField(
                     controller: _searchController,
@@ -333,7 +334,7 @@ class _AdminProductsState extends State<AdminProducts> {
                       decoration: const BoxDecoration(
                         border: Border(
                           bottom: BorderSide(
-                            color: Color(0xFFE0E0E0),
+                            color: AppColors.divider,
                             width: 2,
                           ),
                         ),
@@ -417,7 +418,7 @@ class _AdminProductsState extends State<AdminProducts> {
                       child: _isLoading
                           ? const Center(
                               child: CircularProgressIndicator(
-                                color: Color(0xFFB71C1C),
+                                color: AppColors.brand,
                               ),
                             )
                           : _hasError
@@ -436,7 +437,7 @@ class _AdminProductsState extends State<AdminProducts> {
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
-                                      color: Color(0xFF333333),
+                                      color: AppColors.inkSoft,
                                     ),
                                   ),
                                   const SizedBox(height: 8),
@@ -448,7 +449,7 @@ class _AdminProductsState extends State<AdminProducts> {
                                   ElevatedButton(
                                     onPressed: _fetchProducts,
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFFB71C1C),
+                                      backgroundColor: AppColors.brand,
                                     ),
                                     child: const Text(
                                       'Retry',
@@ -494,7 +495,7 @@ class _AdminProductsState extends State<AdminProducts> {
                                   decoration: const BoxDecoration(
                                     border: Border(
                                       bottom: BorderSide(
-                                        color: Color(0xFFF0F0F0),
+                                        color: AppColors.surfaceMuted,
                                       ),
                                     ),
                                   ),
@@ -506,7 +507,7 @@ class _AdminProductsState extends State<AdminProducts> {
                                           product['v_productCode'] ?? '',
                                           style: const TextStyle(
                                             fontSize: 13,
-                                            color: Color(0xFF666666),
+                                            color: AppColors.inkMuted,
                                           ),
                                         ),
                                       ),
@@ -517,7 +518,7 @@ class _AdminProductsState extends State<AdminProducts> {
                                           style: const TextStyle(
                                             fontSize: 13,
                                             fontWeight: FontWeight.bold,
-                                            color: Color(0xFF1A1A1A),
+                                            color: AppColors.ink,
                                           ),
                                         ),
                                       ),
@@ -527,7 +528,7 @@ class _AdminProductsState extends State<AdminProducts> {
                                           product['v_productCategory'] ?? '',
                                           style: const TextStyle(
                                             fontSize: 13,
-                                            color: Color(0xFF666666),
+                                            color: AppColors.inkMuted,
                                           ),
                                         ),
                                       ),
@@ -539,7 +540,7 @@ class _AdminProductsState extends State<AdminProducts> {
                                           style: const TextStyle(
                                             fontSize: 13,
                                             fontWeight: FontWeight.bold,
-                                            color: Color(0xFFB71C1C),
+                                            color: AppColors.brand,
                                           ),
                                         ),
                                       ),

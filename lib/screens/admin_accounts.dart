@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_client.dart';
+import 'package:katala/theme/app_theme.dart';
 
 class AdminAccounts extends StatefulWidget {
   const AdminAccounts({super.key});
@@ -50,7 +51,7 @@ class _AdminAccountsState extends State<AdminAccounts> {
       padding: EdgeInsets.all(isDesktop ? 32.0 : 16.0),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -70,7 +71,7 @@ class _AdminAccountsState extends State<AdminAccounts> {
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF1A1A1A),
+                      color: AppColors.ink,
                     ),
                   ),
                   SizedBox(height: 4),
@@ -84,12 +85,12 @@ class _AdminAccountsState extends State<AdminAccounts> {
                 onPressed: _fetchAccounts,
                 icon: const Icon(
                   Icons.refresh,
-                  color: Color(0xFFB71C1C),
+                  color: AppColors.brand,
                   size: 18,
                 ),
                 label: const Text(
                   'Refresh',
-                  style: TextStyle(color: Color(0xFFB71C1C)),
+                  style: TextStyle(color: AppColors.brand),
                 ),
               ),
             ],
@@ -112,7 +113,7 @@ class _AdminAccountsState extends State<AdminAccounts> {
                       decoration: const BoxDecoration(
                         border: Border(
                           bottom: BorderSide(
-                            color: Color(0xFFE0E0E0),
+                            color: AppColors.divider,
                             width: 2,
                           ),
                         ),
@@ -159,7 +160,7 @@ class _AdminAccountsState extends State<AdminAccounts> {
                       child: _isLoading
                           ? const Center(
                               child: CircularProgressIndicator(
-                                color: Color(0xFFB71C1C),
+                                color: AppColors.brand,
                               ),
                             )
                           : _accounts.isEmpty
@@ -184,7 +185,7 @@ class _AdminAccountsState extends State<AdminAccounts> {
                                   decoration: const BoxDecoration(
                                     border: Border(
                                       bottom: BorderSide(
-                                        color: Color(0xFFF0F0F0),
+                                        color: AppColors.surfaceMuted,
                                       ),
                                     ),
                                   ),
@@ -197,7 +198,7 @@ class _AdminAccountsState extends State<AdminAccounts> {
                                           style: const TextStyle(
                                             fontSize: 13,
                                             fontWeight: FontWeight.bold,
-                                            color: Color(0xFF1A1A1A),
+                                            color: AppColors.ink,
                                           ),
                                         ),
                                       ),
@@ -207,7 +208,7 @@ class _AdminAccountsState extends State<AdminAccounts> {
                                           acc['email'] ?? 'N/A',
                                           style: const TextStyle(
                                             fontSize: 13,
-                                            color: Color(0xFF666666),
+                                            color: AppColors.inkMuted,
                                           ),
                                         ),
                                       ),
@@ -217,7 +218,7 @@ class _AdminAccountsState extends State<AdminAccounts> {
                                           acc['contact_number'] ?? 'N/A',
                                           style: const TextStyle(
                                             fontSize: 13,
-                                            color: Color(0xFF666666),
+                                            color: AppColors.inkMuted,
                                           ),
                                         ),
                                       ),

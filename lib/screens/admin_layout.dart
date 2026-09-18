@@ -8,6 +8,7 @@ import 'admin_requests.dart';
 import 'admin_appointments.dart';
 import 'admin_customers.dart';
 import 'admin_accounts.dart';
+import 'package:katala/theme/app_theme.dart';
 
 class AdminLayout extends StatefulWidget {
   const AdminLayout({super.key});
@@ -73,12 +74,12 @@ class _AdminLayoutState extends State<AdminLayout> {
     final isDesktop = MediaQuery.of(context).size.width > 800;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F6FA),
+      backgroundColor: AppColors.canvas,
 
       appBar: isDesktop
           ? null
           : AppBar(
-              backgroundColor: const Color(0xFF2C3E50),
+              backgroundColor: AppColors.nav,
               iconTheme: const IconThemeData(color: Colors.white),
               title: const Text(
                 'Katala Admin',
@@ -114,7 +115,7 @@ class _AdminLayoutState extends State<AdminLayout> {
   Widget _buildSidebar(BuildContext context, bool isDesktop) {
     return Container(
       width: 260,
-      color: const Color(0xFF2C3E50),
+      color: AppColors.nav,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -130,7 +131,7 @@ class _AdminLayoutState extends State<AdminLayout> {
                   ),
                   child: const Icon(
                     Icons.shield,
-                    color: Color(0xFFB71C1C),
+                    color: AppColors.brand,
                     size: 24,
                   ),
                 ),
@@ -161,48 +162,49 @@ class _AdminLayoutState extends State<AdminLayout> {
               itemCount: _menuItems.length,
               itemBuilder: (context, index) {
                 bool isSelected = _selectedIndex == index;
-                return InkWell(
-                  onTap: () {
-                    setState(() => _selectedIndex = index);
-                    if (!isDesktop) {
-                      Navigator.pop(context);
-                    }
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 16,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? const Color(0xFFB71C1C)
-                          : Colors.transparent,
-                      border: Border(
-                        left: BorderSide(
-                          color: isSelected ? Colors.white : Colors.transparent,
-                          width: 4,
-                        ),
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () {
+                      setState(() => _selectedIndex = index);
+                      if (!isDesktop) {
+                        Navigator.pop(context);
+                      }
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      curve: Curves.easeOut,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 13,
                       ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          _menuItems[index]['icon'],
-                          color: isSelected ? Colors.white : Colors.white70,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 16),
-                        Text(
-                          _menuItems[index]['title'],
-                          style: TextStyle(
-                            color: isSelected ? Colors.white : Colors.white70,
-                            fontWeight: isSelected
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                            fontSize: 14,
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? AppColors.brand
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            _menuItems[index]['icon'],
+                            color: isSelected ? Colors.white : Colors.white60,
+                            size: 20,
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 14),
+                          Text(
+                            _menuItems[index]['title'],
+                            style: TextStyle(
+                              color: isSelected ? Colors.white : Colors.white60,
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 );
@@ -226,12 +228,12 @@ class _AdminLayoutState extends State<AdminLayout> {
                 ); // Babalik sa login page
               }
             },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 20),
               child: Row(
                 children: const [
                   Icon(Icons.logout, color: Colors.white54, size: 20),
-                  SizedBox(width: 16),
+                  SizedBox(width: 14),
                   Text(
                     'Logout',
                     style: TextStyle(color: Colors.white54, fontSize: 14),
@@ -248,30 +250,66 @@ class _AdminLayoutState extends State<AdminLayout> {
   Widget _buildTopAppBar() {
     return Container(
       height: 70,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: const BoxDecoration(
+      padding: const EdgeInsets.symmetric(horizontal: 28),
+      decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(bottom: BorderSide(color: Color(0xFFE0E0E0))),
+        border: const Border(bottom: BorderSide(color: AppColors.divider)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0A12151C),
+            blurRadius: 10,
+            offset: Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
-            'Admin Portal',
-            style: TextStyle(
-              color: Color(0xFFB71C1C),
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: const [
+              Text(
+                'Admin Portal',
+                style: TextStyle(
+                  color: AppColors.ink,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                  letterSpacing: -0.2,
+                ),
+              ),
+              Text(
+                'Overview & management',
+                style: TextStyle(
+                  color: AppColors.inkMuted,
+                  fontSize: 12,
+                ),
+              ),
+            ],
           ),
           Row(
-            children: const [
-              Icon(Icons.notifications_outlined, color: Colors.grey),
-              SizedBox(width: 24),
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceMuted,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.notifications_outlined,
+                  color: AppColors.inkMuted,
+                  size: 18,
+                ),
+              ),
+              const SizedBox(width: 14),
               CircleAvatar(
                 radius: 18,
-                backgroundColor: Color(0xFF2C3E50),
-                child: Icon(Icons.person, color: Colors.white, size: 18),
+                backgroundColor: AppColors.brandTint,
+                child: const Icon(
+                  Icons.person,
+                  color: AppColors.brand,
+                  size: 18,
+                ),
               ),
             ],
           ),

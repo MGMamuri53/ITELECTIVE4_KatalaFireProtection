@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/api_client.dart';
 import 'main_layout.dart';
 import 'admin_layout.dart'; // IN-IMPORT NATIN ANG ADMIN LAYOUT DITO
+import 'package:katala/theme/app_theme.dart';
 
 class AuthPage extends StatefulWidget {
   const AuthPage({super.key});
@@ -51,7 +52,7 @@ class _AuthPageState extends State<AuthPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Passwords do not match!'),
-              backgroundColor: Colors.red,
+              backgroundColor: AppColors.danger,
             ),
           );
           return;
@@ -69,7 +70,7 @@ class _AuthPageState extends State<AuthPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Account created! You can now log in.'),
-              backgroundColor: Colors.green,
+              backgroundColor: AppColors.success,
             ),
           );
           setState(() {
@@ -82,7 +83,10 @@ class _AuthPageState extends State<AuthPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: AppColors.danger,
+          ),
         );
       }
     } finally {
@@ -147,7 +151,7 @@ class _AuthPageState extends State<AuthPage> {
                   children: [
                     const Icon(
                       Icons.shield,
-                      color: Color(0xFFB71C1C),
+                      color: AppColors.brand,
                       size: 18,
                     ),
                     const SizedBox(width: 8),
@@ -229,7 +233,7 @@ class _AuthPageState extends State<AuthPage> {
             style: const TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w900,
-              color: Color(0xFF1A1A1A),
+              color: AppColors.ink,
             ),
           ),
           const SizedBox(height: 8),
@@ -237,7 +241,7 @@ class _AuthPageState extends State<AuthPage> {
             _isLogin
                 ? 'Sign in to Katala FireSafe to continue.'
                 : 'Access Katala FireSafe to manage your quotations and service requests.',
-            style: const TextStyle(fontSize: 12, color: Color(0xFF666666)),
+            style: const TextStyle(fontSize: 12, color: AppColors.inkMuted),
           ),
           const SizedBox(height: 16),
 
@@ -245,7 +249,7 @@ class _AuthPageState extends State<AuthPage> {
             width: 40,
             height: 3,
             decoration: BoxDecoration(
-              color: const Color(0xFFB71C1C),
+              color: AppColors.brand,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -330,22 +334,22 @@ class _AuthPageState extends State<AuthPage> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFFF5F6FA),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color(0xFFE0E0E0)),
+                color: AppColors.surfaceMuted,
+                borderRadius: BorderRadius.circular(KataUi.radiusCard),
+                border: Border.all(color: AppColors.divider),
               ),
               child: Row(
                 children: const [
                   Icon(
                     Icons.privacy_tip_outlined,
-                    color: Colors.grey,
+                    color: AppColors.inkMuted,
                     size: 16,
                   ),
                   SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       'Your data is handled according to our Privacy Policy and ISO security standards.',
-                      style: TextStyle(fontSize: 10, color: Color(0xFF666666)),
+                      style: TextStyle(fontSize: 10, color: AppColors.inkMuted),
                     ),
                   ),
                 ],
@@ -358,13 +362,6 @@ class _AuthPageState extends State<AuthPage> {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: _isLoading ? null : _handleAuth,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFB71C1C),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(6),
-                ),
-              ),
               child: _isLoading
                   ? const SizedBox(
                       height: 20,
@@ -374,14 +371,7 @@ class _AuthPageState extends State<AuthPage> {
                         strokeWidth: 2,
                       ),
                     )
-                  : Text(
-                      _isLogin ? 'Sign In' : 'Create Account',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
+                  : Text(_isLogin ? 'Sign In' : 'Create Account'),
             ),
           ),
 
@@ -400,14 +390,14 @@ class _AuthPageState extends State<AuthPage> {
                       ? "Don't have an account? "
                       : "Already have an account? ",
                   style: const TextStyle(
-                    color: Color(0xFF666666),
+                    color: AppColors.inkMuted,
                     fontSize: 12,
                   ),
                   children: [
                     TextSpan(
                       text: _isLogin ? 'Sign up' : 'Sign in',
                       style: const TextStyle(
-                        color: Color(0xFFB71C1C),
+                        color: AppColors.brand,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -434,9 +424,9 @@ class _AuthPageState extends State<AuthPage> {
         Text(
           label,
           style: const TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF333333),
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: AppColors.inkSoft,
           ),
         ),
         const SizedBox(height: 8),
@@ -444,28 +434,9 @@ class _AuthPageState extends State<AuthPage> {
           controller: controller,
           obscureText: isPassword,
           keyboardType: keyboardType,
-          style: const TextStyle(fontSize: 13),
+          style: const TextStyle(fontSize: 14),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: const TextStyle(color: Color(0xFF999999), fontSize: 12),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 14,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
-              borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
-              borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
-              borderSide: const BorderSide(color: Color(0xFFB71C1C)),
-            ),
-            filled: true,
-            fillColor: const Color(0xFFFAFAFA),
           ),
         ),
       ],

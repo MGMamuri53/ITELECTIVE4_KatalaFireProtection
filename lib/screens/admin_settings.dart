@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:katala/theme/app_theme.dart';
 
 class AdminSettings extends StatefulWidget {
   const AdminSettings({super.key});
@@ -99,7 +100,7 @@ class _AdminSettingsState extends State<AdminSettings> {
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFB71C1C),
+                    backgroundColor: AppColors.brand,
                   ),
                   child: const Text(
                     'Update Password',
@@ -167,7 +168,7 @@ class _AdminSettingsState extends State<AdminSettings> {
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFB71C1C),
+                backgroundColor: AppColors.brand,
               ),
               child: const Text(
                 'Save Changes',
@@ -263,7 +264,7 @@ class _AdminSettingsState extends State<AdminSettings> {
         padding: EdgeInsets.all(isDesktop ? 32.0 : 16.0),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -279,7 +280,7 @@ class _AdminSettingsState extends State<AdminSettings> {
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF1A1A1A),
+                        color: AppColors.ink,
                       ),
                     ),
                     SizedBox(height: 4),
@@ -290,7 +291,7 @@ class _AdminSettingsState extends State<AdminSettings> {
                   ],
                 ),
                 if (_isActionLoading)
-                  const CircularProgressIndicator(color: Color(0xFFB71C1C)),
+                  const CircularProgressIndicator(color: AppColors.brand),
               ],
             ),
             const SizedBox(height: 32),
@@ -368,7 +369,7 @@ class _AdminSettingsState extends State<AdminSettings> {
         style: const TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.bold,
-          color: Color(0xFFB71C1C),
+          color: AppColors.brand,
           letterSpacing: 1.2,
         ),
       ),
@@ -386,10 +387,10 @@ class _AdminSettingsState extends State<AdminSettings> {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: const Color(0xFFF5F5F5),
-          borderRadius: BorderRadius.circular(8),
+          color: AppColors.surfaceMuted,
+          borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(icon, color: const Color(0xFF333333)),
+        child: Icon(icon, color: AppColors.inkSoft),
       ),
       title: Text(
         title,
@@ -416,10 +417,10 @@ class _AdminSettingsState extends State<AdminSettings> {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: const Color(0xFFF5F5F5),
-          borderRadius: BorderRadius.circular(8),
+          color: AppColors.surfaceMuted,
+          borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(icon, color: const Color(0xFF333333)),
+        child: Icon(icon, color: AppColors.inkSoft),
       ),
       title: Text(
         title,
@@ -432,7 +433,7 @@ class _AdminSettingsState extends State<AdminSettings> {
       trailing: Switch(
         value: currentValue,
         onChanged: onChanged, // NAGBABAGO NA ANG STATE
-        activeThumbColor: const Color(0xFFB71C1C),
+        activeThumbColor: AppColors.brand,
       ),
     );
   }

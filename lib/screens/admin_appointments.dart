@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_client.dart';
+import 'package:katala/theme/app_theme.dart';
 
 class AdminAppointments extends StatefulWidget {
   const AdminAppointments({super.key});
@@ -154,7 +155,7 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFB71C1C),
+                backgroundColor: AppColors.brand,
               ),
               child: const Text('Save', style: TextStyle(color: Colors.white)),
             ),
@@ -228,7 +229,7 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFB71C1C),
+                backgroundColor: AppColors.brand,
               ),
               child: const Text(
                 'Update',
@@ -258,7 +259,7 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
       padding: EdgeInsets.all(isDesktop ? 32.0 : 16.0),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -277,7 +278,7 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF1A1A1A),
+                      color: AppColors.ink,
                     ),
                   ),
                   SizedBox(height: 4),
@@ -294,15 +295,15 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
                     onPressed: _fetchAppointments,
                     icon: const Icon(
                       Icons.refresh,
-                      color: Color(0xFFB71C1C),
+                      color: AppColors.brand,
                       size: 18,
                     ),
                     label: const Text(
                       'Refresh',
-                      style: TextStyle(color: Color(0xFFB71C1C)),
+                      style: TextStyle(color: AppColors.brand),
                     ),
                     style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Color(0xFFB71C1C)),
+                      side: const BorderSide(color: AppColors.brand),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -314,7 +315,7 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
                       style: TextStyle(color: Colors.white),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFB71C1C),
+                      backgroundColor: AppColors.brand,
                     ),
                   ),
                 ],
@@ -327,8 +328,8 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFFFFF4E5),
-              borderRadius: BorderRadius.circular(8),
+              color: AppColors.warningTint,
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
             ),
             child: Row(
@@ -338,7 +339,7 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
                 Expanded(
                   child: Text(
                     'TEAM SUGGESTION: Calendar scheduling rules (e.g., auto-assigning engineers, time blocking) are pending client confirmation. Currently, site visits are manually tied to Project References.',
-                    style: TextStyle(fontSize: 12, color: Color(0xFF805B10)),
+                    style: TextStyle(fontSize: 12, color: AppColors.warning),
                   ),
                 ),
               ],
@@ -370,7 +371,7 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
               border: Border(
                 bottom: BorderSide(
                   color: isSelected
-                      ? const Color(0xFFB71C1C)
+                      ? AppColors.brand
                       : Colors.transparent,
                   width: 2,
                 ),
@@ -381,7 +382,7 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                color: isSelected ? const Color(0xFFB71C1C) : Colors.grey,
+                color: isSelected ? AppColors.brand : Colors.grey,
               ),
             ),
           ),
@@ -401,7 +402,7 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: const BoxDecoration(
                 border: Border(
-                  bottom: BorderSide(color: Color(0xFFE0E0E0), width: 2),
+                  bottom: BorderSide(color: AppColors.divider, width: 2),
                 ),
               ),
               child: Row(
@@ -480,7 +481,7 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
               child: _isLoading
                   ? const Center(
                       child: CircularProgressIndicator(
-                        color: Color(0xFFB71C1C),
+                        color: AppColors.brand,
                       ),
                     )
                   : appointments.isEmpty
@@ -535,7 +536,7 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: Color(0xFFF0F0F0))),
+        border: Border(bottom: BorderSide(color: AppColors.surfaceMuted)),
       ),
       child: Row(
         children: [
@@ -546,7 +547,7 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
               style: const TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFFB71C1C),
+                color: AppColors.brand,
               ),
             ),
           ),
@@ -557,7 +558,7 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
               style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF1A1A1A),
+                color: AppColors.ink,
               ),
             ),
           ),
@@ -565,14 +566,14 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
             flex: 2,
             child: Text(
               type,
-              style: const TextStyle(fontSize: 12, color: Color(0xFF666666)),
+              style: const TextStyle(fontSize: 12, color: AppColors.inkMuted),
             ),
           ),
           Expanded(
             flex: 2,
             child: Text(
               date,
-              style: const TextStyle(fontSize: 13, color: Color(0xFF666666)),
+              style: const TextStyle(fontSize: 13, color: AppColors.inkMuted),
             ),
           ),
           Expanded(
@@ -592,7 +593,7 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
                   status,
                   style: const TextStyle(
                     fontSize: 13,
-                    color: Color(0xFF666666),
+                    color: AppColors.inkMuted,
                   ),
                 ),
               ],
@@ -606,7 +607,7 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
                 'Update',
                 style: TextStyle(
                   fontSize: 12,
-                  color: Color(0xFFB71C1C),
+                  color: AppColors.brand,
                   fontWeight: FontWeight.bold,
                 ),
                 textAlign: TextAlign.right,

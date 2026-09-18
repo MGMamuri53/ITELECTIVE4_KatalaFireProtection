@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:katala/theme/app_theme.dart';
 
 class ServicesPage extends StatefulWidget {
   final VoidCallback onStartInquiry; // DINAGDAG NATIN ITO PARA MA-LINK SA FORM
@@ -72,21 +73,17 @@ class _ServicesPageState extends State<ServicesPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
           title: Row(
             children: [
-              const Icon(Icons.design_services, color: Color(0xFFB71C1C)),
+              const Icon(Icons.design_services, color: AppColors.brand),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   title,
                   style: const TextStyle(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w700,
                     fontSize: 16,
-                    color: Color(0xFF1A1A1A),
+                    color: AppColors.ink,
                   ),
                 ),
               ),
@@ -100,7 +97,7 @@ class _ServicesPageState extends State<ServicesPage> {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 16.0),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(KataUi.radiusCard),
                     child: Image.network(
                       imageUrl,
                       height: 120,
@@ -111,17 +108,18 @@ class _ServicesPageState extends State<ServicesPage> {
                   ),
                 ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF5F5F5),
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(color: const Color(0xFFE0E0E0)),
+                  color: AppColors.brandTint,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.brandTintBorder),
                 ),
                 child: Text(
                   'Category: $category',
                   style: const TextStyle(
-                    fontSize: 10,
-                    color: Color(0xFF666666),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.brand,
                   ),
                 ),
               ),
@@ -130,7 +128,7 @@ class _ServicesPageState extends State<ServicesPage> {
                 description,
                 style: const TextStyle(
                   fontSize: 13,
-                  color: Color(0xFF333333),
+                  color: AppColors.inkSoft,
                   height: 1.5,
                 ),
               ),
@@ -139,27 +137,15 @@ class _ServicesPageState extends State<ServicesPage> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Close', style: TextStyle(color: Colors.grey)),
+              child: const Text('Close'),
             ),
             // DINAGDAG DIN NATIN ANG INQUIRY BUTTON SA LOOB NG DIALOG
-            ElevatedButton(
+            FilledButton(
               onPressed: () {
                 Navigator.pop(context); // Close dialog first
                 widget.onStartInquiry(); // Open inquiry form
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFB71C1C),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(6),
-                ),
-              ),
-              child: const Text(
-                'Start service inquiry',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              child: const Text('Start service inquiry'),
             ),
           ],
         );
@@ -192,7 +178,7 @@ class _ServicesPageState extends State<ServicesPage> {
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w900,
-              color: Color(0xFF1A1A1A),
+              color: AppColors.ink,
               height: 1.2,
             ),
           ),
@@ -201,7 +187,7 @@ class _ServicesPageState extends State<ServicesPage> {
             'Explore our fire-protection services. When you are ready, start an inquiry and our team can help assess your project requirements.',
             style: TextStyle(
               fontSize: 12,
-              color: Color(0xFF666666),
+              color: AppColors.inkMuted,
               height: 1.5,
             ),
           ),
@@ -219,10 +205,10 @@ class _ServicesPageState extends State<ServicesPage> {
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFB71C1C),
+                backgroundColor: AppColors.brand,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
             ),
@@ -246,8 +232,15 @@ class _ServicesPageState extends State<ServicesPage> {
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: const Color(0xFFE0E0E0)),
+                  borderRadius: BorderRadius.circular(KataUi.radiusCard),
+                  border: Border.all(color: AppColors.divider),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x0A12151C),
+                      blurRadius: 14,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -258,12 +251,12 @@ class _ServicesPageState extends State<ServicesPage> {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: const BoxDecoration(
-                            color: Color(0xFFFFF0F0),
+                            color: AppColors.brandTint,
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
                             serviceIcon,
-                            color: const Color(0xFFB71C1C),
+                            color: AppColors.brand,
                             size: 24,
                           ),
                         ),
@@ -277,7 +270,7 @@ class _ServicesPageState extends State<ServicesPage> {
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
-                                  color: Color(0xFF1A1A1A),
+                                  color: AppColors.ink,
                                 ),
                               ),
                               const SizedBox(height: 8),
@@ -285,7 +278,7 @@ class _ServicesPageState extends State<ServicesPage> {
                                 desc,
                                 style: const TextStyle(
                                   fontSize: 12,
-                                  color: Color(0xFF666666),
+                                  color: AppColors.inkMuted,
                                   height: 1.4,
                                 ),
                                 maxLines: 2,
@@ -311,16 +304,18 @@ class _ServicesPageState extends State<ServicesPage> {
                               '',
                             ),
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: const Color(0xFF666666),
-                              side: const BorderSide(color: Color(0xFFE0E0E0)),
+                              foregroundColor: AppColors.inkMuted,
+                              side: const BorderSide(color: AppColors.divider),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(6),
+                                borderRadius:
+                                    BorderRadius.circular(KataTheme.radiusControl),
+                              ),
+                              textStyle: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
-                            child: const Text(
-                              'Details',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
+                            child: const Text('Details'),
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -329,24 +324,8 @@ class _ServicesPageState extends State<ServicesPage> {
                           child: ElevatedButton.icon(
                             onPressed: widget
                                 .onStartInquiry, // ETO YUNG MAGBUBUKAS NG FORM
-                            icon: const Icon(
-                              Icons.arrow_forward,
-                              size: 16,
-                              color: Colors.white,
-                            ),
-                            label: const Text(
-                              'Start service inquiry',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFB71C1C),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                            ),
+                            icon: const Icon(Icons.arrow_forward, size: 16),
+                            label: const Text('Start service inquiry'),
                           ),
                         ),
                       ],
@@ -363,11 +342,11 @@ class _ServicesPageState extends State<ServicesPage> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
-      color: const Color(0xFF1A1A1A),
+      color: AppColors.ink,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const Icon(Icons.shield, color: Color(0xFFB71C1C), size: 36),
+          const Icon(Icons.shield, color: AppColors.brand, size: 36),
           const SizedBox(height: 16),
           const Text(
             'Katala Fire Protection',
@@ -387,7 +366,7 @@ class _ServicesPageState extends State<ServicesPage> {
             ),
           ),
           const SizedBox(height: 32),
-          const Divider(color: Color(0xFF333333)),
+          const Divider(color: AppColors.inkSoft),
           const SizedBox(height: 16),
           const Text(
             '© 2026 Katala Fire Protection Product Trading.\nAll rights reserved.',

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_client.dart';
+import 'package:katala/theme/app_theme.dart';
 
 class AdminPortfolio extends StatefulWidget {
   const AdminPortfolio({super.key});
@@ -178,7 +179,7 @@ class _AdminPortfolioState extends State<AdminPortfolio> {
                 }
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFB71C1C),
+                backgroundColor: AppColors.brand,
               ),
               child: Text(
                 isEditing ? 'Update' : 'Save',
@@ -209,7 +210,7 @@ class _AdminPortfolioState extends State<AdminPortfolio> {
       padding: const EdgeInsets.all(32.0),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -243,7 +244,7 @@ class _AdminPortfolioState extends State<AdminPortfolio> {
                   style: TextStyle(color: Colors.white),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFB71C1C),
+                  backgroundColor: AppColors.brand,
                 ),
               ),
             ],
@@ -255,8 +256,8 @@ class _AdminPortfolioState extends State<AdminPortfolio> {
                 child: Container(
                   height: 40,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF5F6FA),
-                    borderRadius: BorderRadius.circular(6),
+                    color: AppColors.canvas,
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: TextField(
                     controller: _searchController,
@@ -280,7 +281,7 @@ class _AdminPortfolioState extends State<AdminPortfolio> {
           Expanded(
             child: _isLoading
                 ? const Center(
-                    child: CircularProgressIndicator(color: Color(0xFFB71C1C)),
+                    child: CircularProgressIndicator(color: AppColors.brand),
                   )
                 : _filteredProjects.isEmpty
                 ? const Center(
@@ -298,8 +299,8 @@ class _AdminPortfolioState extends State<AdminPortfolio> {
                         margin: const EdgeInsets.only(bottom: 12),
                         elevation: 0,
                         shape: RoundedRectangleBorder(
-                          side: const BorderSide(color: Color(0xFFE0E0E0)),
-                          borderRadius: BorderRadius.circular(8),
+                          side: const BorderSide(color: AppColors.divider),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                         child: ListTile(
                           leading: Container(

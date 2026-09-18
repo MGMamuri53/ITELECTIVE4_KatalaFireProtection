@@ -9,6 +9,7 @@ import 'portfolio_page.dart';
 import 'company_profile.dart';
 import 'admin_settings.dart';
 import 'customer_orders.dart'; // IN-IMPORT NATIN YUNG BAGONG GINAWA MO PARA SA ORDERS
+import 'package:katala/theme/app_theme.dart';
 
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
@@ -33,10 +34,6 @@ class _MainLayoutState extends State<MainLayout> {
       context: context,
       builder: (context) {
         return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          backgroundColor: Colors.white,
           insetPadding: const EdgeInsets.all(16),
           child: SingleChildScrollView(
             child: Padding(
@@ -51,21 +48,26 @@ class _MainLayoutState extends State<MainLayout> {
                       const Text(
                         'Request a Quote',
                         style: TextStyle(
-                          fontWeight: FontWeight.w900,
+                          fontWeight: FontWeight.w700,
                           fontSize: 20,
-                          color: Color(0xFFB71C1C),
+                          letterSpacing: -0.3,
+                          color: AppColors.ink,
                         ),
                       ),
                       InkWell(
+                        borderRadius: BorderRadius.circular(12),
                         onTap: () => Navigator.pop(context),
-                        child: const Icon(Icons.close, color: Colors.grey),
+                        child: const Icon(
+                          Icons.close,
+                          color: AppColors.inkMuted,
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 8),
                   const Text(
                     'Provide detailed information for our safety engineers to evaluate your requirements accurately.',
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                    style: TextStyle(fontSize: 12, color: AppColors.inkMuted),
                   ),
                   const SizedBox(height: 24),
 
@@ -73,7 +75,6 @@ class _MainLayoutState extends State<MainLayout> {
                     controller: nameController,
                     decoration: const InputDecoration(
                       labelText: 'Full Name / Company Name',
-                      border: OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -85,7 +86,6 @@ class _MainLayoutState extends State<MainLayout> {
                           controller: emailController,
                           decoration: const InputDecoration(
                             labelText: 'Email Address',
-                            border: OutlineInputBorder(),
                           ),
                         ),
                       ),
@@ -95,7 +95,6 @@ class _MainLayoutState extends State<MainLayout> {
                           controller: phoneController,
                           decoration: const InputDecoration(
                             labelText: 'Contact Number',
-                            border: OutlineInputBorder(),
                           ),
                         ),
                       ),
@@ -107,7 +106,6 @@ class _MainLayoutState extends State<MainLayout> {
                     initialValue: selectedService,
                     decoration: const InputDecoration(
                       labelText: 'Primary Service Needed',
-                      border: OutlineInputBorder(),
                     ),
                     items:
                         [
@@ -131,7 +129,6 @@ class _MainLayoutState extends State<MainLayout> {
                     controller: locationController,
                     decoration: const InputDecoration(
                       labelText: 'Project Location (City, Province)',
-                      border: OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -143,7 +140,6 @@ class _MainLayoutState extends State<MainLayout> {
                       labelText: 'Project Details & Specifications',
                       hintText:
                           'Describe the facility size, specific hazards, or current systems installed...',
-                      border: OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -170,7 +166,7 @@ class _MainLayoutState extends State<MainLayout> {
                               content: Text(
                                 'Please sign in before requesting a quote.',
                               ),
-                              backgroundColor: Colors.red,
+                              backgroundColor: AppColors.danger,
                             ),
                           );
                           return;
@@ -205,7 +201,7 @@ class _MainLayoutState extends State<MainLayout> {
                                   content: Text(
                                     'Request Submitted! We will email you shortly.',
                                   ),
-                                  backgroundColor: Colors.green,
+                                  backgroundColor: AppColors.success,
                                 ),
                               );
                             }
@@ -216,7 +212,7 @@ class _MainLayoutState extends State<MainLayout> {
                                   content: Text(
                                     'Request failed: ${response.body}',
                                   ),
-                                  backgroundColor: Colors.red,
+                                  backgroundColor: AppColors.danger,
                                 ),
                               );
                             }
@@ -226,23 +222,13 @@ class _MainLayoutState extends State<MainLayout> {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text('Request failed: $e'),
-                                backgroundColor: Colors.red,
+                                backgroundColor: AppColors.danger,
                               ),
                             );
                           }
                         }
                       },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFB71C1C),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                      ),
-                      child: const Text(
-                        'Submit Detailed Request',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      child: const Text('Submit Detailed Request'),
                     ),
                   ),
                 ],
@@ -259,21 +245,17 @@ class _MainLayoutState extends State<MainLayout> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
           title: Row(
             children: [
-              const Icon(Icons.info_outline, color: Color(0xFFB71C1C)),
+              const Icon(Icons.info_outline, color: AppColors.brand),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   title,
                   style: const TextStyle(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w700,
                     fontSize: 18,
-                    color: Color(0xFF1A1A1A),
+                    color: AppColors.ink,
                   ),
                 ),
               ),
@@ -284,7 +266,7 @@ class _MainLayoutState extends State<MainLayout> {
               content,
               style: const TextStyle(
                 fontSize: 13,
-                color: Color(0xFF333333),
+                color: AppColors.inkSoft,
                 height: 1.6,
               ),
             ),
@@ -292,13 +274,7 @@ class _MainLayoutState extends State<MainLayout> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text(
-                'Close',
-                style: TextStyle(
-                  color: Color(0xFFB71C1C),
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              child: const Text('Close'),
             ),
           ],
         );
@@ -319,9 +295,9 @@ class _MainLayoutState extends State<MainLayout> {
         return true;
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8F9FA),
+        backgroundColor: AppColors.canvas,
         appBar: _buildCustomAppBar(),
-        endDrawer: _buildNavigationDrawer(context),
+        endDrawer: _buildMenuTile(context),
         body: _buildBodyContent(),
       ),
     );
@@ -329,14 +305,11 @@ class _MainLayoutState extends State<MainLayout> {
 
   PreferredSizeWidget _buildCustomAppBar() {
     return AppBar(
-      backgroundColor: Colors.white,
-      elevation: 0,
-      surfaceTintColor: Colors.transparent,
       leading: _currentIndex == 0
           ? null
           : IconButton(
               tooltip: 'Back to Homepage',
-              icon: const Icon(Icons.arrow_back, color: Color(0xFFB71C1C)),
+              icon: const Icon(Icons.arrow_back, color: AppColors.brand),
               onPressed: () => setState(() => _currentIndex = 0),
             ),
       title: Column(
@@ -345,17 +318,17 @@ class _MainLayoutState extends State<MainLayout> {
           Text(
             'Katala Fire Protection',
             style: TextStyle(
-              color: Color(0xFFB71C1C),
-              fontWeight: FontWeight.w900,
-              fontSize: 20,
-              letterSpacing: -0.5,
+              color: AppColors.ink,
+              fontWeight: FontWeight.w700,
+              fontSize: 18,
+              letterSpacing: -0.4,
             ),
           ),
           Text(
             'Safeguarding Lives and Assets',
             style: TextStyle(
-              color: Colors.grey,
-              fontSize: 12,
+              color: AppColors.inkMuted,
+              fontSize: 11,
               fontStyle: FontStyle.italic,
             ),
           ),
@@ -366,14 +339,19 @@ class _MainLayoutState extends State<MainLayout> {
           builder: (context) => Padding(
             padding: const EdgeInsets.only(right: 16.0),
             child: InkWell(
+              borderRadius: BorderRadius.circular(10),
               onTap: () => Scaffold.of(context).openEndDrawer(),
               child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFB71C1C),
-                  borderRadius: BorderRadius.circular(6),
+                  color: AppColors.brandTint,
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.menu, color: Colors.white, size: 24),
+                child: const Icon(
+                  Icons.menu,
+                  color: AppColors.brand,
+                  size: 22,
+                ),
               ),
             ),
           ),
@@ -382,64 +360,75 @@ class _MainLayoutState extends State<MainLayout> {
     );
   }
 
-  Widget _buildNavigationDrawer(BuildContext context) {
+  Widget _buildMenuTile(BuildContext context) {
     return Drawer(
-      backgroundColor: Colors.white,
-      surfaceTintColor: Colors.transparent,
-      child: SafeArea(
-        child: Column(
+      backgroundColor: AppColors.nav,
+      child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.all(20.0),
+              padding: const EdgeInsets.all(24.0),
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Text(
-                          'Katala Fire Protection',
-                          style: TextStyle(
-                            color: Color(0xFFB71C1C),
-                            fontWeight: FontWeight.w900,
-                            fontSize: 18,
-                            letterSpacing: -0.5,
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          'Safeguarding Lives and Assets',
-                          style: TextStyle(color: Colors.grey, fontSize: 12),
-                        ),
-                      ],
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.shield,
+                      color: AppColors.brand,
+                      size: 24,
                     ),
                   ),
+                  const SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text(
+                        'Katala',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 17,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                      Text(
+                        'Fire Protection',
+                        style: TextStyle(
+                          color: Colors.white60,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Spacer(),
                   InkWell(
+                    borderRadius: BorderRadius.circular(12),
                     onTap: () => Navigator.pop(context),
                     child: Container(
-                      padding: const EdgeInsets.all(4),
+                      padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFB71C1C),
-                        borderRadius: BorderRadius.circular(6),
+                        color: Colors.white.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(
                         Icons.close,
-                        color: Colors.white,
-                        size: 20,
+                        color: Colors.white70,
+                        size: 18,
                       ),
                     ),
                   ),
                 ],
               ),
             ),
-            const Divider(color: Color(0xFFEEEEEE), height: 1),
+            const Divider(color: Colors.white12, height: 1),
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
+                  horizontal: 12,
+                  vertical: 12,
                 ),
                 children: [
                   _buildMenuItem(
@@ -477,36 +466,16 @@ class _MainLayoutState extends State<MainLayout> {
                     title: 'My Orders',
                     index: 6,
                   ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        Navigator.pop(context); // Close drawer first
-                        _showRequestQuoteDialog(context); // Then open form
-                      },
-                      icon: const Icon(
-                        Icons.description_outlined,
-                        color: Colors.white,
-                      ),
-                      label: const Text(
-                        'Request Quote',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFB71C1C),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                    ),
+                  const SizedBox(height: 12),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context); // Close drawer first
+                      _showRequestQuoteDialog(context); // Then open form
+                    },
+                    icon: const Icon(Icons.description_outlined, size: 20),
+                    label: const Text('Request Quote'),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 24),
                   _buildFooterLink(
                     Icons.privacy_tip_outlined,
                     'Privacy Policy',
@@ -546,7 +515,7 @@ class _MainLayoutState extends State<MainLayout> {
                 ],
               ),
             ),
-            const Divider(color: Color(0xFFEEEEEE), height: 1),
+            const Divider(color: Colors.white12, height: 1),
             InkWell(
               onTap: () async {
                 try {
@@ -563,12 +532,12 @@ class _MainLayoutState extends State<MainLayout> {
                 padding: const EdgeInsets.all(20.0),
                 child: Row(
                   children: const [
-                    Icon(Icons.logout, color: Colors.grey, size: 20),
+                    Icon(Icons.logout, color: Colors.white54, size: 20),
                     SizedBox(width: 12),
                     Text(
                       'Logout',
                       style: TextStyle(
-                        color: Color(0xFF666666),
+                        color: Colors.white54,
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                       ),
@@ -577,8 +546,7 @@ class _MainLayoutState extends State<MainLayout> {
                 ),
               ),
             ),
-          ],
-        ),
+        ],
       ),
     );
   }
@@ -589,34 +557,47 @@ class _MainLayoutState extends State<MainLayout> {
     required int index,
   }) {
     bool isSelected = _currentIndex == index;
-    return InkWell(
-      onTap: () {
-        setState(() => _currentIndex = index);
-        Navigator.pop(context);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        decoration: const BoxDecoration(
-          border: Border(bottom: BorderSide(color: Color(0xFFF5F5F5))),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: const Color(0xFFB71C1C), size: 24),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                title,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                  color: isSelected
-                      ? const Color(0xFFB71C1C)
-                      : const Color(0xFF333333),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () {
+          setState(() => _currentIndex = index);
+          Navigator.pop(context);
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOut,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.brandTint : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                icon,
+                color: isSelected ? AppColors.brand : Colors.white70,
+                size: 22,
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                    color: isSelected ? AppColors.brand : Colors.white70,
+                  ),
                 ),
               ),
-            ),
-            const Icon(Icons.chevron_right, color: Colors.grey, size: 20),
-          ],
+              Icon(
+                isSelected ? Icons.check : Icons.chevron_right,
+                color: isSelected ? AppColors.brand : Colors.white24,
+                size: 20,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -624,17 +605,18 @@ class _MainLayoutState extends State<MainLayout> {
 
   Widget _buildFooterLink(IconData icon, String title, VoidCallback onTap) {
     return InkWell(
+      borderRadius: BorderRadius.circular(10),
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 12),
         child: Row(
           children: [
-            Icon(icon, color: Colors.grey, size: 20),
+            Icon(icon, color: Colors.white54, size: 20),
             const SizedBox(width: 12),
             Text(
               title,
               style: const TextStyle(
-                color: Color(0xFF666666),
+                color: Colors.white70,
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),

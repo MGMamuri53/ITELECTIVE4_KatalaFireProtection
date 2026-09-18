@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:katala/theme/app_theme.dart';
 
 class WebHomePage extends StatelessWidget {
   const WebHomePage({super.key});
@@ -6,19 +7,13 @@ class WebHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: AppColors.canvas,
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        title: const Text(
-          'Katala Web Portal',
-          style: TextStyle(
-            color: Color(0xFFB71C1C),
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        title: const Text('Katala Web Portal'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout, color: Colors.black),
+            tooltip: 'Logout',
+            icon: const Icon(Icons.logout, color: AppColors.inkMuted),
             onPressed: () {
               // Babalik sa Web Login Page kapag nag-logout
               Navigator.pushReplacementNamed(context, '/');
@@ -30,21 +25,36 @@ class WebHomePage extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: const [
-            Icon(Icons.construction, size: 80, color: Colors.grey),
-            SizedBox(height: 24),
+            SizedBox(
+              width: 120,
+              height: 120,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: AppColors.brandTint,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.construction,
+                  size: 56,
+                  color: AppColors.brand,
+                ),
+              ),
+            ),
+            SizedBox(height: 28),
             Text(
               'Web User Dashboard',
               style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF1A1A1A),
+                fontSize: 30,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.5,
+                color: AppColors.ink,
               ),
             ),
-            SizedBox(height: 16),
+            SizedBox(height: 12),
             Text(
               'lib/web/web_home_page.dart - dyan kayo mag start mag code for web - sean',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 16, color: Colors.grey, height: 1.5),
+              style: TextStyle(fontSize: 15, color: AppColors.inkMuted, height: 1.5),
             ),
           ],
         ),

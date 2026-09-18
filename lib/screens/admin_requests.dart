@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_client.dart';
+import 'package:katala/theme/app_theme.dart';
 
 class AdminRequests extends StatefulWidget {
   const AdminRequests({super.key});
@@ -88,7 +89,7 @@ class _AdminRequestsState extends State<AdminRequests> {
               style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFFB71C1C),
+                color: AppColors.brand,
               ),
             ),
             const SizedBox(height: 16),
@@ -111,8 +112,8 @@ class _AdminRequestsState extends State<AdminRequests> {
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFFF5F6FA),
-                borderRadius: BorderRadius.circular(6),
+                color: AppColors.canvas,
+                borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
                 request['details'] ?? 'No additional details provided.',
@@ -211,7 +212,7 @@ class _AdminRequestsState extends State<AdminRequests> {
                     }
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFB71C1C),
+                    backgroundColor: AppColors.brand,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 24,
                       vertical: 16,
@@ -287,7 +288,7 @@ class _AdminRequestsState extends State<AdminRequests> {
               style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
-                color: Color(0xFF1A1A1A),
+                color: AppColors.ink,
               ),
             ),
           ),
@@ -336,7 +337,7 @@ class _AdminRequestsState extends State<AdminRequests> {
         padding: EdgeInsets.all(isDesktop ? 32.0 : 16.0),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -355,7 +356,7 @@ class _AdminRequestsState extends State<AdminRequests> {
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF1A1A1A),
+                        color: AppColors.ink,
                       ),
                     ),
                     SizedBox(height: 4),
@@ -369,15 +370,15 @@ class _AdminRequestsState extends State<AdminRequests> {
                   onPressed: _fetchRequests,
                   icon: const Icon(
                     Icons.refresh,
-                    color: Color(0xFFB71C1C),
+                    color: AppColors.brand,
                     size: 18,
                   ),
                   label: const Text(
                     'Refresh List',
-                    style: TextStyle(color: Color(0xFFB71C1C)),
+                    style: TextStyle(color: AppColors.brand),
                   ),
                   style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: Color(0xFFB71C1C)),
+                    side: const BorderSide(color: AppColors.brand),
                   ),
                 ),
               ],
@@ -468,8 +469,8 @@ class _AdminRequestsState extends State<AdminRequests> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE0E0E0)),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.divider),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -509,7 +510,7 @@ class _AdminRequestsState extends State<AdminRequests> {
               border: Border(
                 bottom: BorderSide(
                   color: isSelected
-                      ? const Color(0xFFB71C1C)
+                      ? AppColors.brand
                       : Colors.transparent,
                   width: 2,
                 ),
@@ -520,7 +521,7 @@ class _AdminRequestsState extends State<AdminRequests> {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                color: isSelected ? const Color(0xFFB71C1C) : Colors.grey,
+                color: isSelected ? AppColors.brand : Colors.grey,
               ),
             ),
           ),
@@ -540,7 +541,7 @@ class _AdminRequestsState extends State<AdminRequests> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: const BoxDecoration(
                 border: Border(
-                  bottom: BorderSide(color: Color(0xFFE0E0E0), width: 2),
+                  bottom: BorderSide(color: AppColors.divider, width: 2),
                 ),
               ),
               child: Row(
@@ -621,7 +622,7 @@ class _AdminRequestsState extends State<AdminRequests> {
                     padding: EdgeInsets.all(32.0),
                     child: Center(
                       child: CircularProgressIndicator(
-                        color: Color(0xFFB71C1C),
+                        color: AppColors.brand,
                       ),
                     ),
                   )
@@ -686,7 +687,7 @@ class _AdminRequestsState extends State<AdminRequests> {
                         ),
                         decoration: const BoxDecoration(
                           border: Border(
-                            bottom: BorderSide(color: Color(0xFFF0F0F0)),
+                            bottom: BorderSide(color: AppColors.surfaceMuted),
                           ),
                         ),
                         child: Row(
@@ -698,7 +699,7 @@ class _AdminRequestsState extends State<AdminRequests> {
                                 style: const TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
-                                  color: Color(0xFFB71C1C),
+                                  color: AppColors.brand,
                                 ),
                               ),
                             ),
@@ -709,7 +710,7 @@ class _AdminRequestsState extends State<AdminRequests> {
                                 style: const TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
-                                  color: Color(0xFF1A1A1A),
+                                  color: AppColors.ink,
                                 ),
                               ),
                             ),
@@ -728,7 +729,7 @@ class _AdminRequestsState extends State<AdminRequests> {
                                       req['request_type'] ?? 'General',
                                       style: const TextStyle(
                                         fontSize: 13,
-                                        color: Color(0xFF666666),
+                                        color: AppColors.inkMuted,
                                       ),
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -742,7 +743,7 @@ class _AdminRequestsState extends State<AdminRequests> {
                                 formattedDate,
                                 style: const TextStyle(
                                   fontSize: 13,
-                                  color: Color(0xFF666666),
+                                  color: AppColors.inkMuted,
                                 ),
                               ),
                             ),
@@ -781,7 +782,7 @@ class _AdminRequestsState extends State<AdminRequests> {
                                   'Update Tracker',
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color: Color(0xFFB71C1C),
+                                    color: AppColors.brand,
                                     fontWeight: FontWeight.bold,
                                   ),
                                   textAlign: TextAlign.right,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../services/api_client.dart';
+import 'package:katala/theme/app_theme.dart';
 
 class CustomerOrders extends StatefulWidget {
   const CustomerOrders({super.key});
@@ -101,10 +102,10 @@ class _CustomerOrdersState extends State<CustomerOrders> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: AppColors.canvas,
       body: _isLoading
           ? const Center(
-              child: CircularProgressIndicator(color: Color(0xFFB71C1C)),
+              child: CircularProgressIndicator(color: AppColors.brand),
             )
           : _hasError
           ? Center(
@@ -118,7 +119,7 @@ class _CustomerOrdersState extends State<CustomerOrders> {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF333333),
+                      color: AppColors.inkSoft,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -130,7 +131,7 @@ class _CustomerOrdersState extends State<CustomerOrders> {
                   ElevatedButton(
                     onPressed: _fetchMyOrders,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFB71C1C),
+                      backgroundColor: AppColors.brand,
                     ),
                     child: const Text(
                       'Retry',
@@ -156,7 +157,7 @@ class _CustomerOrdersState extends State<CustomerOrders> {
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF333333),
+                      color: AppColors.inkSoft,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -195,7 +196,7 @@ class _CustomerOrdersState extends State<CustomerOrders> {
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 14,
-                                color: Color(0xFFB71C1C),
+                                color: AppColors.brand,
                               ),
                             ),
                             Container(
@@ -218,7 +219,7 @@ class _CustomerOrdersState extends State<CustomerOrders> {
                             ),
                           ],
                         ),
-                        const Divider(height: 24, color: Color(0xFFEEEEEE)),
+                        const Divider(height: 24, color: AppColors.surfaceMuted),
                         Row(
                           children: [
                             const Icon(
@@ -234,7 +235,7 @@ class _CustomerOrdersState extends State<CustomerOrders> {
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 14,
-                                  color: Color(0xFF1A1A1A),
+                                  color: AppColors.ink,
                                 ),
                               ),
                             ),
@@ -242,7 +243,7 @@ class _CustomerOrdersState extends State<CustomerOrders> {
                               'Qty: ${order['v_quantity']}',
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFF666666),
+                                color: AppColors.inkMuted,
                               ),
                             ),
                           ],
@@ -284,7 +285,7 @@ class _CustomerOrdersState extends State<CustomerOrders> {
                                   '₱ ${double.tryParse(order['v_totalAmount'].toString())?.toStringAsFixed(2) ?? '0.00'}',
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    color: Color(0xFF1A1A1A),
+                                    color: AppColors.ink,
                                     fontSize: 14,
                                   ),
                                 ),

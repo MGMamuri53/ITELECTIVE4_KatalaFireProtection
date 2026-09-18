@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_client.dart';
+import 'package:katala/theme/app_theme.dart';
 
 class WebLandingPage extends StatefulWidget {
   const WebLandingPage({super.key});
@@ -42,7 +43,7 @@ class _WebLandingPageState extends State<WebLandingPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Passwords do not match!'),
-              backgroundColor: Colors.red,
+              backgroundColor: AppColors.danger,
             ),
           );
           return;
@@ -60,7 +61,7 @@ class _WebLandingPageState extends State<WebLandingPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Web Account created! You can now log in.'),
-              backgroundColor: Colors.green,
+              backgroundColor: AppColors.success,
             ),
           );
           setState(() {
@@ -73,7 +74,10 @@ class _WebLandingPageState extends State<WebLandingPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: AppColors.danger,
+          ),
         );
       }
     } finally {
@@ -114,7 +118,13 @@ class _WebLandingPageState extends State<WebLandingPage> {
   Widget _buildBrandingSide() {
     return Container(
       width: double.infinity, // PARA PUNO ANG SCREEN LAPAD SA MOBILE
-      color: const Color(0xFF1A1A1A),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.ink, Color(0xFF2A1416)],
+        ),
+      ),
       padding: const EdgeInsets.symmetric(
         horizontal: 40,
         vertical: 60,
@@ -123,13 +133,24 @@ class _WebLandingPageState extends State<WebLandingPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.shield, color: Color(0xFFB71C1C), size: 64),
-          const SizedBox(height: 24),
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: AppColors.brandTint.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: AppColors.brand.withValues(alpha: 0.4),
+              ),
+            ),
+            child: const Icon(Icons.shield, color: AppColors.brand, size: 44),
+          ),
+          const SizedBox(height: 28),
           const Text(
             'Katala Fire Protection\nWeb Portal',
             style: TextStyle(
               fontSize: 40,
-              fontWeight: FontWeight.w900,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -1,
               color: Colors.white,
               height: 1.1,
             ),
@@ -137,7 +158,11 @@ class _WebLandingPageState extends State<WebLandingPage> {
           const SizedBox(height: 16),
           const Text(
             'Access your dashboard, manage quotations, and review safety compliance reports from your browser.',
-            style: TextStyle(fontSize: 16, color: Colors.grey, height: 1.5),
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.white70,
+              height: 1.5,
+            ),
           ),
           const SizedBox(height: 48),
 
@@ -150,7 +175,7 @@ class _WebLandingPageState extends State<WebLandingPage> {
               style: TextStyle(color: Colors.white),
             ),
             style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: Colors.white),
+              side: const BorderSide(color: Colors.white70),
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             ),
           ),
@@ -173,7 +198,7 @@ class _WebLandingPageState extends State<WebLandingPage> {
             style: const TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.w900,
-              color: Color(0xFF1A1A1A),
+              color: AppColors.ink,
             ),
           ),
           const SizedBox(height: 8),
@@ -181,7 +206,7 @@ class _WebLandingPageState extends State<WebLandingPage> {
             _isLogin
                 ? 'Enter your credentials to access the web portal.'
                 : 'Register to manage your fire safety systems online.',
-            style: const TextStyle(fontSize: 14, color: Color(0xFF666666)),
+            style: const TextStyle(fontSize: 14, color: AppColors.inkMuted),
           ),
           const SizedBox(height: 32),
 
@@ -246,10 +271,6 @@ class _WebLandingPageState extends State<WebLandingPage> {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: _isLoading ? null : _handleAuth,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFB71C1C),
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
               child: _isLoading
                   ? const SizedBox(
                       height: 20,
@@ -259,14 +280,7 @@ class _WebLandingPageState extends State<WebLandingPage> {
                         strokeWidth: 2,
                       ),
                     )
-                  : Text(
-                      _isLogin ? 'Sign In' : 'Sign Up',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
+                  : Text(_isLogin ? 'Sign In' : 'Sign Up'),
             ),
           ),
           const SizedBox(height: 24),
@@ -283,7 +297,7 @@ class _WebLandingPageState extends State<WebLandingPage> {
                     ? "Don't have an account? Sign up here."
                     : "Already have an account? Sign in here.",
                 style: const TextStyle(
-                  color: Color(0xFFB71C1C),
+                  color: AppColors.brand,
                   fontWeight: FontWeight.bold,
                   decoration: TextDecoration.underline,
                 ),
@@ -309,30 +323,16 @@ class _WebLandingPageState extends State<WebLandingPage> {
           style: const TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF333333),
+            color: AppColors.inkSoft,
           ),
         ),
         const SizedBox(height: 8),
         TextField(
           controller: controller,
           obscureText: isPassword,
+          style: const TextStyle(fontSize: 14),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: const TextStyle(color: Color(0xFF999999), fontSize: 13),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 14,
-            ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
-              borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(6),
-              borderSide: const BorderSide(color: Color(0xFFB71C1C)),
-            ),
-            filled: true,
-            fillColor: const Color(0xFFFAFAFA),
           ),
         ),
       ],

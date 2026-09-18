@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_client.dart';
+import 'package:katala/theme/app_theme.dart';
 
 class AdminCustomers extends StatefulWidget {
   const AdminCustomers({super.key});
@@ -72,7 +73,7 @@ class _AdminCustomersState extends State<AdminCustomers> {
       padding: EdgeInsets.all(isDesktop ? 32.0 : 16.0),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -92,7 +93,7 @@ class _AdminCustomersState extends State<AdminCustomers> {
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF1A1A1A),
+                      color: AppColors.ink,
                     ),
                   ),
                   SizedBox(height: 4),
@@ -106,15 +107,15 @@ class _AdminCustomersState extends State<AdminCustomers> {
                 onPressed: _fetchCustomers,
                 icon: const Icon(
                   Icons.refresh,
-                  color: Color(0xFFB71C1C),
+                  color: AppColors.brand,
                   size: 18,
                 ),
                 label: const Text(
                   'Refresh List',
-                  style: TextStyle(color: Color(0xFFB71C1C)),
+                  style: TextStyle(color: AppColors.brand),
                 ),
                 style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Color(0xFFB71C1C)),
+                  side: const BorderSide(color: AppColors.brand),
                 ),
               ),
             ],
@@ -128,8 +129,8 @@ class _AdminCustomersState extends State<AdminCustomers> {
                 child: Container(
                   height: 40,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF5F6FA),
-                    borderRadius: BorderRadius.circular(6),
+                    color: AppColors.canvas,
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: TextField(
                     controller: _searchController,
@@ -168,7 +169,7 @@ class _AdminCustomersState extends State<AdminCustomers> {
                       decoration: const BoxDecoration(
                         border: Border(
                           bottom: BorderSide(
-                            color: Color(0xFFE0E0E0),
+                            color: AppColors.divider,
                             width: 2,
                           ),
                         ),
@@ -228,7 +229,7 @@ class _AdminCustomersState extends State<AdminCustomers> {
                       child: _isLoading
                           ? const Center(
                               child: CircularProgressIndicator(
-                                color: Color(0xFFB71C1C),
+                                color: AppColors.brand,
                               ),
                             )
                           : _filteredCustomers.isEmpty
@@ -258,7 +259,7 @@ class _AdminCustomersState extends State<AdminCustomers> {
                                   decoration: const BoxDecoration(
                                     border: Border(
                                       bottom: BorderSide(
-                                        color: Color(0xFFF0F0F0),
+                                        color: AppColors.surfaceMuted,
                                       ),
                                     ),
                                   ),
@@ -271,7 +272,7 @@ class _AdminCustomersState extends State<AdminCustomers> {
                                           style: const TextStyle(
                                             fontSize: 12,
                                             fontWeight: FontWeight.bold,
-                                            color: Color(0xFF999999),
+                                            color: AppColors.inkFaint,
                                           ),
                                         ),
                                       ),
@@ -289,7 +290,7 @@ class _AdminCustomersState extends State<AdminCustomers> {
                                                     ? fullName[0].toUpperCase()
                                                     : '?',
                                                 style: const TextStyle(
-                                                  color: Color(0xFFB71C1C),
+                                                  color: AppColors.brand,
                                                   fontWeight: FontWeight.bold,
                                                   fontSize: 12,
                                                 ),
@@ -302,7 +303,7 @@ class _AdminCustomersState extends State<AdminCustomers> {
                                                 style: const TextStyle(
                                                   fontSize: 13,
                                                   fontWeight: FontWeight.w600,
-                                                  color: Color(0xFF1A1A1A),
+                                                  color: AppColors.ink,
                                                 ),
                                               ),
                                             ),
@@ -315,7 +316,7 @@ class _AdminCustomersState extends State<AdminCustomers> {
                                           customer['email'] ?? 'N/A',
                                           style: const TextStyle(
                                             fontSize: 13,
-                                            color: Color(0xFF666666),
+                                            color: AppColors.inkMuted,
                                           ),
                                         ),
                                       ),
@@ -325,7 +326,7 @@ class _AdminCustomersState extends State<AdminCustomers> {
                                           customer['contact_number'] ?? 'N/A',
                                           style: const TextStyle(
                                             fontSize: 13,
-                                            color: Color(0xFF666666),
+                                            color: AppColors.inkMuted,
                                           ),
                                         ),
                                       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:katala/theme/app_theme.dart';
 
 class Homepage extends StatelessWidget {
   final VoidCallback onRequestQuote;
@@ -29,7 +30,7 @@ class Homepage extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.w900,
-                    color: Color(0xFF1A1A1A),
+                    color: AppColors.ink,
                     height: 1.1,
                   ),
                 ),
@@ -38,7 +39,7 @@ class Homepage extends StatelessWidget {
                   'Delivering professional fire safety services and precision-engineered suppression systems for industrial, commercial, and high-risk environments.',
                   style: TextStyle(
                     fontSize: 12,
-                    color: Color(0xFF666666),
+                    color: AppColors.inkMuted,
                     height: 1.5,
                   ),
                 ),
@@ -63,10 +64,10 @@ class Homepage extends StatelessWidget {
                       ),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFB71C1C), // Katala Red
+                      backgroundColor: AppColors.brand, // Katala Red
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                   ),
@@ -95,7 +96,7 @@ class Homepage extends StatelessWidget {
                       ), // Dark Blue for separation
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                   ),
@@ -143,7 +144,7 @@ class Homepage extends StatelessWidget {
                               width: 8,
                               height: 8,
                               decoration: const BoxDecoration(
-                                color: Color(0xFFB71C1C),
+                                color: AppColors.brand,
                                 shape: BoxShape.circle,
                               ),
                             ),
@@ -153,7 +154,7 @@ class Homepage extends StatelessWidget {
                               style: TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFF1A1A1A),
+                                color: AppColors.ink,
                               ),
                             ),
                           ],
@@ -187,7 +188,7 @@ class Homepage extends StatelessWidget {
                     width: 40,
                     height: 3,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFB71C1C),
+                      color: AppColors.brand,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -200,13 +201,13 @@ class Homepage extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF1A1A1A),
+                    color: AppColors.ink,
                   ),
                 ),
                 const SizedBox(height: 8),
                 const Text(
                   'Industrial-grade fire safety products engineered for maximum reliability in critical situations.',
-                  style: TextStyle(fontSize: 12, color: Color(0xFF666666)),
+                  style: TextStyle(fontSize: 12, color: AppColors.inkMuted),
                 ),
                 const SizedBox(height: 16),
 
@@ -243,15 +244,15 @@ class Homepage extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: const BoxDecoration(
-            color: Color(0xFFF5F6FA),
+            color: AppColors.canvas,
             shape: BoxShape.circle,
           ),
-          child: Icon(icon, color: Color(0xFF666666), size: 24),
+          child: Icon(icon, color: AppColors.inkMuted, size: 24),
         ),
         const SizedBox(height: 8),
         Text(
           label,
-          style: const TextStyle(fontSize: 9, color: Color(0xFF666666)),
+          style: const TextStyle(fontSize: 9, color: AppColors.inkMuted),
           textAlign: TextAlign.center,
         ),
       ],
@@ -266,18 +267,18 @@ class Homepage extends StatelessWidget {
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: const Color(0xFFE0E0E0)),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: AppColors.divider),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, color: const Color(0xFFB71C1C), size: 24),
+            Icon(icon, color: AppColors.brand, size: 24),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
@@ -288,7 +289,7 @@ class Homepage extends StatelessWidget {
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
-                      color: Color(0xFF1A1A1A),
+                      color: AppColors.ink,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -296,7 +297,7 @@ class Homepage extends StatelessWidget {
                     desc,
                     style: const TextStyle(
                       fontSize: 11,
-                      color: Color(0xFF666666),
+                      color: AppColors.inkMuted,
                       height: 1.4,
                     ),
                   ),
@@ -308,14 +309,14 @@ class Homepage extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFFB71C1C),
+                          color: AppColors.brand,
                         ),
                       ),
                       SizedBox(width: 4),
                       Icon(
                         Icons.arrow_forward,
                         size: 12,
-                        color: Color(0xFFB71C1C),
+                        color: AppColors.brand,
                       ),
                     ],
                   ),
@@ -332,11 +333,11 @@ class Homepage extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
-      color: const Color(0xFF1A1A1A),
+      color: AppColors.ink,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const Icon(Icons.shield, color: Color(0xFFB71C1C), size: 36),
+          const Icon(Icons.shield, color: AppColors.brand, size: 36),
           const SizedBox(height: 16),
           const Text(
             'Katala Fire Protection',
@@ -356,7 +357,7 @@ class Homepage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 32),
-          const Divider(color: Color(0xFF333333)),
+          const Divider(color: AppColors.inkSoft),
           const SizedBox(height: 16),
           const Text(
             '© 2026 Katala Fire Protection Product Trading.\nAll rights reserved.',
