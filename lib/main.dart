@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 
 import 'screens/auth_page.dart';
 import 'screens/admin_layout.dart';
 import 'screens/main_layout.dart';
 import 'theme/app_theme.dart';
-import 'web/web_landing_page.dart';
-import 'web/web_home_page.dart'; // BAGONG IMPORT PARA SA BLANK PAGE
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,12 +22,10 @@ class KatalaApp extends StatelessWidget {
       theme: KataTheme.light(),
       initialRoute: '/',
       routes: {
-        '/': (context) => kIsWeb ? const WebLandingPage() : const AuthPage(),
+        '/': (context) => const AuthPage(),
         '/app': (context) => const AuthPage(),
         '/main': (context) => const MainLayout(),
         '/admin': (context) => const AdminLayout(),
-        '/web-home': (context) =>
-            const WebHomePage(), // BAGONG ROUTE PARA SA KA-GRUPO MO
       },
     );
   }
