@@ -39,22 +39,27 @@ class ProductController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        $id = DB::table('tbl_product')->insertGetId([
-            'v_productCode' => $validated['sku'] ?? null,
-            'v_productName' => $validated['name'],
-            'v_productCategory' => $validated['category'] ?? null,
-            'v_currentPrice' => $validated['price'] ?? null,
-            'v_productDescription' => $validated['description'] ?? null,
-            'v_isActive' => 1,
-        ]);
+        return DB::transaction(function () use ($validated) {
+            $id = DB::table('tbl_product')->insertGetId([
+                'v_productCode' => $validated['sku'] ?? null,
+                'v_productName' => $validated['name'],
+                'v_productCategory' => $validated['category'] ?? null,
+                'v_currentPrice' => $validated['price'] ?? null,
+                'v_productDescription' => $validated['description'] ?? null,
+                'v_isActive' => 1,
+            ], 'v_productId');
 
-        DB::table('tbl_inventory')->insert([
-            'v_productId' => $id,
-            'v_quantityOnHand' => 0,
-            'v_quantityReserved' => 0,
-        ]);
+            DB::table('tbl_inventory')->insert([
+                'v_productId' => $id,
+                'v_quantityOnHand' => 0,
+                'v_quantityReserved' => 0,
+            ]);
 
-        return response()->json(['id' => $id], 201);
+            return response()->json([
+                'message' => 'Product created successfully.',
+                'id' => $id,
+            ], 201);
+        });
     }
 
     public function update(Request $request, $id)
@@ -67,23 +72,31 @@ class ProductController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        DB::table('tbl_product')->where('v_productId', $id)->update([
-            'v_productCode' => $validated['sku'] ?? null,
-            'v_productName' => $validated['name'],
-            'v_productCategory' => $validated['category'] ?? null,
-            'v_currentPrice' => $validated['price'] ?? null,
-            'v_productDescription' => $validated['description'] ?? null,
-        ]);
+        DB::table('tbl_product')
+            ->where('v_productId', $id)
+            ->update([
+                'v_productCode' => $validated['sku'] ?? null,
+                'v_productName' => $validated['name'],
+                'v_productCategory' => $validated['category'] ?? null,
+                'v_currentPrice' => $validated['price'] ?? null,
+                'v_productDescription' => $validated['description'] ?? null,
+            ]);
 
-        return response()->json(['message' => 'Product updated.']);
+        return response()->json([
+            'message' => 'Product updated.',
+        ]);
     }
 
     public function destroy($id)
     {
-        DB::table('tbl_product')->where('v_productId', $id)->update([
-            'v_isActive' => 0,
-        ]);
+        DB::table('tbl_product')
+            ->where('v_productId', $id)
+            ->update([
+                'v_isActive' => 0,
+            ]);
 
-        return response()->json(['message' => 'Product removed.']);
+        return response()->json([
+            'message' => 'Product removed.',
+        ]);
     }
 }

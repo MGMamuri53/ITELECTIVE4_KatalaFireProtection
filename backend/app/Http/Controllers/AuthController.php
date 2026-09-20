@@ -28,7 +28,9 @@ class AuthController extends Controller
             ]);
         }
 
-        $user->forceFill(['v_lastLoginAt' => now()])->save();
+        $user->forceFill([
+            'v_lastLoginAt' => now(),
+        ])->save();
 
         $role = DB::table('tbl_role')
             ->where('v_roleId', $user->v_roleId)
@@ -51,6 +53,18 @@ class AuthController extends Controller
         ]);
 
         return DB::transaction(function () use ($validated) {
+
+            $roleId = DB::table('tbl_role')
+                ->where('v_roleName', 'Customer')
+                ->where('v_isActive', 1)
+                ->value('v_roleId');
+
+            if (!$roleId) {
+                return response()->json([
+                    'message' => 'Customer role is not configured.',
+                ], 500);
+            }
+
             $customerId = DB::table('tbl_customer')->insertGetId([
                 'v_customerType' => 'Individual',
                 'v_firstName' => $validated['first_name'],
@@ -58,11 +72,7 @@ class AuthController extends Controller
                 'v_emailAddress' => $validated['email'],
                 'v_mobileNumber' => $validated['contact_number'] ?? null,
                 'v_isActive' => 1,
-            ]);
-
-            $roleId = DB::table('tbl_role')
-                ->where('v_roleName', 'Customer')
-                ->value('v_roleId');
+            ], 'v_customerId');
 
             $user = User::create([
                 'v_roleId' => $roleId,
@@ -99,7 +109,9 @@ class AuthController extends Controller
     {
         $request->user()->currentAccessToken()?->delete();
 
-        return response()->json(['message' => 'Logged out successfully.']);
+        return response()->json([
+            'message' => 'Logged out successfully.',
+        ]);
     }
 
     private function userPayload(User $user, string $role): array

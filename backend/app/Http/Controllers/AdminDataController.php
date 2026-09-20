@@ -22,7 +22,7 @@ class AdminDataController extends Controller
                     'sr.v_projectName as project_name',
                     'sr.v_requestStatus as status',
                     'sr.v_createdAt as created_at',
-                    DB::raw("CONCAT(COALESCE(c.v_firstName, ''), ' ', COALESCE(c.v_lastName, '')) as customer_name")
+                    DB::raw('CONCAT(COALESCE(c."v_firstName", \'\'), \' \', COALESCE(c."v_lastName", \'\')) as customer_name')
                 )
                 ->get(),
         ]);
@@ -72,7 +72,7 @@ class AdminDataController extends Controller
             'v_serviceDescription' => $validated['description'] ?? null,
             'v_basePrice' => $validated['base_price'] ?? null,
             'v_isActive' => 1,
-        ]);
+        ], 'v_serviceId');
 
         return response()->json(['id' => $id], 201);
     }
@@ -119,7 +119,7 @@ class AdminDataController extends Controller
                     'sr.v_requestStatus as status',
                     'sr.v_createdAt as created_at',
                     's.v_serviceName as service',
-                    DB::raw("CONCAT(COALESCE(c.v_firstName, ''), ' ', COALESCE(c.v_lastName, '')) as customer_name"),
+                    DB::raw('CONCAT(COALESCE(c."v_firstName", \'\'), \' \', COALESCE(c."v_lastName", \'\')) as customer_name'),
                     'c.v_emailAddress as email',
                     'c.v_mobileNumber as contact_number'
                 )

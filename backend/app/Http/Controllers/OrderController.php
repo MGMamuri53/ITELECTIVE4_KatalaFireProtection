@@ -97,8 +97,11 @@ class OrderController extends Controller
             DB::table('tbl_inventory')
                 ->where('v_productId', $validated['product_id'])
                 ->update([
-                    'v_quantityAvailable' =>
-                        $quantityAvailable - $validated['quantity'],
+                    'v_quantityOnHand' =>
+                        DB::raw(
+                            'v_quantityOnHand - ' .
+                            (int) $validated['quantity']
+                        ),
                 ]);
 
             // Create delivery/pickup record
@@ -115,9 +118,8 @@ class OrderController extends Controller
             DB::table('tbl_payment')->insert([
                 'v_orderId' => $orderId,
                 'v_customerId' => $validated['customer_id'],
-                'v_paymentType' => 'Order Payment',
                 'v_paymentMethod' => $validated['payment_method'],
-                'v_paymentAmount' => $total,
+                'v_amount' => $total,
                 'v_paymentStatus' => 'Pending',
             ]);
 

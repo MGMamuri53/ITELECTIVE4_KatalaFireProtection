@@ -18,7 +18,7 @@ class ServiceRequestController extends Controller
             'name' => 'required|string',
             'email' => 'required|email',
             'contact_number' => 'nullable|string',
-            'service' => 'required|string',
+            'service_id' => 'required|integer',
             'location' => 'nullable|string',
             'details' => 'nullable|string',
         ]);
@@ -34,11 +34,23 @@ class ServiceRequestController extends Controller
             ], 403);
         }
 
+        $service = DB::table('tbl_service')
+            ->where('v_serviceId', $validated['service_id'])
+            ->where('v_isActive', 1)
+            ->first();
+
+        if (!$service) {
+            return response()->json([
+                'message' => 'Service not found or inactive.'
+            ], 404);
+        }
+
         $requestNumber = 'REQ-' . strtoupper(uniqid());
 
         $serviceRequestId = DB::table('tbl_serviceRequest')->insertGetId([
             'v_serviceRequestNumber' => $requestNumber,
             'v_customerId' => $validated['customer_id'],
+            'v_serviceId' => $validated['service_id'],
             'v_projectName' => $validated['name'],
             'v_projectLocation' => $validated['location'] ?? null,
             'v_projectRequirements' => $validated['details'] ?? null,

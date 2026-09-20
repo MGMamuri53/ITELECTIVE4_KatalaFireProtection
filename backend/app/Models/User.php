@@ -60,4 +60,9 @@ class User extends Authenticatable
             'v_isActive' => 'boolean',
         ];
     }
+
+    public function getAuthPassword()
+        {
+            return $this->v_passwordHash;
+        }
 }
