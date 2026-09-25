@@ -10,6 +10,10 @@ class AdminPortfolio extends StatefulWidget {
 }
 
 class _AdminPortfolioState extends State<AdminPortfolio> {
+  static const double maxContentWidth = 1280;
+  static const double twoColumnBreakpoint = 900;
+  static const double inlineActionBreakpoint = 420;
+
   List<Map<String, dynamic>> _allProjects = [];
   List<Map<String, dynamic>> _filteredProjects = [];
   bool _isLoading = true;
@@ -89,6 +93,10 @@ class _AdminPortfolioState extends State<AdminPortfolio> {
       builder: (context) {
         return AlertDialog(
           backgroundColor: Colors.white,
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 24,
+          ),
           title: Text(
             isEditing ? 'Edit Project' : 'Add New Project',
             style: const TextStyle(fontWeight: FontWeight.bold),
@@ -107,6 +115,7 @@ class _AdminPortfolioState extends State<AdminPortfolio> {
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
                   initialValue: selectedCategory,
+                  isExpanded: true,
                   decoration: const InputDecoration(
                     labelText: 'Sector / Category',
                     border: OutlineInputBorder(),
@@ -114,7 +123,11 @@ class _AdminPortfolioState extends State<AdminPortfolio> {
                   items: _portfolioCategories.map((category) {
                     return DropdownMenuItem(
                       value: category,
-                      child: Text(category),
+                      child: Text(
+                        category,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     );
                   }).toList(),
                   onChanged: (val) {
@@ -178,9 +191,7 @@ class _AdminPortfolioState extends State<AdminPortfolio> {
                   debugPrint(e.toString());
                 }
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.brand,
-              ),
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.brand),
               child: Text(
                 isEditing ? 'Update' : 'Save',
                 style: const TextStyle(color: Colors.white),
@@ -205,163 +216,305 @@ class _AdminPortfolioState extends State<AdminPortfolio> {
 
   @override
   Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isDesktop = constraints.maxWidth >= 1024;
+        return Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: maxContentWidth),
+            child: SizedBox(
+              width: double.infinity,
+              height: double.infinity,
+              child: Container(
+                margin: EdgeInsets.all(isDesktop ? 24.0 : 16.0),
+                padding: EdgeInsets.all(isDesktop ? 32.0 : 16.0),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Flexible(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // BINALOT SA WRAP PARA HINDI MA-CUT ANG BUTTON SA MOBILE
+                            Wrap(
+                              alignment: WrapAlignment.spaceBetween,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              spacing: 16,
+                              runSpacing: 16,
+                              children: [
+                                ConstrainedBox(
+                                  constraints: const BoxConstraints(
+                                    maxWidth: 620,
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: const [
+                                      Text(
+                                        'Project Portfolio',
+                                        style: TextStyle(
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      SizedBox(height: 4),
+                                      Text(
+                                        'Manage case studies and completed projects.',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                ElevatedButton.icon(
+                                  onPressed: () => _showProjectDialog(),
+                                  icon: const Icon(
+                                    Icons.add,
+                                    color: Colors.white,
+                                    size: 18,
+                                  ),
+                                  label: const Text(
+                                    'Add Project',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.brand,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: isDesktop ? 24 : 16),
+                            ConstrainedBox(
+                              constraints: const BoxConstraints(minHeight: 44),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: AppColors.canvas,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: TextField(
+                                  controller: _searchController,
+                                  onChanged: _filterProjects,
+                                  textAlignVertical: TextAlignVertical.center,
+                                  decoration: const InputDecoration(
+                                    hintText:
+                                        'Search Project Name, Category, or Location...',
+                                    prefixIcon: Icon(
+                                      Icons.search,
+                                      color: Colors.grey,
+                                      size: 20,
+                                    ),
+                                    border: InputBorder.none,
+                                    contentPadding: EdgeInsets.symmetric(
+                                      vertical: 10,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: LayoutBuilder(
+                        builder: (context, content) {
+                          if (_isLoading) {
+                            return const Center(
+                              child: CircularProgressIndicator(
+                                color: AppColors.brand,
+                              ),
+                            );
+                          }
+                          if (_filteredProjects.isEmpty) {
+                            return const Center(
+                              child: Text(
+                                'No projects match your search.',
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                            );
+                          }
+                          return _buildProjectList(content.maxWidth);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildProjectList(double availableWidth) {
+    final columns = availableWidth >= twoColumnBreakpoint ? 2 : 1;
+    final gap = columns > 1 ? 16.0 : 10.0;
+    final itemWidth = (availableWidth - gap * (columns - 1)) / columns;
+    final rowCount = (_filteredProjects.length + columns - 1) ~/ columns;
+
+    return ListView.separated(
+      padding: EdgeInsets.zero,
+      itemCount: columns == 1 ? _filteredProjects.length : rowCount,
+      separatorBuilder: (context, index) => SizedBox(height: gap),
+      itemBuilder: (context, index) {
+        if (columns == 1) {
+          return _buildProjectCard(_filteredProjects[index], itemWidth);
+        }
+
+        final first = _filteredProjects[index * columns];
+        final hasSecond = (index * columns + 1) < _filteredProjects.length;
+
+        return IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(
+                width: itemWidth,
+                child: _buildProjectCard(first, itemWidth),
+              ),
+              SizedBox(width: gap),
+              if (hasSecond)
+                SizedBox(
+                  width: itemWidth,
+                  child: _buildProjectCard(
+                    _filteredProjects[index * columns + 1],
+                    itemWidth,
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildProjectCard(
+    Map<String, dynamic> project,
+    double availableWidth,
+  ) {
+    final thumbnail = Container(
+      width: 50,
+      height: 50,
+      decoration: BoxDecoration(
+        color: Colors.grey[200],
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child:
+          project['image_url'] != null &&
+              project['image_url'].toString().isNotEmpty
+          ? ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: Image.network(
+                project['image_url'],
+                fit: BoxFit.cover,
+                errorBuilder: (c, e, s) =>
+                    const Icon(Icons.image, color: Colors.grey),
+              ),
+            )
+          : const Icon(Icons.image, color: Colors.grey),
+    );
+
+    final details = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          project['project_name'] ?? '',
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          '${project['category']} • ${project['location']}',
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontSize: 12, color: AppColors.inkMuted),
+        ),
+      ],
+    );
+
+    final actions = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _actionButton(
+          icon: Icons.edit_outlined,
+          color: Colors.blue,
+          tooltip: 'Edit project',
+          onPressed: () => _showProjectDialog(project: project),
+        ),
+        _actionButton(
+          icon: Icons.delete_outline,
+          color: Colors.red,
+          tooltip: 'Delete project',
+          onPressed: () => _deleteProject(project['id']),
+        ),
+      ],
+    );
+
+    final inlineActions = availableWidth >= inlineActionBreakpoint;
+
     return Container(
-      margin: const EdgeInsets.all(24.0),
-      padding: const EdgeInsets.all(32.0),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.divider),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // BINALOT SA WRAP PARA HINDI MA-CUT ANG BUTTON SA MOBILE
-          Wrap(
-            alignment: WrapAlignment.spaceBetween,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: 16,
-            runSpacing: 16,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text(
-                    'Project Portfolio',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    'Manage case studies and completed projects.',
-                    style: TextStyle(fontSize: 14, color: Colors.grey),
-                  ),
-                ],
-              ),
-              ElevatedButton.icon(
-                onPressed: () => _showProjectDialog(),
-                icon: const Icon(Icons.add, color: Colors.white, size: 18),
-                label: const Text(
-                  'Add Project',
-                  style: TextStyle(color: Colors.white),
+      child: inlineActions
+          ? Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                thumbnail,
+                const SizedBox(width: 14),
+                Expanded(child: details),
+                const SizedBox(width: 8),
+                actions,
+              ],
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    thumbnail,
+                    const SizedBox(width: 14),
+                    Expanded(child: details),
+                  ],
                 ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.brand,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              Expanded(
-                child: Container(
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: AppColors.canvas,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: TextField(
-                    controller: _searchController,
-                    onChanged: _filterProjects,
-                    decoration: const InputDecoration(
-                      hintText: 'Search Project Name, Category, or Location...',
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: Colors.grey,
-                        size: 20,
-                      ),
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(vertical: 10),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: _isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(color: AppColors.brand),
-                  )
-                : _filteredProjects.isEmpty
-                ? const Center(
-                    child: Text(
-                      'No projects match your search.',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  )
-                : ListView.builder(
-                    itemCount: _filteredProjects.length,
-                    itemBuilder: (context, index) {
-                      final project = _filteredProjects[index];
-                      return Card(
-                        color: Colors.white,
-                        margin: const EdgeInsets.only(bottom: 12),
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          side: const BorderSide(color: AppColors.divider),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: ListTile(
-                          leading: Container(
-                            width: 50,
-                            height: 50,
-                            decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child:
-                                project['image_url'] != null &&
-                                    project['image_url'].toString().isNotEmpty
-                                ? ClipRRect(
-                                    borderRadius: BorderRadius.circular(4),
-                                    child: Image.network(
-                                      project['image_url'],
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (c, e, s) => const Icon(
-                                        Icons.image,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  )
-                                : const Icon(Icons.image, color: Colors.grey),
-                          ),
-                          title: Text(
-                            project['project_name'] ?? '',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Text(
-                            '${project['category']} • ${project['location']}',
-                          ),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.edit_outlined,
-                                  color: Colors.blue,
-                                  size: 20,
-                                ),
-                                onPressed: () =>
-                                    _showProjectDialog(project: project),
-                              ),
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.delete_outline,
-                                  color: Colors.red,
-                                  size: 20,
-                                ),
-                                onPressed: () => _deleteProject(project['id']),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-          ),
-        ],
-      ),
+                const SizedBox(height: 8),
+                Align(alignment: Alignment.centerRight, child: actions),
+              ],
+            ),
+    );
+  }
+
+  Widget _actionButton({
+    required IconData icon,
+    required Color color,
+    required String tooltip,
+    required VoidCallback onPressed,
+  }) {
+    return IconButton(
+      icon: Icon(icon, color: color, size: 20),
+      tooltip: tooltip,
+      visualDensity: VisualDensity.compact,
+      padding: const EdgeInsets.all(6),
+      onPressed: onPressed,
     );
   }
 }

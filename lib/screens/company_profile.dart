@@ -12,11 +12,21 @@ class CompanyProfile extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeaderSection(),
-          _buildOriginSection(),
-          _buildMissionVision(),
-          _buildCoreValues(),
-          _buildCTASection(), // Hiwalay na Call-To-Action section
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1000),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeaderSection(),
+                  _buildOriginSection(),
+                  _buildMissionVision(),
+                  _buildCoreValues(),
+                  _buildCTASection(), // Hiwalay na Call-To-Action section
+                ],
+              ),
+            ),
+          ),
           _buildFooter(), // Updated Uniform Dark Footer
         ],
       ),
@@ -190,52 +200,64 @@ class CompanyProfile extends StatelessWidget {
             style: TextStyle(fontSize: 10, color: Colors.grey),
           ),
           const SizedBox(height: 24),
-          Row(
-            children: [
-              Expanded(
-                child: _buildValueCard(
-                  Icons.health_and_safety,
-                  'Safety',
-                  'Absolute priority in all environments.',
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildValueCard(
-                  Icons.verified,
-                  'Reliability',
-                  'Consistent performance under pressure.',
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildValueCard(
-                  Icons.military_tech,
-                  'Quality',
-                  'Excellence in materials and execution.',
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _buildValueCard(
-                  Icons.engineering,
-                  'Professionalism',
-                  'Expertise driven technical conduct.',
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildValueCard(
-                  Icons.support_agent,
-                  'Customer Care',
-                  'Responsive, dedicated support.',
-                ),
-              ),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final int columns = constraints.maxWidth >= 900
+                  ? 3
+                  : constraints.maxWidth >= 480
+                  ? 2
+                  : 1;
+              const double gridSpacing = 12;
+              final double cardWidth =
+                  (constraints.maxWidth - gridSpacing * (columns - 1)) /
+                  columns;
+              return Wrap(
+                spacing: gridSpacing,
+                runSpacing: gridSpacing,
+                children: [
+                  SizedBox(
+                    width: cardWidth,
+                    child: _buildValueCard(
+                      Icons.health_and_safety,
+                      'Safety',
+                      'Absolute priority in all environments.',
+                    ),
+                  ),
+                  SizedBox(
+                    width: cardWidth,
+                    child: _buildValueCard(
+                      Icons.verified,
+                      'Reliability',
+                      'Consistent performance under pressure.',
+                    ),
+                  ),
+                  SizedBox(
+                    width: cardWidth,
+                    child: _buildValueCard(
+                      Icons.military_tech,
+                      'Quality',
+                      'Excellence in materials and execution.',
+                    ),
+                  ),
+                  SizedBox(
+                    width: cardWidth,
+                    child: _buildValueCard(
+                      Icons.engineering,
+                      'Professionalism',
+                      'Expertise driven technical conduct.',
+                    ),
+                  ),
+                  SizedBox(
+                    width: cardWidth,
+                    child: _buildValueCard(
+                      Icons.support_agent,
+                      'Customer Care',
+                      'Responsive, dedicated support.',
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -362,23 +384,22 @@ class CompanyProfile extends StatelessWidget {
             style: TextStyle(color: Colors.grey, fontSize: 10, height: 1.5),
           ),
           const SizedBox(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 8,
+            runSpacing: 8,
             children: const [
               Text(
                 'Privacy Policy',
                 style: TextStyle(fontSize: 10, color: Colors.grey),
               ),
-              SizedBox(width: 8),
               Text('•', style: TextStyle(fontSize: 10, color: Colors.grey)),
-              SizedBox(width: 8),
               Text(
                 'Terms of Service',
                 style: TextStyle(fontSize: 10, color: Colors.grey),
               ),
-              SizedBox(width: 8),
               Text('•', style: TextStyle(fontSize: 10, color: Colors.grey)),
-              SizedBox(width: 8),
               Text(
                 'SEC & DTI Registered',
                 style: TextStyle(fontSize: 10, color: Colors.grey),

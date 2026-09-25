@@ -34,7 +34,11 @@ class _MainLayoutState extends State<MainLayout> {
       context: context,
       builder: (context) {
         return Dialog(
-          insetPadding: const EdgeInsets.all(16),
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 24,
+          ),
+          constraints: const BoxConstraints(maxWidth: 640),
           child: SingleChildScrollView(
             child: Padding(
               padding: const EdgeInsets.all(24.0),
@@ -43,21 +47,23 @@ class _MainLayoutState extends State<MainLayout> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Request a Quote',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 20,
-                          letterSpacing: -0.3,
-                          color: AppColors.ink,
+                      const Expanded(
+                        child: Text(
+                          'Request a Quote',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 20,
+                            letterSpacing: -0.3,
+                            color: AppColors.ink,
+                          ),
                         ),
                       ),
-                      InkWell(
-                        borderRadius: BorderRadius.circular(12),
-                        onTap: () => Navigator.pop(context),
-                        child: const Icon(
+                      const SizedBox(width: 8),
+                      IconButton(
+                        tooltip: 'Close',
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(
                           Icons.close,
                           color: AppColors.inkMuted,
                         ),
@@ -79,26 +85,38 @@ class _MainLayoutState extends State<MainLayout> {
                   ),
                   const SizedBox(height: 16),
 
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: emailController,
-                          decoration: const InputDecoration(
-                            labelText: 'Email Address',
-                          ),
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final emailField = TextField(
+                        controller: emailController,
+                        decoration: const InputDecoration(
+                          labelText: 'Email Address',
                         ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: TextField(
-                          controller: phoneController,
-                          decoration: const InputDecoration(
-                            labelText: 'Contact Number',
-                          ),
+                      );
+                      final phoneField = TextField(
+                        controller: phoneController,
+                        decoration: const InputDecoration(
+                          labelText: 'Contact Number',
                         ),
-                      ),
-                    ],
+                      );
+                      if (constraints.maxWidth >= 560) {
+                        return Row(
+                          children: [
+                            Expanded(child: emailField),
+                            const SizedBox(width: 16),
+                            Expanded(child: phoneField),
+                          ],
+                        );
+                      }
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          emailField,
+                          const SizedBox(height: 16),
+                          phoneField,
+                        ],
+                      );
+                    },
                   ),
                   const SizedBox(height: 16),
 
@@ -159,6 +177,7 @@ class _MainLayoutState extends State<MainLayout> {
                         }
 
                         final accessToken = await ApiClient.token();
+                        if (!context.mounted) return;
 
                         if (accessToken == null || accessToken.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -245,6 +264,11 @@ class _MainLayoutState extends State<MainLayout> {
       context: context,
       builder: (context) {
         return AlertDialog(
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 24,
+          ),
+          constraints: const BoxConstraints(maxWidth: 640),
           title: Row(
             children: [
               const Icon(Icons.info_outline, color: AppColors.brand),
@@ -304,7 +328,12 @@ class _MainLayoutState extends State<MainLayout> {
   }
 
   PreferredSizeWidget _buildCustomAppBar() {
+    final textScale = MediaQuery.textScalerOf(context).scale(16) / 16;
+    final toolbarHeight =
+        (56 + (textScale - 1).clamp(0.0, double.infinity) * 22).toDouble();
+
     return AppBar(
+      toolbarHeight: toolbarHeight,
       leading: _currentIndex == 0
           ? null
           : IconButton(
@@ -314,9 +343,11 @@ class _MainLayoutState extends State<MainLayout> {
             ),
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          Text(
+        children: [
+          const Text(
             'Katala Fire Protection',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               color: AppColors.ink,
               fontWeight: FontWeight.w700,
@@ -324,8 +355,10 @@ class _MainLayoutState extends State<MainLayout> {
               letterSpacing: -0.4,
             ),
           ),
-          Text(
+          const Text(
             'Safeguarding Lives and Assets',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               color: AppColors.inkMuted,
               fontSize: 11,
@@ -347,11 +380,7 @@ class _MainLayoutState extends State<MainLayout> {
                   color: AppColors.brandTint,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(
-                  Icons.menu,
-                  color: AppColors.brand,
-                  size: 22,
-                ),
+                child: const Icon(Icons.menu, color: AppColors.brand, size: 22),
               ),
             ),
           ),
@@ -364,29 +393,32 @@ class _MainLayoutState extends State<MainLayout> {
     return Drawer(
       backgroundColor: AppColors.nav,
       child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.shield,
-                      color: AppColors.brand,
-                      size: 24,
-                    ),
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
                   ),
-                  const SizedBox(width: 12),
-                  Column(
+                  child: const Icon(
+                    Icons.shield,
+                    color: AppColors.brand,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: const [
                       Text(
                         'Katala',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w700,
@@ -396,156 +428,153 @@ class _MainLayoutState extends State<MainLayout> {
                       ),
                       Text(
                         'Fire Protection',
-                        style: TextStyle(
-                          color: Colors.white60,
-                          fontSize: 12,
-                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(color: Colors.white60, fontSize: 12),
                       ),
                     ],
                   ),
-                  const Spacer(),
-                  InkWell(
-                    borderRadius: BorderRadius.circular(12),
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.close,
-                        color: Colors.white70,
-                        size: 18,
-                      ),
+                ),
+                const SizedBox(width: 8),
+                InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.close,
+                      color: Colors.white70,
+                      size: 18,
                     ),
                   ),
-                ],
-              ),
-            ),
-            const Divider(color: Colors.white12, height: 1),
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 12,
                 ),
-                children: [
-                  _buildMenuItem(
-                    icon: Icons.home_outlined,
-                    title: 'Homepage',
-                    index: 0,
-                  ),
-                  _buildMenuItem(
-                    icon: Icons.inventory_2_outlined,
-                    title: 'Product Catalog',
-                    index: 1,
-                  ),
-                  _buildMenuItem(
-                    icon: Icons.construction_outlined,
-                    title: 'Services',
-                    index: 2,
-                  ),
-                  _buildMenuItem(
-                    icon: Icons.cases_outlined,
-                    title: 'Project Portfolio',
-                    index: 3,
-                  ),
-                  _buildMenuItem(
-                    icon: Icons.business_outlined,
-                    title: 'Company Profile',
-                    index: 4,
-                  ),
-                  _buildMenuItem(
-                    icon: Icons.settings_outlined,
-                    title: 'Settings',
-                    index: 5,
-                  ),
-                  _buildMenuItem(
-                    icon: Icons.shopping_bag_outlined,
-                    title: 'My Orders',
-                    index: 6,
-                  ),
-                  const SizedBox(height: 12),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.pop(context); // Close drawer first
-                      _showRequestQuoteDialog(context); // Then open form
-                    },
-                    icon: const Icon(Icons.description_outlined, size: 20),
-                    label: const Text('Request Quote'),
-                  ),
-                  const SizedBox(height: 24),
-                  _buildFooterLink(
-                    Icons.privacy_tip_outlined,
+              ],
+            ),
+          ),
+          const Divider(color: Colors.white12, height: 1),
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              children: [
+                _buildMenuItem(
+                  icon: Icons.home_outlined,
+                  title: 'Homepage',
+                  index: 0,
+                ),
+                _buildMenuItem(
+                  icon: Icons.inventory_2_outlined,
+                  title: 'Product Catalog',
+                  index: 1,
+                ),
+                _buildMenuItem(
+                  icon: Icons.construction_outlined,
+                  title: 'Services',
+                  index: 2,
+                ),
+                _buildMenuItem(
+                  icon: Icons.cases_outlined,
+                  title: 'Project Portfolio',
+                  index: 3,
+                ),
+                _buildMenuItem(
+                  icon: Icons.business_outlined,
+                  title: 'Company Profile',
+                  index: 4,
+                ),
+                _buildMenuItem(
+                  icon: Icons.settings_outlined,
+                  title: 'Settings',
+                  index: 5,
+                ),
+                _buildMenuItem(
+                  icon: Icons.shopping_bag_outlined,
+                  title: 'My Orders',
+                  index: 6,
+                ),
+                const SizedBox(height: 12),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(context); // Close drawer first
+                    _showRequestQuoteDialog(context); // Then open form
+                  },
+                  icon: const Icon(Icons.description_outlined, size: 20),
+                  label: const Text('Request Quote'),
+                ),
+                const SizedBox(height: 24),
+                _buildFooterLink(
+                  Icons.privacy_tip_outlined,
+                  'Privacy Policy',
+                  () => _showLegalDialog(
+                    context,
                     'Privacy Policy',
-                    () => _showLegalDialog(
-                      context,
-                      'Privacy Policy',
-                      'Katala Fire Protection is committed to protecting your personal data...',
-                    ),
+                    'Katala Fire Protection is committed to protecting your personal data...',
                   ),
-                  _buildFooterLink(
-                    Icons.description_outlined,
+                ),
+                _buildFooterLink(
+                  Icons.description_outlined,
+                  'Terms of Service',
+                  () => _showLegalDialog(
+                    context,
                     'Terms of Service',
-                    () => _showLegalDialog(
-                      context,
-                      'Terms of Service',
-                      'By using the Katala Fire Protection application and services, you agree to abide by our operational terms...',
-                    ),
+                    'By using the Katala Fire Protection application and services, you agree to abide by our operational terms...',
                   ),
-                  _buildFooterLink(
-                    Icons.verified_outlined,
+                ),
+                _buildFooterLink(
+                  Icons.verified_outlined,
+                  'ISO Certification',
+                  () => _showLegalDialog(
+                    context,
                     'ISO Certification',
-                    () => _showLegalDialog(
-                      context,
-                      'ISO Certification',
-                      'Katala Fire Protection strictly adheres to international standards for quality management...',
-                    ),
+                    'Katala Fire Protection strictly adheres to international standards for quality management...',
                   ),
-                  _buildFooterLink(
-                    Icons.domain_outlined,
+                ),
+                _buildFooterLink(
+                  Icons.domain_outlined,
+                  'Business Registration',
+                  () => _showLegalDialog(
+                    context,
                     'Business Registration',
-                    () => _showLegalDialog(
-                      context,
-                      'Business Registration',
-                      'Katala Fire Protection Product Trading is officially registered with the SEC and DTI...',
+                    'Katala Fire Protection Product Trading is officially registered with the SEC and DTI...',
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(color: Colors.white12, height: 1),
+          InkWell(
+            onTap: () async {
+              try {
+                await ApiClient.post('/logout', {});
+              } catch (_) {
+                // Local logout still clears the stale token if the server is unavailable.
+              }
+              await ApiClient.clearSession();
+              if (context.mounted) {
+                Navigator.pushReplacementNamed(context, '/');
+              }
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Row(
+                children: const [
+                  Icon(Icons.logout, color: Colors.white54, size: 20),
+                  SizedBox(width: 12),
+                  Text(
+                    'Logout',
+                    style: TextStyle(
+                      color: Colors.white54,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
               ),
             ),
-            const Divider(color: Colors.white12, height: 1),
-            InkWell(
-              onTap: () async {
-                try {
-                  await ApiClient.post('/logout', {});
-                } catch (_) {
-                  // Local logout still clears the stale token if the server is unavailable.
-                }
-                await ApiClient.clearSession();
-                if (context.mounted) {
-                  Navigator.pushReplacementNamed(context, '/');
-                }
-              },
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Row(
-                  children: const [
-                    Icon(Icons.logout, color: Colors.white54, size: 20),
-                    SizedBox(width: 12),
-                    Text(
-                      'Logout',
-                      style: TextStyle(
-                        color: Colors.white54,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+          ),
         ],
       ),
     );
@@ -586,7 +615,9 @@ class _MainLayoutState extends State<MainLayout> {
                   title,
                   style: TextStyle(
                     fontSize: 15,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                    fontWeight: isSelected
+                        ? FontWeight.w600
+                        : FontWeight.normal,
                     color: isSelected ? AppColors.brand : Colors.white70,
                   ),
                 ),

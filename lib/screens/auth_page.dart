@@ -40,10 +40,9 @@ class _AuthPageState extends State<AuthPage> {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) =>
-                  role.toLowerCase().contains('admin')
-                      ? const AdminLayout()
-                      : const MainLayout(),
+              builder: (context) => role.toLowerCase().contains('admin')
+                  ? const AdminLayout()
+                  : const MainLayout(),
             ),
           );
         }
@@ -109,17 +108,38 @@ class _AuthPageState extends State<AuthPage> {
 
   @override
   Widget build(BuildContext context) {
+    final Size screenSize = MediaQuery.sizeOf(context);
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SingleChildScrollView(
-        child: Column(children: [_buildMobileHeader(), _buildAuthForm()]),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1000),
+              child: Column(
+                children: [
+                  _buildMobileHeader(screenSize),
+                  Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 520),
+                      child: _buildAuthForm(context),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildMobileHeader() {
+  Widget _buildMobileHeader(Size screenSize) {
+    final double headerHeight = screenSize.height < 500
+        ? 220
+        : (screenSize.width < 700 ? 300 : 320);
     return SizedBox(
-      height: 320,
+      height: headerHeight,
       width: double.infinity,
       child: Stack(
         fit: StackFit.expand,
@@ -149,11 +169,7 @@ class _AuthPageState extends State<AuthPage> {
               children: [
                 Row(
                   children: [
-                    const Icon(
-                      Icons.shield,
-                      color: AppColors.brand,
-                      size: 18,
-                    ),
+                    const Icon(Icons.shield, color: AppColors.brand, size: 18),
                     const SizedBox(width: 8),
                     const Text(
                       'Katala FireSafe',
@@ -176,7 +192,9 @@ class _AuthPageState extends State<AuthPage> {
                   decoration: BoxDecoration(
                     color: Colors.black.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.2),
+                    ),
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -222,9 +240,10 @@ class _AuthPageState extends State<AuthPage> {
     );
   }
 
-  Widget _buildAuthForm() {
+  Widget _buildAuthForm(BuildContext context) {
+    final double horizontal = MediaQuery.sizeOf(context).width < 360 ? 18 : 32;
     return Padding(
-      padding: const EdgeInsets.all(32.0),
+      padding: EdgeInsets.fromLTRB(horizontal, 32, horizontal, 32),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -257,25 +276,35 @@ class _AuthPageState extends State<AuthPage> {
           const SizedBox(height: 32),
 
           if (!_isLogin) ...[
-            Row(
-              children: [
-                Expanded(
-                  child: _buildTextField(
-                    'First Name',
-                    'Jane',
-                    _firstNameController,
+            if (_wideEnough(context))
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildTextField(
+                      'First Name',
+                      'Jane',
+                      _firstNameController,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildTextField(
-                    'Last Name',
-                    'Doe',
-                    _lastNameController,
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _buildTextField(
+                      'Last Name',
+                      'Doe',
+                      _lastNameController,
+                    ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              )
+            else
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildTextField('First Name', 'Jane', _firstNameController),
+                  const SizedBox(height: 16),
+                  _buildTextField('Last Name', 'Doe', _lastNameController),
+                ],
+              ),
             const SizedBox(height: 16),
           ],
 
@@ -298,27 +327,47 @@ class _AuthPageState extends State<AuthPage> {
           ],
 
           if (!_isLogin) ...[
-            Row(
-              children: [
-                Expanded(
-                  child: _buildTextField(
+            if (_wideEnough(context))
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildTextField(
+                      'Password',
+                      '••••••••',
+                      _passwordController,
+                      isPassword: true,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _buildTextField(
+                      'Confirm Password',
+                      '••••••••',
+                      _confirmPasswordController,
+                      isPassword: true,
+                    ),
+                  ),
+                ],
+              )
+            else
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildTextField(
                     'Password',
                     '••••••••',
                     _passwordController,
                     isPassword: true,
                   ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildTextField(
+                  const SizedBox(height: 16),
+                  _buildTextField(
                     'Confirm Password',
                     '••••••••',
                     _confirmPasswordController,
                     isPassword: true,
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
           ] else ...[
             _buildTextField(
               'Password',
@@ -435,11 +484,12 @@ class _AuthPageState extends State<AuthPage> {
           obscureText: isPassword,
           keyboardType: keyboardType,
           style: const TextStyle(fontSize: 14),
-          decoration: InputDecoration(
-            hintText: hint,
-          ),
+          decoration: InputDecoration(hintText: hint),
         ),
       ],
     );
   }
+
+  bool _wideEnough(BuildContext context) =>
+      MediaQuery.sizeOf(context).width >= 560;
 }

@@ -87,37 +87,90 @@ class _WebLandingPageState extends State<WebLandingPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width > 800;
-
     return Scaffold(
       backgroundColor: Colors.white,
-      body: isDesktop
-          ? Row(
-              children: [
-                Expanded(child: _buildBrandingSide()),
-                Expanded(
-                  child: Center(
-                    child: SingleChildScrollView(child: _buildAuthForm()),
-                  ),
-                ),
-              ],
-            )
-          : SingleChildScrollView(
-              child: Column(
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            const splitLayoutBreakpoint = 900.0;
+            const compactLayoutBreakpoint = 600.0;
+            final isSplitLayout = constraints.maxWidth >= splitLayoutBreakpoint;
+            final isCompact = constraints.maxWidth < compactLayoutBreakpoint;
+            final horizontalPadding = isCompact ? 20.0 : 32.0;
+
+            if (isSplitLayout) {
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // TINANGGAL YUNG SIZEDBOX HEIGHT 300 PARA HINDI MA-CUT ANG BUTTON
-                  _buildBrandingSide(),
-                  _buildAuthForm(),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: constraints.maxHeight,
+                        ),
+                        child: Center(
+                          child: _buildBrandingSide(
+                            horizontalPadding: 40,
+                            verticalPadding: 48,
+                            titleSize: 40,
+                            isCompact: false,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          minHeight: constraints.maxHeight,
+                        ),
+                        child: Center(
+                          child: _buildAuthForm(
+                            horizontalPadding: 40,
+                            isCompact: false,
+                            stackNameFields: false,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            }
+
+            return SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  _buildBrandingSide(
+                    horizontalPadding: horizontalPadding,
+                    verticalPadding: isCompact ? 32 : 40,
+                    titleSize: isCompact ? 30 : 36,
+                    isCompact: isCompact,
+                  ),
+                  _buildAuthForm(
+                    horizontalPadding: horizontalPadding,
+                    isCompact: isCompact,
+                    stackNameFields: isCompact,
+                  ),
                 ],
               ),
-            ),
+            );
+          },
+        ),
+      ),
     );
   }
 
-  // LEFT SIDE / TOP SIDE: BRANDING AT BUTTON PARA SA MOBILE
-  Widget _buildBrandingSide() {
+  Widget _buildBrandingSide({
+    required double horizontalPadding,
+    required double verticalPadding,
+    required double titleSize,
+    required bool isCompact,
+  }) {
     return Container(
-      width: double.infinity, // PARA PUNO ANG SCREEN LAPAD SA MOBILE
+      width: double.infinity,
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -125,58 +178,58 @@ class _WebLandingPageState extends State<WebLandingPage> {
           colors: [AppColors.ink, Color(0xFF2A1416)],
         ),
       ),
-      padding: const EdgeInsets.symmetric(
-        horizontal: 40,
-        vertical: 60,
-      ), // INAYOS ANG PADDING
+      padding: EdgeInsets.symmetric(
+        horizontal: horizontalPadding,
+        vertical: verticalPadding,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(14),
+            padding: EdgeInsets.all(isCompact ? 12 : 14),
             decoration: BoxDecoration(
               color: AppColors.brandTint.withValues(alpha: 0.14),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: AppColors.brand.withValues(alpha: 0.4),
-              ),
+              border: Border.all(color: AppColors.brand.withValues(alpha: 0.4)),
             ),
-            child: const Icon(Icons.shield, color: AppColors.brand, size: 44),
+            child: Icon(
+              Icons.shield,
+              color: AppColors.brand,
+              size: isCompact ? 36 : 44,
+            ),
           ),
-          const SizedBox(height: 28),
-          const Text(
+          SizedBox(height: isCompact ? 20 : 28),
+          Text(
             'Katala Fire Protection\nWeb Portal',
             style: TextStyle(
-              fontSize: 40,
+              fontSize: titleSize,
               fontWeight: FontWeight.w800,
               letterSpacing: -1,
               color: Colors.white,
               height: 1.1,
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: isCompact ? 12 : 16),
           const Text(
             'Access your dashboard, manage quotations, and review safety compliance reports from your browser.',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.white70,
-              height: 1.5,
-            ),
+            style: TextStyle(fontSize: 16, color: Colors.white70, height: 1.5),
           ),
-          const SizedBox(height: 48),
-
-          // BUTTON PARA PUMUNTA SA MOBILE VERSION
+          SizedBox(height: isCompact ? 28 : 48),
           OutlinedButton.icon(
             onPressed: () => Navigator.pushNamed(context, '/app'),
             icon: const Icon(Icons.smartphone, color: Colors.white),
-            label: const Text(
-              'Go to Mobile Version',
-              style: TextStyle(color: Colors.white),
+            label: Text(
+              isCompact ? 'Open Mobile App' : 'Go to Mobile Version',
+              style: const TextStyle(color: Colors.white),
             ),
             style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.white,
               side: const BorderSide(color: Colors.white70),
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              padding: EdgeInsets.symmetric(
+                horizontal: isCompact ? 16 : 24,
+                vertical: 16,
+              ),
             ),
           ),
         ],
@@ -184,19 +237,25 @@ class _WebLandingPageState extends State<WebLandingPage> {
     );
   }
 
-  // RIGHT SIDE / BOTTOM SIDE: YUNG FORM PARA SA SIGN UP AT LOGIN
-  Widget _buildAuthForm() {
+  Widget _buildAuthForm({
+    required double horizontalPadding,
+    required bool isCompact,
+    required bool stackNameFields,
+  }) {
     return Container(
       constraints: const BoxConstraints(maxWidth: 450),
-      padding: const EdgeInsets.all(32.0),
+      padding: EdgeInsets.symmetric(
+        horizontal: horizontalPadding,
+        vertical: isCompact ? 24 : 32,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             _isLogin ? 'Web Sign In' : 'Create Web Account',
-            style: const TextStyle(
-              fontSize: 28,
+            style: TextStyle(
+              fontSize: isCompact ? 24 : 28,
               fontWeight: FontWeight.w900,
               color: AppColors.ink,
             ),
@@ -209,37 +268,39 @@ class _WebLandingPageState extends State<WebLandingPage> {
             style: const TextStyle(fontSize: 14, color: AppColors.inkMuted),
           ),
           const SizedBox(height: 32),
-
           if (!_isLogin) ...[
-            Row(
-              children: [
-                Expanded(
-                  child: _buildTextField(
-                    'First Name',
-                    'Jane',
-                    _firstNameController,
+            if (stackNameFields) ...[
+              _buildTextField('First Name', 'Jane', _firstNameController),
+              const SizedBox(height: 16),
+              _buildTextField('Last Name', 'Doe', _lastNameController),
+            ] else
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildTextField(
+                      'First Name',
+                      'Jane',
+                      _firstNameController,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildTextField(
-                    'Last Name',
-                    'Doe',
-                    _lastNameController,
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _buildTextField(
+                      'Last Name',
+                      'Doe',
+                      _lastNameController,
+                    ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
             const SizedBox(height: 16),
           ],
-
           _buildTextField(
             'Email Address',
             'jane.doe@company.com',
             _emailController,
           ),
           const SizedBox(height: 16),
-
           if (!_isLogin) ...[
             _buildTextField(
               'Contact Number',
@@ -248,7 +309,6 @@ class _WebLandingPageState extends State<WebLandingPage> {
             ),
             const SizedBox(height: 16),
           ],
-
           _buildTextField(
             'Password',
             '••••••••',
@@ -256,7 +316,6 @@ class _WebLandingPageState extends State<WebLandingPage> {
             isPassword: true,
           ),
           const SizedBox(height: 16),
-
           if (!_isLogin) ...[
             _buildTextField(
               'Confirm Password',
@@ -266,15 +325,14 @@ class _WebLandingPageState extends State<WebLandingPage> {
             ),
             const SizedBox(height: 24),
           ],
-
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
               onPressed: _isLoading ? null : _handleAuth,
               child: _isLoading
                   ? const SizedBox(
-                      height: 20,
                       width: 20,
+                      height: 20,
                       child: CircularProgressIndicator(
                         color: Colors.white,
                         strokeWidth: 2,
@@ -283,19 +341,22 @@ class _WebLandingPageState extends State<WebLandingPage> {
                   : Text(_isLogin ? 'Sign In' : 'Sign Up'),
             ),
           ),
-          const SizedBox(height: 24),
-
-          Center(
-            child: InkWell(
-              onTap: () => setState(() {
-                _isLogin = !_isLogin;
-                _passwordController.clear();
-                _confirmPasswordController.clear();
-              }),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: TextButton(
+              onPressed: () {
+                setState(() {
+                  _isLogin = !_isLogin;
+                  _passwordController.clear();
+                  _confirmPasswordController.clear();
+                });
+              },
               child: Text(
                 _isLogin
                     ? "Don't have an account? Sign up here."
                     : "Already have an account? Sign in here.",
+                textAlign: TextAlign.center,
                 style: const TextStyle(
                   color: AppColors.brand,
                   fontWeight: FontWeight.bold,
@@ -331,9 +392,7 @@ class _WebLandingPageState extends State<WebLandingPage> {
           controller: controller,
           obscureText: isPassword,
           style: const TextStyle(fontSize: 14),
-          decoration: InputDecoration(
-            hintText: hint,
-          ),
+          decoration: InputDecoration(hintText: hint),
         ),
       ],
     );

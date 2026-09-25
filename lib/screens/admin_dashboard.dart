@@ -10,6 +10,11 @@ class AdminDashboard extends StatefulWidget {
 }
 
 class _AdminDashboardState extends State<AdminDashboard> {
+  static const double maxContentWidth = 1400;
+  static const double splitBreakpoint = 900;
+  static const double twoColumnBreakpoint = 560;
+  static const double fourColumnBreakpoint = 1100;
+
   int _totalProducts = 0;
   int _totalServices = 0;
   int _pendingRequests = 0;
@@ -45,7 +50,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
         setState(() => _hasError = true);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Unable to load dashboard data. Please check your internet connection.'),
+            content: Text(
+              'Unable to load dashboard data. Please check your internet connection.',
+            ),
             backgroundColor: Colors.orange,
           ),
         );
@@ -59,140 +66,168 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    // ETO ANG LOGIC PARA MALAMAN KUNG NAKA-MOBILE O DESKTOP
-    final isDesktop = MediaQuery.of(context).size.width > 800;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isRoomy = constraints.maxWidth >= 1024;
+        return SingleChildScrollView(
+          padding: EdgeInsets.all(isRoomy ? 32.0 : 16.0),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: maxContentWidth),
+              child: LayoutBuilder(
+                builder: (context, content) {
+                  final gap = content.maxWidth >= twoColumnBreakpoint
+                      ? 16.0
+                      : 12.0;
+                  final sectionGap = isRoomy ? 32.0 : 20.0;
+                  final isSplit = content.maxWidth >= splitBreakpoint;
 
-    return SingleChildScrollView(
-      padding: EdgeInsets.all(
-        isDesktop ? 32.0 : 16.0,
-      ), // Mas maliit na padding pag mobile
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildHeader(),
+                      SizedBox(height: sectionGap),
+                      _isLoading
+                          ? const Center(
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(vertical: 48),
+                                child: CircularProgressIndicator(
+                                  color: AppColors.brand,
+                                ),
+                              ),
+                            )
+                          : _hasError
+                          ? _buildErrorState()
+                          : _buildStatsGrid(content.maxWidth, gap),
+                      if (!_hasError) ...[
+                        SizedBox(height: sectionGap),
+                        if (isSplit)
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                flex: 2,
+                                child: _buildPlaceholderChart(
+                                  'Request Volume Trend',
+                                ),
+                              ),
+                              SizedBox(width: gap),
+                              Expanded(
+                                flex: 1,
+                                child: _buildPlaceholderChart(
+                                  'Status Distribution',
+                                ),
+                              ),
+                            ],
+                          )
+                        else
+                          Column(
+                            children: [
+                              _buildPlaceholderChart('Request Volume Trend'),
+                              SizedBox(height: gap),
+                              _buildPlaceholderChart('Status Distribution'),
+                            ],
+                          ),
+                        SizedBox(height: sectionGap),
+                        if (isSplit)
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                flex: 2,
+                                child: _buildPlaceholderTable(
+                                  'Upcoming Appointments',
+                                ),
+                              ),
+                              SizedBox(width: gap),
+                              Expanded(flex: 1, child: _buildRecentActivity()),
+                            ],
+                          )
+                        else
+                          Column(
+                            children: [
+                              _buildPlaceholderTable('Upcoming Appointments'),
+                              SizedBox(height: gap),
+                              _buildRecentActivity(),
+                            ],
+                          ),
+                      ],
+                    ],
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildErrorState() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(32),
+      decoration: KataUi.cardBox(),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          _buildHeader(),
-          const SizedBox(height: 32),
-          _isLoading
-              ? const Center(
-                  child: CircularProgressIndicator(color: AppColors.brand),
-                )
-              : _hasError
-              ? Center(
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.cloud_off,
-                        size: 64,
-                        color: Colors.grey[400],
-                      ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Unable to load dashboard data',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.inkSoft,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Please check your internet connection and try again',
-                        style: TextStyle(color: Colors.grey),
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _fetchDashboardStats,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.brand,
-                        ),
-                        child: const Text(
-                          'Retry',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              : _buildStatsRow(isDesktop), // Ipinasa natin ang isDesktop dito
-          if (!_hasError) const SizedBox(height: 32),
-
-          // CHARTS SECTION (Magiging patayo pag mobile)
-          if (!_hasError) ...[
-            isDesktop
-                ? Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        flex: 2,
-                        child: _buildPlaceholderChart('Request Volume Trend'),
-                      ),
-                      const SizedBox(width: 24),
-                      Expanded(
-                        flex: 1,
-                        child: _buildPlaceholderChart('Status Distribution'),
-                      ),
-                    ],
-                  )
-                : Column(
-                    children: [
-                      _buildPlaceholderChart('Request Volume Trend'),
-                      const SizedBox(height: 16),
-                      _buildPlaceholderChart('Status Distribution'),
-                    ],
-                  ),
-            const SizedBox(height: 32),
-
-            // TABLES & RECENT ACTIVITY SECTION (Magiging patayo pag mobile)
-            isDesktop
-                ? Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        flex: 2,
-                        child: _buildPlaceholderTable('Upcoming Appointments'),
-                      ),
-                      const SizedBox(width: 24),
-                      Expanded(flex: 1, child: _buildRecentActivity()),
-                    ],
-                  )
-                : Column(
-                    children: [
-                      _buildPlaceholderTable('Upcoming Appointments'),
-                      const SizedBox(height: 16),
-                      _buildRecentActivity(),
-                    ],
-                  ),
-          ],
+          Icon(Icons.cloud_off, size: 64, color: Colors.grey[400]),
+          const SizedBox(height: 16),
+          const Text(
+            'Unable to load dashboard data',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppColors.inkSoft,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Please check your internet connection and try again',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.grey),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: _fetchDashboardStats,
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.brand),
+            child: const Text('Retry', style: TextStyle(color: Colors.white)),
+          ),
         ],
       ),
     );
   }
 
   Widget _buildHeader() {
-    // GINAWANG WRAP PARA BUMABA ANG BUTTON KUNG HINDI KASYA SA MOBILE
     return Wrap(
       alignment: WrapAlignment.spaceBetween,
       crossAxisAlignment: WrapCrossAlignment.center,
       spacing: 16,
       runSpacing: 16,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
-            Text(
-              'System Overview',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w700,
-                letterSpacing: -0.5,
-                color: AppColors.ink,
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 640),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Text(
+                'System Overview',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -0.5,
+                  color: AppColors.ink,
+                ),
               ),
-            ),
-            SizedBox(height: 4),
-            Text(
-              'High-level operational metrics and recent activity for Katala Fire Protection.',
-              style: TextStyle(fontSize: 14, color: AppColors.inkMuted),
-            ),
-          ],
+              SizedBox(height: 4),
+              Text(
+                'High-level operational metrics and recent activity for Katala Fire Protection.',
+                style: TextStyle(fontSize: 14, color: AppColors.inkMuted),
+              ),
+            ],
+          ),
         ),
         OutlinedButton.icon(
           onPressed: _fetchDashboardStats,
@@ -203,69 +238,72 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  Widget _buildStatsRow(bool isDesktop) {
-    // KAPAG NAKA DESKTOP, NAKATABI-TABI (Row)
-    if (isDesktop) {
-      return Row(
-        children: [
-          Expanded(
-            child: _buildStatCard(
-              'TOTAL ACTIVE PRODUCTS',
-              _totalProducts.toString(),
-              Icons.inventory_2_outlined,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: _buildStatCard(
-              'TOTAL SERVICES',
-              _totalServices.toString(),
-              Icons.design_services_outlined,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: _buildStatCard(
-              'PENDING SERVICE REQS',
-              _pendingRequests.toString(),
-              Icons.description_outlined,
-              isHighlight: true,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: _buildStatCard('TOTAL CUSTOMERS', '0', Icons.people_outline),
-          ),
-        ],
-      );
-    }
-    // KAPAG NAKA MOBILE, MAGPAPATONG-PATONG (Column) PARA DI MA-SQUEEZE
-    else {
+  Widget _buildStatsGrid(double availableWidth, double gap) {
+    final columns = availableWidth >= fourColumnBreakpoint
+        ? 4
+        : availableWidth >= twoColumnBreakpoint
+        ? 2
+        : 1;
+
+    final cards = <Widget>[
+      _buildStatCard(
+        'TOTAL ACTIVE PRODUCTS',
+        _totalProducts.toString(),
+        Icons.inventory_2_outlined,
+      ),
+      _buildStatCard(
+        'TOTAL SERVICES',
+        _totalServices.toString(),
+        Icons.design_services_outlined,
+      ),
+      _buildStatCard(
+        'PENDING SERVICE REQS',
+        _pendingRequests.toString(),
+        Icons.description_outlined,
+        isHighlight: true,
+      ),
+      _buildStatCard('TOTAL CUSTOMERS', '0', Icons.people_outline),
+    ];
+
+    if (columns <= 1) {
       return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildStatCard(
-            'TOTAL ACTIVE PRODUCTS',
-            _totalProducts.toString(),
-            Icons.inventory_2_outlined,
-          ),
-          const SizedBox(height: 16),
-          _buildStatCard(
-            'TOTAL SERVICES',
-            _totalServices.toString(),
-            Icons.design_services_outlined,
-          ),
-          const SizedBox(height: 16),
-          _buildStatCard(
-            'PENDING SERVICE REQS',
-            _pendingRequests.toString(),
-            Icons.description_outlined,
-            isHighlight: true,
-          ),
-          const SizedBox(height: 16),
-          _buildStatCard('TOTAL CUSTOMERS', '0', Icons.people_outline),
+          for (var i = 0; i < cards.length; i++) ...[
+            if (i > 0) SizedBox(height: gap),
+            cards[i],
+          ],
         ],
       );
     }
+
+    final rows = <Widget>[];
+    for (var i = 0; i < cards.length; i += columns) {
+      final end = (i + columns) > cards.length ? cards.length : i + columns;
+      final rowChildren = <Widget>[];
+      for (var j = i; j < end; j++) {
+        if (j > i) rowChildren.add(SizedBox(width: gap));
+        rowChildren.add(Expanded(child: cards[j]));
+      }
+      rows.add(
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: rowChildren,
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (var i = 0; i < rows.length; i++) ...[
+          if (i > 0) SizedBox(height: gap),
+          rows[i],
+        ],
+      ],
+    );
   }
 
   Widget _buildStatCard(
@@ -275,7 +313,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
     bool isHighlight = false,
   }) {
     return Container(
-      width: double.infinity, // PARA SAKUPIN ANG BUONG LAPAD SA MOBILE
+      width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -295,13 +333,16 @@ class _AdminDashboardState extends State<AdminDashboard> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: Text(
                   title,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
@@ -310,25 +351,30 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   ),
                 ),
               ),
+              const SizedBox(width: 8),
               KataUi.iconTile(
                 icon,
                 size: 16,
                 background: isHighlight
                     ? AppColors.brandTint
                     : AppColors.surfaceMuted,
-                foreground:
-                    isHighlight ? AppColors.brand : AppColors.inkMuted,
+                foreground: isHighlight ? AppColors.brand : AppColors.inkMuted,
               ),
             ],
           ),
           const SizedBox(height: 12),
-          Text(
-            count,
-            style: const TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.5,
-              color: AppColors.ink,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              count,
+              maxLines: 1,
+              style: const TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.5,
+                color: AppColors.ink,
+              ),
             ),
           ),
         ],
@@ -343,6 +389,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
       decoration: KataUi.cardBox(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           const Text(
             'Recent Activity',
@@ -381,6 +428,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
                             'New quotation requested by ${activity['customer_name']}',
@@ -396,6 +444,8 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                   10,
                                 ) ??
                                 '',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               fontSize: 10,
                               color: AppColors.inkMuted,
@@ -415,12 +465,13 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
   Widget _buildPlaceholderChart(String title) {
     return Container(
-      height: 250,
+      constraints: const BoxConstraints(minHeight: 200),
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(20),
       decoration: KataUi.cardBox(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             title,
@@ -430,10 +481,14 @@ class _AdminDashboardState extends State<AdminDashboard> {
               letterSpacing: -0.2,
             ),
           ),
-          const Expanded(
-            child: Center(
+          const SizedBox(height: 32),
+          SizedBox(
+            width: double.infinity,
+            child: const Padding(
+              padding: EdgeInsets.symmetric(vertical: 32),
               child: Text(
                 'Chart Visualization UI Pending',
+                textAlign: TextAlign.center,
                 style: TextStyle(color: AppColors.inkMuted),
               ),
             ),
@@ -445,12 +500,13 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
   Widget _buildPlaceholderTable(String title) {
     return Container(
-      height: 250,
+      constraints: const BoxConstraints(minHeight: 200),
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(20),
       decoration: KataUi.cardBox(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             title,
@@ -460,10 +516,14 @@ class _AdminDashboardState extends State<AdminDashboard> {
               letterSpacing: -0.2,
             ),
           ),
-          const Expanded(
-            child: Center(
+          const SizedBox(height: 32),
+          const SizedBox(
+            width: double.infinity,
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 32),
               child: Text(
                 'Table UI Pending',
+                textAlign: TextAlign.center,
                 style: TextStyle(color: AppColors.inkMuted),
               ),
             ),

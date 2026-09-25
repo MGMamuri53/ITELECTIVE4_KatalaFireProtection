@@ -84,6 +84,11 @@ class _ProductCatalogState extends State<ProductCatalog> {
             double totalPrice = price * quantity;
 
             return Dialog(
+              insetPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 24,
+              ),
+              constraints: const BoxConstraints(maxWidth: 600),
               child: SingleChildScrollView(
                 child: Padding(
                   padding: const EdgeInsets.all(24.0),
@@ -94,12 +99,16 @@ class _ProductCatalogState extends State<ProductCatalog> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            sku,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.brand,
-                              fontSize: 12,
+                          Flexible(
+                            child: Text(
+                              sku,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.brand,
+                                fontSize: 12,
+                              ),
                             ),
                           ),
                           InkWell(
@@ -182,14 +191,18 @@ class _ProductCatalogState extends State<ProductCatalog> {
                       const SizedBox(height: 16),
                       const Divider(),
                       // QUANTITY SELECTOR
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      Wrap(
+                        alignment: WrapAlignment.spaceBetween,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 12,
+                        runSpacing: 8,
                         children: [
                           const Text(
                             'Quantity',
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                           Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
                               IconButton(
                                 onPressed: () {
@@ -334,307 +347,327 @@ class _ProductCatalogState extends State<ProductCatalog> {
         return StatefulBuilder(
           builder: (context, setCheckoutState) {
             return Dialog(
-              insetPadding: const EdgeInsets.all(0), // Full screen feel
+              insetPadding: const EdgeInsets.all(0),
               backgroundColor: Colors.white,
-              child: SafeArea(
-                child: Column(
-                  children: [
-                    // Header
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: const BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(color: AppColors.surfaceMuted),
+              child: AnimatedPadding(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.viewInsetsOf(context).bottom,
+                ),
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOut,
+                child: SafeArea(
+                  child: Column(
+                    children: [
+                      // Header
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: const BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(color: AppColors.surfaceMuted),
+                          ),
                         ),
-                      ),
-                      child: Row(
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.arrow_back),
-                            onPressed: () {
-                              Navigator.of(
-                                context,
-                                rootNavigator: true,
-                              ).pushNamedAndRemoveUntil(
-                                '/main',
-                                (route) => false,
-                              );
-                            },
-                          ),
-                          const Expanded(
-                            child: Text(
-                              'Checkout',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // Form Content
-                    Expanded(
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.all(24),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        child: Row(
                           children: [
-                            const Text(
-                              'Order Summary',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                                color: AppColors.brand,
-                              ),
+                            IconButton(
+                              icon: const Icon(Icons.arrow_back),
+                              onPressed: () => Navigator.of(context).pop(),
                             ),
-                            const SizedBox(height: 12),
-                            Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: AppColors.canvas,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Column(
-                                children: [
-                                  Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              product['v_productName'] ??
-                                                  'Unknown Product',
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              product['v_productDescription'] ??
-                                                  'No description available',
-                                              style: const TextStyle(
-                                                fontSize: 13,
-                                                color: Colors.grey,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Text('x$quantity'),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 8),
-                                  const Divider(),
-                                  const SizedBox(height: 8),
-                                  _buildDetailRow('Fulfillment', fulfillment),
-                                  const SizedBox(height: 8),
-                                  _buildDetailRow(
-                                    'Total Due',
-                                    '₱ ${totalPrice.toStringAsFixed(2)}',
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 24),
-
-                            const Text(
-                              'Contact Information',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            TextField(
-                              controller: nameController,
-                              decoration: const InputDecoration(
-                                labelText: 'Full Name',
-                                border: OutlineInputBorder(),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            TextField(
-                              controller: emailController,
-                              decoration: const InputDecoration(
-                                labelText: 'Email Address',
-                                border: OutlineInputBorder(),
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            TextField(
-                              controller: phoneController,
-                              decoration: const InputDecoration(
-                                labelText: 'Phone Number',
-                                border: OutlineInputBorder(),
-                              ),
-                            ),
-
-                            if (fulfillment == 'Delivery') ...[
-                              const SizedBox(height: 16),
-                              TextField(
-                                controller: addressController,
-                                maxLines: 2,
-                                decoration: const InputDecoration(
-                                  labelText: 'Delivery Address',
-                                  border: OutlineInputBorder(),
-                                ),
-                              ),
-                            ],
-
-                            const SizedBox(height: 24),
-                            const Text(
-                              'Payment Method',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            DropdownButtonFormField<String>(
-                              initialValue: paymentMethod,
-                              decoration: const InputDecoration(
-                                border: OutlineInputBorder(),
-                              ),
-                              items:
-                                  ['Bank Transfer', 'Cash on Delivery/Pickup']
-                                      .map(
-                                        (m) => DropdownMenuItem(
-                                          value: m,
-                                          child: Text(m),
-                                        ),
-                                      )
-                                      .toList(),
-                              onChanged: (val) {
-                                if (val != null) {
-                                  setCheckoutState(() => paymentMethod = val);
-                                }
-                              },
-                            ),
-                            if (showValidationError) ...[
-                              const SizedBox(height: 12),
-                              const Text(
-                                'Please fill in your Name and Phone Number.',
+                            const Expanded(
+                              child: Text(
+                                'Checkout',
                                 style: TextStyle(
-                                  color: Colors.red,
+                                  fontSize: 18,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                            ],
+                            ),
                           ],
                         ),
                       ),
-                    ),
 
-                    // Place Order Button
-                    Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.05),
-                            blurRadius: 10,
-                            offset: const Offset(0, -5),
-                          ),
-                        ],
-                      ),
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: isPlacingOrder
-                              ? null
-                              : () async {
-                                  if (nameController.text.isEmpty ||
-                                      phoneController.text.isEmpty) {
-                                    setCheckoutState(() {
-                                      showValidationError = true;
-                                    });
-                                    return;
-                                  }
-                                  setCheckoutState(() {
-                                    isPlacingOrder = true;
-                                  });
-
-                                  try {
-                                    final accessToken =
-                                        await ApiClient.token();
-
-                                    if (accessToken == null ||
-                                        accessToken.isEmpty) {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        const SnackBar(
-                                          content: Text(
-                                            'Please sign in before placing an order.',
-                                          ),
-                                          backgroundColor: Colors.red,
+                      // Form Content
+                      Expanded(
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.all(24),
+                          child: Center(
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 720),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Order Summary',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                      color: AppColors.brand,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Container(
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.canvas,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    product['v_productName'] ??
+                                                        'Unknown Product',
+                                                    style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 4),
+                                                  Text(
+                                                    product['v_productDescription'] ??
+                                                        'No description available',
+                                                    style: const TextStyle(
+                                                      fontSize: 13,
+                                                      color: Colors.grey,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Text('x$quantity'),
+                                          ],
                                         ),
-                                      );
+                                        const SizedBox(height: 8),
+                                        const Divider(),
+                                        const SizedBox(height: 8),
+                                        _buildDetailRow(
+                                          'Fulfillment',
+                                          fulfillment,
+                                        ),
+                                        const SizedBox(height: 8),
+                                        _buildDetailRow(
+                                          'Total Due',
+                                          '₱ ${totalPrice.toStringAsFixed(2)}',
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 24),
+
+                                  const Text(
+                                    'Contact Information',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  TextField(
+                                    controller: nameController,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Full Name',
+                                      border: OutlineInputBorder(),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  TextField(
+                                    controller: emailController,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Email Address',
+                                      border: OutlineInputBorder(),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  TextField(
+                                    controller: phoneController,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Phone Number',
+                                      border: OutlineInputBorder(),
+                                    ),
+                                  ),
+
+                                  if (fulfillment == 'Delivery') ...[
+                                    const SizedBox(height: 16),
+                                    TextField(
+                                      controller: addressController,
+                                      maxLines: 2,
+                                      decoration: const InputDecoration(
+                                        labelText: 'Delivery Address',
+                                        border: OutlineInputBorder(),
+                                      ),
+                                    ),
+                                  ],
+
+                                  const SizedBox(height: 24),
+                                  const Text(
+                                    'Payment Method',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  DropdownButtonFormField<String>(
+                                    initialValue: paymentMethod,
+                                    decoration: const InputDecoration(
+                                      border: OutlineInputBorder(),
+                                    ),
+                                    items:
+                                        [
+                                              'Bank Transfer',
+                                              'Cash on Delivery/Pickup',
+                                            ]
+                                            .map(
+                                              (m) => DropdownMenuItem(
+                                                value: m,
+                                                child: Text(m),
+                                              ),
+                                            )
+                                            .toList(),
+                                    onChanged: (val) {
+                                      if (val != null) {
+                                        setCheckoutState(
+                                          () => paymentMethod = val,
+                                        );
+                                      }
+                                    },
+                                  ),
+                                  if (showValidationError) ...[
+                                    const SizedBox(height: 12),
+                                    const Text(
+                                      'Please fill in your Name and Phone Number.',
+                                      style: TextStyle(
+                                        color: Colors.red,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // Place Order Button
+                      Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, -5),
+                            ),
+                          ],
+                        ),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: isPlacingOrder
+                                ? null
+                                : () async {
+                                    if (nameController.text.isEmpty ||
+                                        phoneController.text.isEmpty) {
                                       setCheckoutState(() {
-                                        isPlacingOrder = false;
+                                        showValidationError = true;
                                       });
                                       return;
                                     }
-
-                                    final response = await http.post(
-                                      Uri.parse(
-                                        'http://127.0.0.1:8000/api/orders',
-                                      ),
-                                      headers: {
-                                        'Content-Type': 'application/json',
-                                        'Accept': 'application/json',
-                                        'Authorization':
-                                            'Bearer $accessToken',
-                                      },
-                                      body: jsonEncode({
-                                        'product_id': product['v_productId'],
-                                        'customer_name': nameController.text,
-                                        'email': emailController.text,
-                                        'contact_number': phoneController.text,
-                                        'address': addressController.text,
-                                        'quantity': quantity,
-                                        'fulfillment_method': fulfillment,
-                                        'payment_method': paymentMethod,
-                                      }),
-                                    );
-
-                                    if (response.statusCode != 201) {
-                                      throw Exception(
-                                        'Failed to place order: ${response.body}',
-                                      );
-                                    }
-
-                                    final orderData = jsonDecode(response.body);
-                                    final orderNumber =
-                                        orderData['order_number'];
-
-                                    if (context.mounted) {
-                                      Navigator.pop(context); // Close Checkout
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            'Order Placed Successfully! Ref: $orderNumber',
-                                          ),
-                                          backgroundColor: Colors.green,
-                                          duration: const Duration(seconds: 4),
-                                        ),
-                                      );
-                                    }
-                                  } catch (e) {
                                     setCheckoutState(() {
-                                      isPlacingOrder = false;
+                                      isPlacingOrder = true;
                                     });
-                                    if (context.mounted) {
+
+                                    try {
+                                      final accessToken =
+                                          await ApiClient.token();
+                                      if (!context.mounted) return;
+
+                                      if (accessToken == null ||
+                                          accessToken.isEmpty) {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              'Please sign in before placing an order.',
+                                            ),
+                                            backgroundColor: Colors.red,
+                                          ),
+                                        );
+                                        setCheckoutState(() {
+                                          isPlacingOrder = false;
+                                        });
+                                        return;
+                                      }
+
+                                      final response = await http.post(
+                                        Uri.parse(
+                                          'http://127.0.0.1:8000/api/orders',
+                                        ),
+                                        headers: {
+                                          'Content-Type': 'application/json',
+                                          'Accept': 'application/json',
+                                          'Authorization':
+                                              'Bearer $accessToken',
+                                        },
+                                        body: jsonEncode({
+                                          'product_id': product['v_productId'],
+                                          'customer_name': nameController.text,
+                                          'email': emailController.text,
+                                          'contact_number':
+                                              phoneController.text,
+                                          'address': addressController.text,
+                                          'quantity': quantity,
+                                          'fulfillment_method': fulfillment,
+                                          'payment_method': paymentMethod,
+                                        }),
+                                      );
+
+                                      if (response.statusCode != 201) {
+                                        throw Exception(
+                                          'Failed to place order: ${response.body}',
+                                        );
+                                      }
+
+                                      final orderData = jsonDecode(
+                                        response.body,
+                                      );
+                                      final orderNumber =
+                                          orderData['order_number'];
+
+                                      if (context.mounted) {
+                                        Navigator.pop(
+                                          context,
+                                        ); // Close Checkout
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              'Order Placed Successfully! Ref: $orderNumber',
+                                            ),
+                                            backgroundColor: Colors.green,
+                                            duration: const Duration(
+                                              seconds: 4,
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                    } catch (e) {
+                                      if (!context.mounted) return;
+                                      setCheckoutState(() {
+                                        isPlacingOrder = false;
+                                      });
                                       ScaffoldMessenger.of(
                                         context,
                                       ).showSnackBar(
@@ -646,27 +679,27 @@ class _ProductCatalogState extends State<ProductCatalog> {
                                         ),
                                       );
                                     }
-                                  }
-                                },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.brand,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                                  },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.brand,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
-                          ),
-                          child: const Text(
-                            'Place Order',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
+                            child: const Text(
+                              'Place Order',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             );
@@ -678,15 +711,24 @@ class _ProductCatalogState extends State<ProductCatalog> {
 
   Widget _buildDetailRow(String label, String value) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.bold,
-            color: AppColors.inkSoft,
+        Expanded(
+          child: Text(
+            label,
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Flexible(
+          child: Text(
+            value,
+            textAlign: TextAlign.right,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              color: AppColors.inkSoft,
+            ),
           ),
         ),
       ],
@@ -699,10 +741,20 @@ class _ProductCatalogState extends State<ProductCatalog> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeaderSection(),
-          _buildSearchBox(),
-          _buildCategoryChips(),
-          _buildProductList(),
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1000),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeaderSection(),
+                  _buildSearchBox(),
+                  _buildCategoryChips(),
+                  _buildProductList(),
+                ],
+              ),
+            ),
+          ),
           _buildFooter(),
         ],
       ),
@@ -769,25 +821,23 @@ class _ProductCatalogState extends State<ProductCatalog> {
   }
 
   Widget _buildCategoryChips() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
+    return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: Row(
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
         children: _categories.map((cat) {
           bool isActive = _selectedCategory == cat['name'];
           return GestureDetector(
             onTap: () =>
                 setState(() => _selectedCategory = cat['name'] as String),
             child: Container(
-              margin: const EdgeInsets.only(right: 8),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
               decoration: BoxDecoration(
                 color: isActive ? AppColors.brandTint : Colors.white,
                 borderRadius: BorderRadius.circular(KataTheme.radiusControl),
                 border: Border.all(
-                  color: isActive
-                      ? AppColors.brand
-                      : AppColors.divider,
+                  color: isActive ? AppColors.brand : AppColors.divider,
                 ),
               ),
               child: Row(
@@ -796,9 +846,7 @@ class _ProductCatalogState extends State<ProductCatalog> {
                   Icon(
                     cat['icon'] as IconData,
                     size: 16,
-                    color: isActive
-                        ? AppColors.brand
-                        : AppColors.inkMuted,
+                    color: isActive ? AppColors.brand : AppColors.inkMuted,
                   ),
                   const SizedBox(width: 8),
                   Text(
@@ -806,9 +854,7 @@ class _ProductCatalogState extends State<ProductCatalog> {
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-                      color: isActive
-                          ? AppColors.brand
-                          : AppColors.inkMuted,
+                      color: isActive ? AppColors.brand : AppColors.inkMuted,
                     ),
                   ),
                 ],
@@ -920,184 +966,223 @@ class _ProductCatalogState extends State<ProductCatalog> {
             );
           }
 
-          return Column(
-            children: products.map((product) {
-              final sku = product['v_productCode'] ?? 'N/A';
-              final name = product['v_productName'] ?? 'Unknown Product';
-              final double stockQuantity =
-                  double.tryParse(
-                    product['v_quantityAvailable']?.toString() ?? '0',
-                  ) ??
-                  0;
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              final int columns = constraints.maxWidth >= 920
+                  ? 3
+                  : constraints.maxWidth >= 560
+                  ? 2
+                  : 1;
+              const double gridSpacing = 16;
+              final double cardWidth =
+                  (constraints.maxWidth - gridSpacing * (columns - 1)) /
+                  columns;
+              final double imageSize = constraints.maxWidth < 380 ? 76 : 90;
+              return Wrap(
+                spacing: gridSpacing,
+                runSpacing: 24,
+                children: products.map((product) {
+                  final sku = product['v_productCode'] ?? 'N/A';
+                  final name = product['v_productName'] ?? 'Unknown Product';
+                  final double stockQuantity =
+                      double.tryParse(
+                        product['v_quantityAvailable']?.toString() ?? '0',
+                      ) ??
+                      0;
 
-              final String status;
+                  final String status;
 
-              if (stockQuantity <= 0) {
-                status = 'OUT OF STOCK';
-              } else if (stockQuantity <= 5) {
-                status = 'LOW STOCK';
-              } else {
-                status = 'AVAILABLE';
-              }
+                  if (stockQuantity <= 0) {
+                    status = 'OUT OF STOCK';
+                  } else if (stockQuantity <= 5) {
+                    status = 'LOW STOCK';
+                  } else {
+                    status = 'AVAILABLE';
+                  }
 
-              // NEW: Kunin ang presyo para idisplay sa card
-              double price =
-                  double.tryParse(
-                    product['v_currentPrice']?.toString() ?? '0',
-                  ) ??
-                  0.0;
+                  // NEW: Kunin ang presyo para idisplay sa card
+                  double price =
+                      double.tryParse(
+                        product['v_currentPrice']?.toString() ?? '0',
+                      ) ??
+                      0.0;
 
-              final imageUrl =
-                  'https://upload.wikimedia.org/wikipedia/commons/7/7e/A_Fire_Extinguisher.jpg';
+                  final imageUrl =
+                      'https://upload.wikimedia.org/wikipedia/commons/7/7e/A_Fire_Extinguisher.jpg';
 
-              Color statusColor = AppColors.inkMuted;
+                  Color statusColor = AppColors.inkMuted;
 
-              if (status == 'AVAILABLE') statusColor = AppColors.success;
+                  if (status == 'AVAILABLE') statusColor = AppColors.success;
 
-              if (status == 'LOW STOCK') statusColor = AppColors.warning;
+                  if (status == 'LOW STOCK') statusColor = AppColors.warning;
 
-              if (status == 'OUT OF STOCK') statusColor = AppColors.danger;
+                  if (status == 'OUT OF STOCK') statusColor = AppColors.danger;
 
-              return Container(
-                margin: const EdgeInsets.only(bottom: 16, top: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(KataUi.radiusCard),
-                  border: Border.all(color: AppColors.divider),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x0A12151C),
-                      blurRadius: 14,
-                      offset: Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Image.network(
-                          imageUrl,
-                          width: 90,
-                          height: 120,
-                          fit: BoxFit.cover,
-                          errorBuilder: (c, e, s) => Container(
-                            width: 90,
-                            height: 120,
-                            color: AppColors.surfaceMuted,
-                            child: const Icon(
-                              Icons.image,
-                              color: AppColors.inkFaint,
+                  return SizedBox(
+                    width: cardWidth,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(KataUi.radiusCard),
+                        border: Border.all(color: AppColors.divider),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x0A12151C),
+                            blurRadius: 14,
+                            offset: Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.network(
+                                imageUrl,
+                                width: imageSize,
+                                height: 120,
+                                fit: BoxFit.cover,
+                                errorBuilder: (c, e, s) => Container(
+                                  width: imageSize,
+                                  height: 120,
+                                  color: AppColors.surfaceMuted,
+                                  child: const Icon(
+                                    Icons.image,
+                                    color: AppColors.inkFaint,
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(0, 12, 12, 12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  sku,
-                                  style: const TextStyle(
-                                    fontSize: 10,
-                                    color: AppColors.inkFaint,
-                                    fontWeight: FontWeight.bold,
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(0, 12, 12, 12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Flexible(
+                                        child: Text(
+                                          sku,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            fontSize: 10,
+                                            color: AppColors.inkFaint,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 6,
+                                          vertical: 2,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: statusColor.withValues(
+                                            alpha: 0.1,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            4,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          status,
+                                          style: TextStyle(
+                                            fontSize: 8,
+                                            color: statusColor,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 6,
-                                    vertical: 2,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: statusColor.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: Text(
-                                    status,
-                                    style: TextStyle(
-                                      fontSize: 8,
-                                      color: statusColor,
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    name,
+                                    style: const TextStyle(
                                       fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                      color: AppColors.ink,
+                                    ),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  // NEW: Price Display
+                                  Text(
+                                    price > 0
+                                        ? '₱ ${price.toStringAsFixed(2)}'
+                                        : 'Ask for Price',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
+                                      color: AppColors.brand,
                                     ),
                                   ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              name,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                                color: AppColors.ink,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 4),
-                            // NEW: Price Display
-                            Text(
-                              price > 0
-                                  ? '₱ ${price.toStringAsFixed(2)}'
-                                  : 'Ask for Price',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
-                                color: AppColors.brand,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            SizedBox(
-                              width: double.infinity,
-                              height: 34,
-                              child: OutlinedButton(
-                                onPressed: () =>
-                                    _showProductDetails(context, product),
-                                style: OutlinedButton.styleFrom(
-                                  side: const BorderSide(
-                                    color: AppColors.divider,
-                                  ),
-                                  foregroundColor: AppColors.inkSoft,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  padding: EdgeInsets.zero,
-                                  textStyle: const TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                child: const Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text('View Details & Order'),
-                                    SizedBox(width: 4),
-                                    Icon(
-                                      Icons.shopping_cart_checkout,
-                                      size: 12,
+                                  const SizedBox(height: 12),
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: OutlinedButton(
+                                      onPressed: () =>
+                                          _showProductDetails(context, product),
+                                      style: OutlinedButton.styleFrom(
+                                        minimumSize: const Size.fromHeight(40),
+                                        side: const BorderSide(
+                                          color: AppColors.divider,
+                                        ),
+                                        foregroundColor: AppColors.inkSoft,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 8,
+                                        ),
+                                        textStyle: const TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      child: const Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Flexible(
+                                            child: Text(
+                                              'View Details & Order',
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                          SizedBox(width: 4),
+                                          Icon(
+                                            Icons.shopping_cart_checkout,
+                                            size: 12,
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                  );
+                }).toList(),
               );
-            }).toList(),
+            },
           );
         },
       ),

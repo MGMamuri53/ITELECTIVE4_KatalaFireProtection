@@ -1,9 +1,12 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'screens/auth_page.dart';
 import 'screens/admin_layout.dart';
 import 'screens/main_layout.dart';
 import 'theme/app_theme.dart';
+import 'web/web_home_page.dart';
+import 'web/web_landing_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,9 +23,11 @@ class KatalaApp extends StatelessWidget {
       title: 'Katala Fire Protection',
       debugShowCheckedModeBanner: false,
       theme: KataTheme.light(),
-      initialRoute: '/',
+      initialRoute: kIsWeb ? '/web' : '/',
       routes: {
-        '/': (context) => const AuthPage(),
+        '/': (context) => kIsWeb ? const WebLandingPage() : const AuthPage(),
+        '/web': (context) => const WebLandingPage(),
+        '/web-home': (context) => const WebHomePage(),
         '/app': (context) => const AuthPage(),
         '/main': (context) => const MainLayout(),
         '/admin': (context) => const AdminLayout(),

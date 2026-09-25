@@ -35,7 +35,11 @@ class _PortfolioPageState extends State<PortfolioPage> {
       context: context,
       builder: (context) {
         return Dialog(
-          insetPadding: const EdgeInsets.all(16),
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 24,
+          ),
+          constraints: const BoxConstraints(maxWidth: 720),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -126,11 +130,15 @@ class _PortfolioPageState extends State<PortfolioPage> {
                             color: Colors.grey,
                           ),
                           const SizedBox(width: 8),
-                          Text(
-                            location,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: AppColors.inkMuted,
+                          Flexible(
+                            child: Text(
+                              location,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: AppColors.inkMuted,
+                              ),
                             ),
                           ),
                         ],
@@ -144,11 +152,15 @@ class _PortfolioPageState extends State<PortfolioPage> {
                             color: Colors.grey,
                           ),
                           const SizedBox(width: 8),
-                          Text(
-                            'Completed: $date',
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: AppColors.inkMuted,
+                          Flexible(
+                            child: Text(
+                              'Completed: $date',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: AppColors.inkMuted,
+                              ),
                             ),
                           ),
                         ],
@@ -187,9 +199,19 @@ class _PortfolioPageState extends State<PortfolioPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeaderSection(),
-          _buildFilterSection(),
-          _buildProjectList(),
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1000),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeaderSection(),
+                  _buildFilterSection(),
+                  _buildProjectList(),
+                ],
+              ),
+            ),
+          ),
           _buildFooter(), // DARK FOOTER NAKADIKIT NA DITO
         ],
       ),
@@ -254,14 +276,10 @@ class _PortfolioPageState extends State<PortfolioPage> {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: isActive
-                            ? AppColors.brandTint
-                            : Colors.white,
+                        color: isActive ? AppColors.brandTint : Colors.white,
                         borderRadius: BorderRadius.circular(4),
                         border: Border.all(
-                          color: isActive
-                              ? AppColors.brand
-                              : AppColors.divider,
+                          color: isActive ? AppColors.brand : AppColors.divider,
                         ),
                       ),
                       child: Text(
@@ -331,142 +349,168 @@ class _PortfolioPageState extends State<PortfolioPage> {
 
         return Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: projects.map((project) {
-              final title = project['project_name'] ?? 'Unknown Project';
-              final category = project['category'] ?? 'General';
-              final location = project['location'] ?? 'Undisclosed Location';
-              final date = project['completion_date'] ?? 'Ongoing';
-              final imageUrl = project['image_url'] ?? '';
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final int columns = constraints.maxWidth >= 920
+                  ? 3
+                  : constraints.maxWidth >= 560
+                  ? 2
+                  : 1;
+              const double gridSpacing = 16;
+              final double cardWidth =
+                  (constraints.maxWidth - gridSpacing * (columns - 1)) /
+                  columns;
+              return Wrap(
+                spacing: gridSpacing,
+                runSpacing: 20,
+                children: projects.map((project) {
+                  final title = project['project_name'] ?? 'Unknown Project';
+                  final category = project['category'] ?? 'General';
+                  final location =
+                      project['location'] ?? 'Undisclosed Location';
+                  final date = project['completion_date'] ?? 'Ongoing';
+                  final imageUrl = project['image_url'] ?? '';
 
-              return Container(
-                margin: const EdgeInsets.only(bottom: 24),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.divider),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.02),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ClipRRect(
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(12),
+                  return SizedBox(
+                    width: cardWidth,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.divider),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.02),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
-                      child: imageUrl.isNotEmpty
-                          ? Image.network(
-                              imageUrl,
-                              height: 160,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                              errorBuilder: (c, e, s) =>
-                                  _buildPlaceholderImage(),
-                            )
-                          : _buildPlaceholderImage(),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
+                          ClipRRect(
+                            borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(12),
                             ),
-                            decoration: BoxDecoration(
-                              color: AppColors.surfaceMuted,
-                              borderRadius: BorderRadius.circular(4),
-                              border: Border.all(
-                                color: AppColors.divider,
-                              ),
-                            ),
-                            child: Text(
-                              category,
-                              style: const TextStyle(
-                                fontSize: 10,
-                                color: AppColors.inkMuted,
-                              ),
-                            ),
+                            child: imageUrl.isNotEmpty
+                                ? Image.network(
+                                    imageUrl,
+                                    height: 160,
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (c, e, s) =>
+                                        _buildPlaceholderImage(),
+                                  )
+                                : _buildPlaceholderImage(),
                           ),
-                          const SizedBox(height: 12),
-                          Text(
-                            title,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.ink,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.location_on_outlined,
-                                size: 14,
-                                color: Colors.grey,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                location,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: AppColors.inkMuted,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.calendar_today_outlined,
-                                size: 14,
-                                color: Colors.grey,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                'Completed: $date',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: AppColors.inkMuted,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-
-                          InkWell(
-                            onTap: () => _showCaseStudy(
-                              context,
-                              title,
-                              category,
-                              location,
-                              date,
-                              imageUrl,
-                            ),
-                            child: Row(
-                              children: const [
-                                Text(
-                                  'View Case Study',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.brand,
+                          Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.surfaceMuted,
+                                    borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(
+                                      color: AppColors.divider,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    category,
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      color: AppColors.inkMuted,
+                                    ),
                                   ),
                                 ),
-                                SizedBox(width: 4),
-                                Icon(
-                                  Icons.arrow_forward,
-                                  size: 14,
-                                  color: AppColors.brand,
+                                const SizedBox(height: 12),
+                                Text(
+                                  title,
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.ink,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.location_on_outlined,
+                                      size: 14,
+                                      color: Colors.grey,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Flexible(
+                                      child: Text(
+                                        location,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: AppColors.inkMuted,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.calendar_today_outlined,
+                                      size: 14,
+                                      color: Colors.grey,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Flexible(
+                                      child: Text(
+                                        'Completed: $date',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: AppColors.inkMuted,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+
+                                InkWell(
+                                  onTap: () => _showCaseStudy(
+                                    context,
+                                    title,
+                                    category,
+                                    location,
+                                    date,
+                                    imageUrl,
+                                  ),
+                                  child: Row(
+                                    children: const [
+                                      Text(
+                                        'View Case Study',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.brand,
+                                        ),
+                                      ),
+                                      SizedBox(width: 4),
+                                      Icon(
+                                        Icons.arrow_forward,
+                                        size: 14,
+                                        color: AppColors.brand,
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ],
                             ),
@@ -474,10 +518,10 @@ class _PortfolioPageState extends State<PortfolioPage> {
                         ],
                       ),
                     ),
-                  ],
-                ),
+                  );
+                }).toList(),
               );
-            }).toList(),
+            },
           ),
         );
       },

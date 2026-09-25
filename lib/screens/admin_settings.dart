@@ -10,6 +10,9 @@ class AdminSettings extends StatefulWidget {
 }
 
 class _AdminSettingsState extends State<AdminSettings> {
+  static const double maxContentWidth = 1120;
+  static const double twoColumnBreakpoint = 900;
+
   // STATES PARA SA SWITCHES
   bool _emailNotifications = true;
   bool _pushNotifications = false;
@@ -38,22 +41,28 @@ class _AdminSettingsState extends State<AdminSettings> {
           builder: (context, setDialogState) {
             return AlertDialog(
               backgroundColor: Colors.white,
+              insetPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 24,
+              ),
               title: const Text(
                 'Change Password',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
-              content: TextField(
-                controller: passwordController,
-                obscureText: isObscure,
-                decoration: InputDecoration(
-                  labelText: 'New Password',
-                  border: const OutlineInputBorder(),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      isObscure ? Icons.visibility_off : Icons.visibility,
+              content: SingleChildScrollView(
+                child: TextField(
+                  controller: passwordController,
+                  obscureText: isObscure,
+                  decoration: InputDecoration(
+                    labelText: 'New Password',
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        isObscure ? Icons.visibility_off : Icons.visibility,
+                      ),
+                      onPressed: () =>
+                          setDialogState(() => isObscure = !isObscure),
                     ),
-                    onPressed: () =>
-                        setDialogState(() => isObscure = !isObscure),
                   ),
                 ),
               ),
@@ -124,27 +133,33 @@ class _AdminSettingsState extends State<AdminSettings> {
       builder: (context) {
         return AlertDialog(
           backgroundColor: Colors.white,
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 24,
+          ),
           title: const Text(
             'Edit Profile',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Display Name',
-                  border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.person_outline),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Display Name',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.person_outline),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Email cannot be changed directly for security reasons.',
-                style: TextStyle(fontSize: 12, color: Colors.grey),
-              ),
-            ],
+                const SizedBox(height: 16),
+                const Text(
+                  'Email cannot be changed directly for security reasons.',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -167,9 +182,7 @@ class _AdminSettingsState extends State<AdminSettings> {
                   debugPrint(e.toString());
                 }
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.brand,
-              ),
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.brand),
               child: const Text(
                 'Save Changes',
                 style: TextStyle(color: Colors.white),
@@ -201,18 +214,26 @@ class _AdminSettingsState extends State<AdminSettings> {
         context: context,
         builder: (context) => AlertDialog(
           backgroundColor: Colors.white,
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 24,
+          ),
           title: const Row(
             children: [
               Icon(Icons.check_circle, color: Colors.green),
               SizedBox(width: 8),
-              Text(
-                'Backup Complete',
-                style: TextStyle(fontWeight: FontWeight.bold),
+              Flexible(
+                child: Text(
+                  'Backup Complete',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
               ),
             ],
           ),
-          content: const Text(
-            'Your database records have been successfully fetched. (CSV Download requires web file-saver package setup).',
+          content: const SingleChildScrollView(
+            child: Text(
+              'Your database records have been successfully fetched. (CSV Download requires web file-saver package setup).',
+            ),
           ),
           actions: [
             TextButton(
@@ -231,12 +252,15 @@ class _AdminSettingsState extends State<AdminSettings> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: Colors.white,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
         title: const Text(
           'Theme Customization',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        content: const Text(
-          'To fully switch the entire portal to Dark Mode, we need to wrap your main.dart with a ThemeProvider. Do you want to enable this mode?',
+        content: const SingleChildScrollView(
+          child: Text(
+            'To fully switch the entire portal to Dark Mode, we need to wrap your main.dart with a ThemeProvider. Do you want to enable this mode?',
+          ),
         ),
         actions: [
           TextButton(
@@ -256,107 +280,180 @@ class _AdminSettingsState extends State<AdminSettings> {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width > 800;
-
-    return SingleChildScrollView(
-      child: Container(
-        margin: EdgeInsets.all(isDesktop ? 24.0 : 16.0),
-        padding: EdgeInsets.all(isDesktop ? 32.0 : 16.0),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    Text(
-                      'System Settings',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.ink,
-                      ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      'Manage your account preferences and system configurations.',
-                      style: TextStyle(fontSize: 14, color: Colors.grey),
-                    ),
-                  ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isDesktop = constraints.maxWidth >= 1024;
+        return Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: maxContentWidth),
+            child: SizedBox(
+              width: double.infinity,
+              height: double.infinity,
+              child: Container(
+                margin: EdgeInsets.all(isDesktop ? 24.0 : 16.0),
+                padding: EdgeInsets.all(isDesktop ? 32.0 : 16.0),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                if (_isActionLoading)
-                  const CircularProgressIndicator(color: AppColors.brand),
-              ],
+                child: SingleChildScrollView(
+                  child: LayoutBuilder(
+                    builder: (context, content) {
+                      final sectionGap = isDesktop ? 24.0 : 16.0;
+                      final profileCard = _buildSection('Profile Settings', [
+                        _buildSettingsTile(
+                          Icons.person_outline,
+                          'Edit Profile',
+                          'Update your personal information and display picture.',
+                          onTap: _showEditProfileDialog, // CONNECTED NA!
+                        ),
+                        _buildSettingsTile(
+                          Icons.lock_outline,
+                          'Change Password',
+                          'Update your login credentials.',
+                          onTap: _showChangePasswordDialog, // CONNECTED NA!
+                        ),
+                      ]);
+                      final notificationsCard = _buildSection('Notifications', [
+                        _buildSwitchTile(
+                          Icons.email_outlined,
+                          'Email Notifications',
+                          'Receive daily summaries of new requests.',
+                          _emailNotifications,
+                          (val) async {
+                            setState(() => _emailNotifications = val);
+
+                            final prefs = await SharedPreferences.getInstance();
+                            await prefs.setBool('email_notifications', val);
+                          }, // WORKING SWITCH
+                        ),
+                        _buildSwitchTile(
+                          Icons.notifications_active_outlined,
+                          'Push Notifications',
+                          'Real-time alerts for incoming appointments.',
+                          _pushNotifications,
+                          (val) async {
+                            setState(() => _pushNotifications = val);
+
+                            final prefs = await SharedPreferences.getInstance();
+                            await prefs.setBool('push_notifications', val);
+                          }, // WORKING SWITCH
+                        ),
+                      ]);
+                      final systemCard = _buildSection('System Data', [
+                        _buildSettingsTile(
+                          Icons.backup_outlined,
+                          'Database Backup',
+                          'Export all records to a CSV file.',
+                          onTap: _runDatabaseBackup, // CONNECTED NA!
+                        ),
+                        _buildSettingsTile(
+                          Icons.color_lens_outlined,
+                          'Theme Customization',
+                          'Switch between Light and Dark mode.',
+                          onTap: _showThemeSettings, // CONNECTED NA!
+                        ),
+                      ]);
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Wrap(
+                            alignment: WrapAlignment.spaceBetween,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            spacing: 16,
+                            runSpacing: 12,
+                            children: [
+                              ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                  maxWidth: 620,
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: const [
+                                    Text(
+                                      'System Settings',
+                                      style: TextStyle(
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.ink,
+                                      ),
+                                    ),
+                                    SizedBox(height: 4),
+                                    Text(
+                                      'Manage your account preferences and system configurations.',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (_isActionLoading)
+                                const Padding(
+                                  padding: EdgeInsets.all(8),
+                                  child: SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.5,
+                                      color: AppColors.brand,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                          SizedBox(height: isDesktop ? 32 : 20),
+                          if (content.maxWidth >= twoColumnBreakpoint)
+                            Column(
+                              children: [
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(child: profileCard),
+                                    SizedBox(width: sectionGap),
+                                    Expanded(child: notificationsCard),
+                                  ],
+                                ),
+                                SizedBox(height: sectionGap),
+                                systemCard,
+                              ],
+                            )
+                          else
+                            Column(
+                              children: [
+                                profileCard,
+                                SizedBox(height: sectionGap),
+                                notificationsCard,
+                                SizedBox(height: sectionGap),
+                                systemCard,
+                              ],
+                            ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ),
             ),
-            const SizedBox(height: 32),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildSectionHeader('Profile Settings'),
-                _buildSettingsTile(
-                  Icons.person_outline,
-                  'Edit Profile',
-                  'Update your personal information and display picture.',
-                  onTap: _showEditProfileDialog, // CONNECTED NA!
-                ),
-                _buildSettingsTile(
-                  Icons.lock_outline,
-                  'Change Password',
-                  'Update your login credentials.',
-                  onTap: _showChangePasswordDialog, // CONNECTED NA!
-                ),
+          ),
+        );
+      },
+    );
+  }
 
-                const SizedBox(height: 24),
-                _buildSectionHeader('Notifications'),
-                _buildSwitchTile(
-                  Icons.email_outlined,
-                  'Email Notifications',
-                  'Receive daily summaries of new requests.',
-                  _emailNotifications,
-                  (val) async {
-                    setState(() => _emailNotifications = val);
-
-                    final prefs = await SharedPreferences.getInstance();
-                    await prefs.setBool('email_notifications', val);
-                  }, // WORKING SWITCH
-                ),
-                _buildSwitchTile(
-                  Icons.notifications_active_outlined,
-                  'Push Notifications',
-                  'Real-time alerts for incoming appointments.',
-                  _pushNotifications,
-                  (val) async {
-                    setState(() => _pushNotifications = val);
-
-                    final prefs = await SharedPreferences.getInstance();
-                    await prefs.setBool('push_notifications', val);
-                  }, // WORKING SWITCH
-                ),
-
-                const SizedBox(height: 24),
-                _buildSectionHeader('System Data'),
-                _buildSettingsTile(
-                  Icons.backup_outlined,
-                  'Database Backup',
-                  'Export all records to a CSV file.',
-                  onTap: _runDatabaseBackup, // CONNECTED NA!
-                ),
-                _buildSettingsTile(
-                  Icons.color_lens_outlined,
-                  'Theme Customization',
-                  'Switch between Light and Dark mode.',
-                  onTap: _showThemeSettings, // CONNECTED NA!
-                ),
-              ],
-            ),
-          ],
-        ),
+  Widget _buildSection(String title, List<Widget> children) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: KataUi.cardBox(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [_buildSectionHeader(title), ...children],
       ),
     );
   }
@@ -382,26 +479,31 @@ class _AdminSettingsState extends State<AdminSettings> {
     String subtitle, {
     VoidCallback? onTap,
   }) {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceMuted,
-          borderRadius: BorderRadius.circular(12),
+    return Material(
+      type: MaterialType.transparency,
+      child: ListTile(
+        contentPadding: EdgeInsets.zero,
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceMuted,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, color: AppColors.inkSoft),
         ),
-        child: Icon(icon, color: AppColors.inkSoft),
+        title: Text(
+          title,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+        ),
+        subtitle: Text(
+          subtitle,
+          maxLines: 3,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontSize: 12, color: Colors.grey),
+        ),
+        trailing: const Icon(Icons.chevron_right, color: Colors.grey),
+        onTap: onTap, // IPINASA NATIN ANG FUNCTION DITO
       ),
-      title: Text(
-        title,
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-      ),
-      subtitle: Text(
-        subtitle,
-        style: const TextStyle(fontSize: 12, color: Colors.grey),
-      ),
-      trailing: const Icon(Icons.chevron_right, color: Colors.grey),
-      onTap: onTap, // IPINASA NATIN ANG FUNCTION DITO
     );
   }
 
@@ -412,28 +514,33 @@ class _AdminSettingsState extends State<AdminSettings> {
     bool currentValue,
     Function(bool) onChanged,
   ) {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceMuted,
-          borderRadius: BorderRadius.circular(12),
+    return Material(
+      type: MaterialType.transparency,
+      child: ListTile(
+        contentPadding: EdgeInsets.zero,
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceMuted,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, color: AppColors.inkSoft),
         ),
-        child: Icon(icon, color: AppColors.inkSoft),
-      ),
-      title: Text(
-        title,
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-      ),
-      subtitle: Text(
-        subtitle,
-        style: const TextStyle(fontSize: 12, color: Colors.grey),
-      ),
-      trailing: Switch(
-        value: currentValue,
-        onChanged: onChanged, // NAGBABAGO NA ANG STATE
-        activeThumbColor: AppColors.brand,
+        title: Text(
+          title,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+        ),
+        subtitle: Text(
+          subtitle,
+          maxLines: 3,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontSize: 12, color: Colors.grey),
+        ),
+        trailing: Switch(
+          value: currentValue,
+          onChanged: onChanged, // NAGBABAGO NA ANG STATE
+          activeThumbColor: AppColors.brand,
+        ),
       ),
     );
   }

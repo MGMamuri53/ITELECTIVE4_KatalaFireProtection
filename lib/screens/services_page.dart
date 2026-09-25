@@ -73,6 +73,11 @@ class _ServicesPageState extends State<ServicesPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 24,
+          ),
+          constraints: const BoxConstraints(maxWidth: 640),
           title: Row(
             children: [
               const Icon(Icons.design_services, color: AppColors.brand),
@@ -89,50 +94,55 @@ class _ServicesPageState extends State<ServicesPage> {
               ),
             ],
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (imageUrl.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 16.0),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(KataUi.radiusCard),
-                    child: Image.network(
-                      imageUrl,
-                      height: 120,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                      errorBuilder: (c, e, s) => const SizedBox.shrink(),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (imageUrl.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16.0),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(KataUi.radiusCard),
+                      child: Image.network(
+                        imageUrl,
+                        height: 120,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (c, e, s) => const SizedBox.shrink(),
+                      ),
+                    ),
+                  ),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.brandTint,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.brandTintBorder),
+                  ),
+                  child: Text(
+                    'Category: $category',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.brand,
                     ),
                   ),
                 ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: AppColors.brandTint,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.brandTintBorder),
-                ),
-                child: Text(
-                  'Category: $category',
+                const SizedBox(height: 16),
+                Text(
+                  description,
                   style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.brand,
+                    fontSize: 13,
+                    color: AppColors.inkSoft,
+                    height: 1.5,
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                description,
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: AppColors.inkSoft,
-                  height: 1.5,
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -159,8 +169,15 @@ class _ServicesPageState extends State<ServicesPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeaderSection(),
-          _buildServicesList(),
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1000),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [_buildHeaderSection(), _buildServicesList()],
+              ),
+            ),
+          ),
           _buildFooter(),
         ],
       ),
@@ -221,81 +238,96 @@ class _ServicesPageState extends State<ServicesPage> {
   Widget _buildServicesList() {
     return Padding(
       padding: const EdgeInsets.all(16.0),
-      child: Column(
-        children: _services.map((service) {
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final int columns = constraints.maxWidth >= 920
+              ? 3
+              : constraints.maxWidth >= 560
+              ? 2
+              : 1;
+          const double gridSpacing = 16;
+          final double cardWidth =
+              (constraints.maxWidth - gridSpacing * (columns - 1)) / columns;
+          return Wrap(
+            spacing: gridSpacing,
+            runSpacing: 20,
+            children: _services.map((service) {
               final title = service['title'] as String;
               final desc = service['description'] as String;
               final serviceIcon = service['icon'] as IconData;
 
-              return Container(
-                margin: const EdgeInsets.only(bottom: 16),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(KataUi.radiusCard),
-                  border: Border.all(color: AppColors.divider),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x0A12151C),
-                      blurRadius: 14,
-                      offset: Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: const BoxDecoration(
-                            color: AppColors.brandTint,
-                            shape: BoxShape.circle,
+              return SizedBox(
+                width: cardWidth,
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(KataUi.radiusCard),
+                    border: Border.all(color: AppColors.divider),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x0A12151C),
+                        blurRadius: 14,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: const BoxDecoration(
+                              color: AppColors.brandTint,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              serviceIcon,
+                              color: AppColors.brand,
+                              size: 24,
+                            ),
                           ),
-                          child: Icon(
-                            serviceIcon,
-                            color: AppColors.brand,
-                            size: 24,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                title,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                  color: AppColors.ink,
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  title,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                    color: AppColors.ink,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                desc,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: AppColors.inkMuted,
-                                  height: 1.4,
+                                const SizedBox(height: 8),
+                                Text(
+                                  desc,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: AppColors.inkMuted,
+                                    height: 1.4,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    // IN-UPDATE NATIN ANG BUTTONS DITO PARA DALAWA NA
-                    Row(
-                      children: [
-                        Expanded(
-                          flex: 1,
-                          child: OutlinedButton(
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      LayoutBuilder(
+                        builder: (context, actionConstraints) {
+                          final textScale =
+                              MediaQuery.textScalerOf(context).scale(14) / 14;
+                          final stackActions =
+                              actionConstraints.maxWidth < 300 ||
+                              textScale > 1.3;
+                          final detailsButton = OutlinedButton(
                             onPressed: () => _showServiceDetails(
                               context,
                               title,
@@ -307,8 +339,9 @@ class _ServicesPageState extends State<ServicesPage> {
                               foregroundColor: AppColors.inkMuted,
                               side: const BorderSide(color: AppColors.divider),
                               shape: RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius.circular(KataTheme.radiusControl),
+                                borderRadius: BorderRadius.circular(
+                                  KataTheme.radiusControl,
+                                ),
                               ),
                               textStyle: const TextStyle(
                                 fontSize: 13,
@@ -316,24 +349,40 @@ class _ServicesPageState extends State<ServicesPage> {
                               ),
                             ),
                             child: const Text('Details'),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          flex: 2,
-                          child: ElevatedButton.icon(
-                            onPressed: widget
-                                .onStartInquiry, // ETO YUNG MAGBUBUKAS NG FORM
+                          );
+                          final inquiryButton = ElevatedButton.icon(
+                            onPressed: widget.onStartInquiry,
                             icon: const Icon(Icons.arrow_forward, size: 16),
                             label: const Text('Start service inquiry'),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                          );
+
+                          if (stackActions) {
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                detailsButton,
+                                const SizedBox(height: 8),
+                                inquiryButton,
+                              ],
+                            );
+                          }
+
+                          return Row(
+                            children: [
+                              Expanded(flex: 1, child: detailsButton),
+                              const SizedBox(width: 8),
+                              Expanded(flex: 2, child: inquiryButton),
+                            ],
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               );
             }).toList(),
+          );
+        },
       ),
     );
   }
