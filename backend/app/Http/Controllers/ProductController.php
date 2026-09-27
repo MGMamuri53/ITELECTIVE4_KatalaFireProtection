@@ -46,7 +46,7 @@ class ProductController extends Controller
             'v_currentPrice' => $validated['price'] ?? null,
             'v_productDescription' => $validated['description'] ?? null,
             'v_isActive' => 1,
-        ]);
+        ], 'v_productId');
 
         DB::table('tbl_inventory')->insert([
             'v_productId' => $id,

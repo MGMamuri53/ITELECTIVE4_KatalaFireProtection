@@ -102,7 +102,7 @@ class KataUi {
             ],
           ),
         const Spacer(),
-        if (trailing != null) trailing,
+        ?trailing,
       ],
     );
   }

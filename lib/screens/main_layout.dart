@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import '../services/api_client.dart';
 import 'homepage.dart';
 import 'product_catalog.dart';
@@ -159,6 +157,7 @@ class _MainLayoutState extends State<MainLayout> {
                         }
 
                         final accessToken = await ApiClient.token();
+                        if (!context.mounted) return;
 
                         if (accessToken == null || accessToken.isEmpty) {
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -173,49 +172,26 @@ class _MainLayoutState extends State<MainLayout> {
                         }
 
                         try {
-                          final response = await http.post(
-                            Uri.parse(
-                              'http://127.0.0.1:8000/api/service-requests',
-                            ),
-                            headers: {
-                              'Accept': 'application/json',
-                              'Content-Type': 'application/json',
-                              'Authorization': 'Bearer $accessToken',
-                            },
-                            body: jsonEncode({
-                              'name': nameController.text.trim(),
-                              'email': emailController.text.trim(),
-                              'contact_number': phoneController.text.trim(),
-                              'service': selectedService,
-                              'location': locationController.text.trim(),
-                              'details': detailsController.text.trim(),
-                            }),
-                          );
+                          await ApiClient.post('/service-requests', {
+                            'name': nameController.text.trim(),
+                            'email': emailController.text.trim(),
+                            'contact_number': phoneController.text.trim(),
+                            'service': selectedService,
+                            'location': locationController.text.trim(),
+                            'details': detailsController.text.trim(),
+                          });
 
-                          if (response.statusCode == 201) {
-                            if (context.mounted) {
-                              Navigator.pop(context);
+                          if (context.mounted) {
+                            Navigator.pop(context);
 
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Request Submitted! We will email you shortly.',
-                                  ),
-                                  backgroundColor: AppColors.success,
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Request Submitted! We will email you shortly.',
                                 ),
-                              );
-                            }
-                          } else {
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    'Request failed: ${response.body}',
-                                  ),
-                                  backgroundColor: AppColors.danger,
-                                ),
-                              );
-                            }
+                                backgroundColor: AppColors.success,
+                              ),
+                            );
                           }
                         } catch (e) {
                           if (context.mounted) {
@@ -347,11 +323,7 @@ class _MainLayoutState extends State<MainLayout> {
                   color: AppColors.brandTint,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(
-                  Icons.menu,
-                  color: AppColors.brand,
-                  size: 22,
-                ),
+                child: const Icon(Icons.menu, color: AppColors.brand, size: 22),
               ),
             ),
           ),
@@ -364,188 +336,182 @@ class _MainLayoutState extends State<MainLayout> {
     return Drawer(
       backgroundColor: AppColors.nav,
       child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.shield,
-                      color: AppColors.brand,
-                      size: 24,
-                    ),
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
                   ),
-                  const SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text(
-                        'Katala',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 17,
-                          letterSpacing: -0.3,
-                        ),
-                      ),
-                      Text(
-                        'Fire Protection',
-                        style: TextStyle(
-                          color: Colors.white60,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
+                  child: const Icon(
+                    Icons.shield,
+                    color: AppColors.brand,
+                    size: 24,
                   ),
-                  const Spacer(),
-                  InkWell(
-                    borderRadius: BorderRadius.circular(12),
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.close,
-                        color: Colors.white70,
-                        size: 18,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Divider(color: Colors.white12, height: 1),
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 12,
                 ),
-                children: [
-                  _buildMenuItem(
-                    icon: Icons.home_outlined,
-                    title: 'Homepage',
-                    index: 0,
-                  ),
-                  _buildMenuItem(
-                    icon: Icons.inventory_2_outlined,
-                    title: 'Product Catalog',
-                    index: 1,
-                  ),
-                  _buildMenuItem(
-                    icon: Icons.construction_outlined,
-                    title: 'Services',
-                    index: 2,
-                  ),
-                  _buildMenuItem(
-                    icon: Icons.cases_outlined,
-                    title: 'Project Portfolio',
-                    index: 3,
-                  ),
-                  _buildMenuItem(
-                    icon: Icons.business_outlined,
-                    title: 'Company Profile',
-                    index: 4,
-                  ),
-                  _buildMenuItem(
-                    icon: Icons.settings_outlined,
-                    title: 'Settings',
-                    index: 5,
-                  ),
-                  _buildMenuItem(
-                    icon: Icons.shopping_bag_outlined,
-                    title: 'My Orders',
-                    index: 6,
-                  ),
-                  const SizedBox(height: 12),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.pop(context); // Close drawer first
-                      _showRequestQuoteDialog(context); // Then open form
-                    },
-                    icon: const Icon(Icons.description_outlined, size: 20),
-                    label: const Text('Request Quote'),
-                  ),
-                  const SizedBox(height: 24),
-                  _buildFooterLink(
-                    Icons.privacy_tip_outlined,
-                    'Privacy Policy',
-                    () => _showLegalDialog(
-                      context,
-                      'Privacy Policy',
-                      'Katala Fire Protection is committed to protecting your personal data...',
-                    ),
-                  ),
-                  _buildFooterLink(
-                    Icons.description_outlined,
-                    'Terms of Service',
-                    () => _showLegalDialog(
-                      context,
-                      'Terms of Service',
-                      'By using the Katala Fire Protection application and services, you agree to abide by our operational terms...',
-                    ),
-                  ),
-                  _buildFooterLink(
-                    Icons.verified_outlined,
-                    'ISO Certification',
-                    () => _showLegalDialog(
-                      context,
-                      'ISO Certification',
-                      'Katala Fire Protection strictly adheres to international standards for quality management...',
-                    ),
-                  ),
-                  _buildFooterLink(
-                    Icons.domain_outlined,
-                    'Business Registration',
-                    () => _showLegalDialog(
-                      context,
-                      'Business Registration',
-                      'Katala Fire Protection Product Trading is officially registered with the SEC and DTI...',
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Divider(color: Colors.white12, height: 1),
-            InkWell(
-              onTap: () async {
-                try {
-                  await ApiClient.post('/logout', {});
-                } catch (_) {
-                  // Local logout still clears the stale token if the server is unavailable.
-                }
-                await ApiClient.clearSession();
-                if (context.mounted) {
-                  Navigator.pushReplacementNamed(context, '/');
-                }
-              },
-              child: Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Row(
+                const SizedBox(width: 12),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: const [
-                    Icon(Icons.logout, color: Colors.white54, size: 20),
-                    SizedBox(width: 12),
                     Text(
-                      'Logout',
+                      'Katala',
                       style: TextStyle(
-                        color: Colors.white54,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 17,
+                        letterSpacing: -0.3,
                       ),
+                    ),
+                    Text(
+                      'Fire Protection',
+                      style: TextStyle(color: Colors.white60, fontSize: 12),
                     ),
                   ],
                 ),
+                const Spacer(),
+                InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.close,
+                      color: Colors.white70,
+                      size: 18,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(color: Colors.white12, height: 1),
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              children: [
+                _buildMenuItem(
+                  icon: Icons.home_outlined,
+                  title: 'Homepage',
+                  index: 0,
+                ),
+                _buildMenuItem(
+                  icon: Icons.inventory_2_outlined,
+                  title: 'Product Catalog',
+                  index: 1,
+                ),
+                _buildMenuItem(
+                  icon: Icons.construction_outlined,
+                  title: 'Services',
+                  index: 2,
+                ),
+                _buildMenuItem(
+                  icon: Icons.cases_outlined,
+                  title: 'Project Portfolio',
+                  index: 3,
+                ),
+                _buildMenuItem(
+                  icon: Icons.business_outlined,
+                  title: 'Company Profile',
+                  index: 4,
+                ),
+                _buildMenuItem(
+                  icon: Icons.settings_outlined,
+                  title: 'Settings',
+                  index: 5,
+                ),
+                _buildMenuItem(
+                  icon: Icons.shopping_bag_outlined,
+                  title: 'My Orders',
+                  index: 6,
+                ),
+                const SizedBox(height: 12),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(context); // Close drawer first
+                    _showRequestQuoteDialog(context); // Then open form
+                  },
+                  icon: const Icon(Icons.description_outlined, size: 20),
+                  label: const Text('Request Quote'),
+                ),
+                const SizedBox(height: 24),
+                _buildFooterLink(
+                  Icons.privacy_tip_outlined,
+                  'Privacy Policy',
+                  () => _showLegalDialog(
+                    context,
+                    'Privacy Policy',
+                    'Katala Fire Protection is committed to protecting your personal data...',
+                  ),
+                ),
+                _buildFooterLink(
+                  Icons.description_outlined,
+                  'Terms of Service',
+                  () => _showLegalDialog(
+                    context,
+                    'Terms of Service',
+                    'By using the Katala Fire Protection application and services, you agree to abide by our operational terms...',
+                  ),
+                ),
+                _buildFooterLink(
+                  Icons.verified_outlined,
+                  'ISO Certification',
+                  () => _showLegalDialog(
+                    context,
+                    'ISO Certification',
+                    'Katala Fire Protection strictly adheres to international standards for quality management...',
+                  ),
+                ),
+                _buildFooterLink(
+                  Icons.domain_outlined,
+                  'Business Registration',
+                  () => _showLegalDialog(
+                    context,
+                    'Business Registration',
+                    'Katala Fire Protection Product Trading is officially registered with the SEC and DTI...',
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(color: Colors.white12, height: 1),
+          InkWell(
+            onTap: () async {
+              try {
+                await ApiClient.post('/logout', {});
+              } catch (_) {
+                // Local logout still clears the stale token if the server is unavailable.
+              }
+              await ApiClient.clearSession();
+              if (context.mounted) {
+                Navigator.pushReplacementNamed(context, '/');
+              }
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Row(
+                children: const [
+                  Icon(Icons.logout, color: Colors.white54, size: 20),
+                  SizedBox(width: 12),
+                  Text(
+                    'Logout',
+                    style: TextStyle(
+                      color: Colors.white54,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
             ),
+          ),
         ],
       ),
     );
@@ -586,7 +552,9 @@ class _MainLayoutState extends State<MainLayout> {
                   title,
                   style: TextStyle(
                     fontSize: 15,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                    fontWeight: isSelected
+                        ? FontWeight.w600
+                        : FontWeight.normal,
                     color: isSelected ? AppColors.brand : Colors.white70,
                   ),
                 ),

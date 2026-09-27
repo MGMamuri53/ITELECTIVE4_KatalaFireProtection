@@ -57,3 +57,32 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## Supabase database
+
+The Laravel API uses the existing Supabase Postgres database through its
+Tokyo session pooler. The direct database hostname is IPv6-only, so use the
+pooler endpoint configured in `.env.example` for typical IPv4 networks.
+
+1. From this directory, copy `.env.example` to `.env`.
+2. Set `DB_PASSWORD` in `.env` to the database password from Supabase Project
+   Settings → Database. Keep the pooler host, port, database, and username
+   from `.env.example`. Do not commit `.env` or share the password.
+3. Ensure the PHP CLI used to run Artisan has the `pdo_pgsql` extension enabled.
+   On XAMPP, enable `extension=pdo_pgsql` in `C:\xampp\php\php.ini`, then open
+   a new terminal.
+4. Run `composer install` and `php artisan key:generate`.
+5. Check the connection with `php artisan db:show`, then start the API:
+   `php artisan serve --host 0.0.0.0 --port 8000`.
+6. From the Flutter project root, run
+   `flutter run -d chrome --dart-define=API_BASE_URL=http://127.0.0.1:8000/api`.
+
+For Android emulator testing, use
+`--dart-define=API_BASE_URL=http://10.0.2.2:8000/api` instead. For a physical
+device, use the computer's LAN IP address and allow port 8000 through the
+firewall.
+
+The Supabase schema is already provisioned and uses application-specific
+`tbl_*` tables. Do not run `php artisan migrate` against it: the Laravel
+scaffold migrations do not represent that schema. The setup scripts therefore
+install dependencies without running migrations.

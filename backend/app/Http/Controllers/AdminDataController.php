@@ -72,7 +72,7 @@ class AdminDataController extends Controller
             'v_serviceDescription' => $validated['description'] ?? null,
             'v_basePrice' => $validated['base_price'] ?? null,
             'v_isActive' => 1,
-        ]);
+        ], 'v_serviceId');
 
         return response()->json(['id' => $id], 201);
     }

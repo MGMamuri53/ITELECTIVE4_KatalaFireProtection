@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import '../services/api_client.dart';
 import 'package:katala/theme/app_theme.dart';
 
@@ -32,21 +30,7 @@ class _CustomerOrdersState extends State<CustomerOrders> {
         throw Exception('Please sign in before viewing orders.');
       }
 
-      final response = await http.get(
-        Uri.parse('http://127.0.0.1:8000/api/orders/my'),
-        headers: {
-          'Accept': 'application/json',
-          'Authorization': 'Bearer $accessToken',
-        },
-      );
-
-      if (response.statusCode != 200) {
-        debugPrint('LARAVEL STATUS: ${response.statusCode}');
-        debugPrint('LARAVEL RESPONSE: ${response.body}');
-        throw Exception('Failed to load orders');
-      }
-
-      final data = jsonDecode(response.body);
+      final data = await ApiClient.get('/orders/my');
 
       setState(() {
         _myOrders = List<Map<String, dynamic>>.from(data);
@@ -219,7 +203,10 @@ class _CustomerOrdersState extends State<CustomerOrders> {
                             ),
                           ],
                         ),
-                        const Divider(height: 24, color: AppColors.surfaceMuted),
+                        const Divider(
+                          height: 24,
+                          color: AppColors.surfaceMuted,
+                        ),
                         Row(
                           children: [
                             const Icon(

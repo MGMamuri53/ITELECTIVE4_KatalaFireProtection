@@ -43,7 +43,7 @@ class ServiceRequestController extends Controller
             'v_projectLocation' => $validated['location'] ?? null,
             'v_projectRequirements' => $validated['details'] ?? null,
             'v_requestStatus' => 'Pending',
-        ]);
+        ], 'v_serviceRequestId');
 
         return response()->json([
             'message' => 'Service request submitted successfully.',

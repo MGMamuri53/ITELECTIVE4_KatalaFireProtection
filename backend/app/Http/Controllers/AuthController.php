@@ -58,7 +58,7 @@ class AuthController extends Controller
                 'v_emailAddress' => $validated['email'],
                 'v_mobileNumber' => $validated['contact_number'] ?? null,
                 'v_isActive' => 1,
-            ]);
+            ], 'v_customerId');
 
             $roleId = DB::table('tbl_role')
                 ->where('v_roleName', 'Customer')

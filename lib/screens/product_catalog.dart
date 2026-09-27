@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import '../services/api_client.dart';
 import 'package:katala/theme/app_theme.dart';
 
@@ -28,16 +26,7 @@ class _ProductCatalogState extends State<ProductCatalog> {
 
   Future<List<Map<String, dynamic>>> _fetchProducts() async {
     try {
-      final response = await http.get(
-        Uri.parse('http://127.0.0.1:8000/api/products'),
-        headers: {'Accept': 'application/json'},
-      );
-
-      if (response.statusCode != 200) {
-        throw Exception('Failed to load products: ${response.body}');
-      }
-
-      final data = jsonDecode(response.body);
+      final data = await ApiClient.get('/products');
       return List<Map<String, dynamic>>.from(data);
     } catch (e) {
       debugPrint('Error fetching products: $e');
@@ -563,8 +552,8 @@ class _ProductCatalogState extends State<ProductCatalog> {
                                   });
 
                                   try {
-                                    final accessToken =
-                                        await ApiClient.token();
+                                    final accessToken = await ApiClient.token();
+                                    if (!context.mounted) return;
 
                                     if (accessToken == null ||
                                         accessToken.isEmpty) {
@@ -584,17 +573,9 @@ class _ProductCatalogState extends State<ProductCatalog> {
                                       return;
                                     }
 
-                                    final response = await http.post(
-                                      Uri.parse(
-                                        'http://127.0.0.1:8000/api/orders',
-                                      ),
-                                      headers: {
-                                        'Content-Type': 'application/json',
-                                        'Accept': 'application/json',
-                                        'Authorization':
-                                            'Bearer $accessToken',
-                                      },
-                                      body: jsonEncode({
+                                    final orderData = await ApiClient.post(
+                                      '/orders',
+                                      {
                                         'product_id': product['v_productId'],
                                         'customer_name': nameController.text,
                                         'email': emailController.text,
@@ -603,16 +584,8 @@ class _ProductCatalogState extends State<ProductCatalog> {
                                         'quantity': quantity,
                                         'fulfillment_method': fulfillment,
                                         'payment_method': paymentMethod,
-                                      }),
+                                      },
                                     );
-
-                                    if (response.statusCode != 201) {
-                                      throw Exception(
-                                        'Failed to place order: ${response.body}',
-                                      );
-                                    }
-
-                                    final orderData = jsonDecode(response.body);
                                     final orderNumber =
                                         orderData['order_number'];
 
@@ -785,9 +758,7 @@ class _ProductCatalogState extends State<ProductCatalog> {
                 color: isActive ? AppColors.brandTint : Colors.white,
                 borderRadius: BorderRadius.circular(KataTheme.radiusControl),
                 border: Border.all(
-                  color: isActive
-                      ? AppColors.brand
-                      : AppColors.divider,
+                  color: isActive ? AppColors.brand : AppColors.divider,
                 ),
               ),
               child: Row(
@@ -796,9 +767,7 @@ class _ProductCatalogState extends State<ProductCatalog> {
                   Icon(
                     cat['icon'] as IconData,
                     size: 16,
-                    color: isActive
-                        ? AppColors.brand
-                        : AppColors.inkMuted,
+                    color: isActive ? AppColors.brand : AppColors.inkMuted,
                   ),
                   const SizedBox(width: 8),
                   Text(
@@ -806,9 +775,7 @@ class _ProductCatalogState extends State<ProductCatalog> {
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-                      color: isActive
-                          ? AppColors.brand
-                          : AppColors.inkMuted,
+                      color: isActive ? AppColors.brand : AppColors.inkMuted,
                     ),
                   ),
                 ],

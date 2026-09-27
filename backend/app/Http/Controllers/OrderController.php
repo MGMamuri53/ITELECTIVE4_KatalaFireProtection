@@ -83,7 +83,7 @@ class OrderController extends Controller
                 'v_orderStatus' => 'Pending Confirmation',
                 'v_subtotalAmount' => $total,
                 'v_totalAmount' => $total,
-            ]);
+            ], 'v_orderId');
 
             // Create order item
             DB::table('tbl_orderItem')->insert([
@@ -96,10 +96,7 @@ class OrderController extends Controller
 
             DB::table('tbl_inventory')
                 ->where('v_productId', $validated['product_id'])
-                ->update([
-                    'v_quantityAvailable' =>
-                        $quantityAvailable - $validated['quantity'],
-                ]);
+                ->increment('v_quantityReserved', $validated['quantity']);
 
             // Create delivery/pickup record
             DB::table('tbl_deliveryPickup')->insert([
@@ -115,9 +112,8 @@ class OrderController extends Controller
             DB::table('tbl_payment')->insert([
                 'v_orderId' => $orderId,
                 'v_customerId' => $validated['customer_id'],
-                'v_paymentType' => 'Order Payment',
+                'v_amount' => $total,
                 'v_paymentMethod' => $validated['payment_method'],
-                'v_paymentAmount' => $total,
                 'v_paymentStatus' => 'Pending',
             ]);
 
