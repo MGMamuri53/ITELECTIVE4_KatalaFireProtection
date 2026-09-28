@@ -1,6 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
-import '../services/api_client.dart';
 import 'package:katala/theme/app_theme.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../services/api_client.dart';
 
 class AdminServices extends StatefulWidget {
   const AdminServices({super.key});
@@ -14,6 +18,7 @@ class _AdminServicesState extends State<AdminServices> {
   List<Map<String, dynamic>> _filteredServices = [];
   bool _isLoading = true;
   bool _hasError = false;
+  static const _servicesCacheKey = 'admin_services_cache';
   final TextEditingController _searchController = TextEditingController();
 
   final List<String> _serviceCategories = [
@@ -27,30 +32,78 @@ class _AdminServicesState extends State<AdminServices> {
   @override
   void initState() {
     super.initState();
-    _fetchServices();
+    _loadServices();
   }
 
-  Future<void> _fetchServices() async {
-    setState(() => _isLoading = true);
-    _hasError = false;
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadServices() async {
     try {
-      final response = await ApiClient.get('/admin/services');
-      if (mounted) {
+      final preferences = await SharedPreferences.getInstance();
+      final cachedServices = preferences.getString(_servicesCacheKey);
+      if (cachedServices != null && mounted) {
+        final services = List<Map<String, dynamic>>.from(
+          (jsonDecode(cachedServices) as List).map(
+            (service) => Map<String, dynamic>.from(service as Map),
+          ),
+        );
         setState(() {
-          _allServices = List<Map<String, dynamic>>.from(response);
-          _filteredServices = _allServices;
+          _allServices = services;
+          _filteredServices = _filterList(services, _searchController.text);
+          _isLoading = false;
         });
       }
+    } on FormatException catch (error) {
+      debugPrint('Ignoring invalid cached services: $error');
+    } on TypeError catch (error) {
+      debugPrint('Ignoring invalid cached services: $error');
+    } catch (error) {
+      debugPrint('Unable to read cached services: $error');
+    }
+    await _fetchServices(showLoading: _allServices.isEmpty);
+  }
+
+  Future<void> _fetchServices({bool showLoading = false}) async {
+    if (!mounted) return;
+
+    setState(() {
+      _isLoading = showLoading;
+      _hasError = false;
+    });
+
+    final messenger = ScaffoldMessenger.maybeOf(context);
+
+    try {
+      final response = await ApiClient.get(
+        '/admin/services',
+        timeout: const Duration(seconds: 10),
+      );
+      if (!mounted) return;
+
+      final services = List<Map<String, dynamic>>.from(response);
+      setState(() {
+        _allServices = services;
+        _filteredServices = _filterList(services, _searchController.text);
+      });
+      try {
+        final preferences = await SharedPreferences.getInstance();
+        await preferences.setString(_servicesCacheKey, jsonEncode(services));
+      } catch (error) {
+        debugPrint('Unable to cache services: $error');
+      }
     } catch (e) {
-      if (mounted) {
-        setState(() => _hasError = true);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(
-          const SnackBar(
-            content: Text('Unable to load services. Please check your internet connection.'),
-            backgroundColor: Colors.orange,
-          ),
+      if (!mounted) return;
+
+      setState(() {
+        _hasError = _allServices.isEmpty;
+      });
+      if (_allServices.isEmpty && context.mounted) {
+        messenger?.showSnackBar(
+          SnackBar(content: Text('Unable to load services: $e')),
         );
       }
     } finally {
@@ -61,39 +114,54 @@ class _AdminServicesState extends State<AdminServices> {
   }
 
   void _filterServices(String query) {
-    if (_hasError) return; // Don't filter if there's an error
-    
+    if (_hasError) return;
+
     setState(() {
-      if (query.isEmpty) {
-        _filteredServices = _allServices;
-      } else {
-        _filteredServices = _allServices.where((service) {
-          final name = (service['service_name'] ?? '').toString().toLowerCase();
-          final category = (service['category'] ?? '').toString().toLowerCase();
-          final searchLower = query.toLowerCase();
-          return name.contains(searchLower) || category.contains(searchLower);
-        }).toList();
-      }
+      _filteredServices = _filterList(_allServices, query);
     });
+  }
+
+  List<Map<String, dynamic>> _filterList(
+    List<Map<String, dynamic>> services,
+    String query,
+  ) {
+    final searchLower = query.trim().toLowerCase();
+    if (searchLower.isEmpty) return List<Map<String, dynamic>>.from(services);
+    return services.where((service) {
+      final name = (service['service_name'] ?? '').toString().toLowerCase();
+      final category = (service['category'] ?? '').toString().toLowerCase();
+      return name.contains(searchLower) || category.contains(searchLower);
+    }).toList();
   }
 
   void _showServiceDialog({Map<String, dynamic>? service}) {
     final isEditing = service != null;
-    final nameController = TextEditingController(
-      text: isEditing ? service['service_name'] : '',
-    );
-    final descController = TextEditingController(
-      text: isEditing ? service['description'] : '',
-    );
 
-    String selectedCategory =
-        (isEditing && _serviceCategories.contains(service['category']))
-        ? service['category']
-        : _serviceCategories.first;
+    String serviceName = '';
+    String serviceDescription = '';
+    String servicePrice = '';
+    String selectedCategory = _serviceCategories.first;
+
+    if (isEditing) {
+      serviceName = (service['service_name'] ?? '').toString();
+      serviceDescription = (service['description'] ?? '').toString();
+      servicePrice = (service['base_price'] ?? '').toString();
+
+      final category = service['category'];
+      if (_serviceCategories.contains(category)) {
+        selectedCategory = category.toString();
+      }
+    }
+
+    final nameController = TextEditingController(text: serviceName);
+    final descController = TextEditingController(text: serviceDescription);
+    final priceController = TextEditingController(text: servicePrice);
+    final mainMessenger = ScaffoldMessenger.maybeOf(context);
+    final mainNavigator = Navigator.of(context);
 
     showDialog(
       context: context,
-      builder: (context) {
+      builder: (dialogContext) {
         return AlertDialog(
           backgroundColor: Colors.white,
           title: Text(
@@ -124,8 +192,10 @@ class _AdminServicesState extends State<AdminServices> {
                       child: Text(category),
                     );
                   }).toList(),
-                  onChanged: (val) {
-                    if (val != null) selectedCategory = val;
+                  onChanged: (value) {
+                    if (value != null) {
+                      selectedCategory = value;
+                    }
                   },
                 ),
                 const SizedBox(height: 16),
@@ -137,49 +207,87 @@ class _AdminServicesState extends State<AdminServices> {
                     border: OutlineInputBorder(),
                   ),
                 ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: priceController,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(
+                    labelText: 'Base price',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
               ],
             ),
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.of(dialogContext).pop(),
               child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
             ),
             ElevatedButton(
               onPressed: () async {
-                if (nameController.text.isEmpty) return;
+                final cleanedName = nameController.text.trim();
+                if (cleanedName.isEmpty) {
+                  ScaffoldMessenger.of(dialogContext).showSnackBar(
+                    const SnackBar(content: Text('Service name is required.')),
+                  );
+                  return;
+                }
+
+                final rawPrice = priceController.text.trim();
+                final basePrice = rawPrice.isEmpty
+                    ? null
+                    : double.tryParse(rawPrice);
+                if (rawPrice.isNotEmpty &&
+                    (basePrice == null || basePrice < 0)) {
+                  ScaffoldMessenger.of(dialogContext).showSnackBar(
+                    const SnackBar(content: Text('Enter a valid base price.')),
+                  );
+                  return;
+                }
 
                 final data = {
-                  'service_name': nameController.text,
+                  'service_name': cleanedName,
                   'category': selectedCategory,
-                  'description': descController.text,
+                  'description': descController.text.trim(),
+                  'base_price': basePrice,
                 };
 
                 try {
                   if (isEditing) {
-                    await ApiClient.put('/admin/services/${service['id']}', data);
+                    final serviceId = service['id'];
+                    if (serviceId == null) {
+                      return;
+                    }
+                    await ApiClient.put('/admin/services/$serviceId', data);
                   } else {
                     await ApiClient.post('/admin/services', data);
                   }
-                  if (mounted) {
-                    Navigator.pop(context);
-                    _fetchServices();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          isEditing ? 'Service Updated!' : 'Service Added!',
-                        ),
-                        backgroundColor: Colors.green,
+
+                  if (!mounted) return;
+                  mainNavigator.pop();
+
+                  await _fetchServices();
+
+                  if (!mounted) return;
+                  mainMessenger?.showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        isEditing ? 'Service Updated!' : 'Service Added!',
                       ),
-                    );
-                  }
+                      backgroundColor: Colors.green,
+                    ),
+                  );
                 } catch (e) {
-                  debugPrint(e.toString());
+                  if (!mounted) return;
+                  mainMessenger?.showSnackBar(
+                    SnackBar(content: Text('Unable to save service: $e')),
+                  );
                 }
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.brand,
-              ),
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.brand),
               child: Text(
                 isEditing ? 'Update' : 'Save',
                 style: const TextStyle(color: Colors.white),
@@ -191,20 +299,54 @@ class _AdminServicesState extends State<AdminServices> {
     );
   }
 
-  void _deleteService(String id) async {
+  Future<void> _deleteService(String id) async {
+    final messenger = ScaffoldMessenger.maybeOf(context);
+
     try {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Archive service?'),
+          content: const Text(
+            'This service will be hidden from customer listings; existing requests remain unchanged.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: const Text('Archive'),
+            ),
+          ],
+        ),
+      );
+
+      if (confirmed != true) return;
+
       await ApiClient.delete('/admin/services/$id');
-      _fetchServices();
+      await _fetchServices();
+
+      if (!context.mounted) return;
+      messenger?.showSnackBar(
+        const SnackBar(content: Text('Service archived.')),
+      );
     } catch (e) {
-      debugPrint(e.toString());
+      if (!context.mounted) return;
+      messenger?.showSnackBar(
+        SnackBar(content: Text('Unable to archive service: $e')),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = MediaQuery.of(context).size.width > 800;
+
     return Container(
-      margin: const EdgeInsets.all(24.0),
-      padding: const EdgeInsets.all(32.0),
+      margin: EdgeInsets.all(isDesktop ? 24.0 : 16.0),
+      padding: EdgeInsets.all(isDesktop ? 32.0 : 16.0),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -212,16 +354,15 @@ class _AdminServicesState extends State<AdminServices> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // BINALOT NATIN SA WRAP PARA HINDI MA-CUT ANG BUTTON SA MOBILE
           Wrap(
             alignment: WrapAlignment.spaceBetween,
             crossAxisAlignment: WrapCrossAlignment.center,
             spacing: 16,
             runSpacing: 16,
             children: [
-              Column(
+              const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
+                children: [
                   Text(
                     'Service Management',
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
@@ -275,12 +416,11 @@ class _AdminServicesState extends State<AdminServices> {
             ],
           ),
           const SizedBox(height: 16),
-          // BINALOT ANG HEADER AT LIST SA ISANG HORIZONTAL SCROLLVIEW
           Expanded(
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: SizedBox(
-                width: 800, // MINIMUM WIDTH PARA HINDI MA-SQUEEZE
+                width: 900,
                 child: Column(
                   children: [
                     Container(
@@ -296,8 +436,8 @@ class _AdminServicesState extends State<AdminServices> {
                           ),
                         ),
                       ),
-                      child: Row(
-                        children: const [
+                      child: const Row(
+                        children: [
                           Expanded(
                             flex: 3,
                             child: Text(
@@ -332,7 +472,7 @@ class _AdminServicesState extends State<AdminServices> {
                             ),
                           ),
                           Expanded(
-                            flex: 1,
+                            flex: 2,
                             child: Text(
                               'ACTIONS',
                               style: TextStyle(
@@ -450,7 +590,7 @@ class _AdminServicesState extends State<AdminServices> {
                                         ),
                                       ),
                                       Expanded(
-                                        flex: 1,
+                                        flex: 2,
                                         child: Row(
                                           mainAxisAlignment:
                                               MainAxisAlignment.end,
@@ -472,8 +612,9 @@ class _AdminServicesState extends State<AdminServices> {
                                                 color: Colors.red,
                                                 size: 18,
                                               ),
-                                              onPressed: () =>
-                                                  _deleteService(service['id']),
+                                              onPressed: () => _deleteService(
+                                                service['id'].toString(),
+                                              ),
                                             ),
                                           ],
                                         ),

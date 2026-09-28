@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/api_client.dart';
 import 'package:katala/theme/app_theme.dart';
 
 class ServicesPage extends StatefulWidget {
@@ -11,56 +12,44 @@ class ServicesPage extends StatefulWidget {
 }
 
 class _ServicesPageState extends State<ServicesPage> {
-  static const List<Map<String, dynamic>> _services = [
-    {
-      'title': 'Fire Extinguishers',
-      'description':
-          'Supply, selection, inspection, and servicing of portable fire extinguishers for your facility.',
-      'icon': Icons.fire_extinguisher,
-    },
-    {
-      'title': 'Fire Alarm & Detection Systems',
-      'description':
-          'Design, installation, testing, and maintenance of fire alarm and detection systems.',
-      'icon': Icons.sensors,
-    },
-    {
-      'title': 'Fire Sprinkler Systems',
-      'description':
-          'Sprinkler system design, installation, inspection, testing, and preventive maintenance.',
-      'icon': Icons.shower_outlined,
-    },
-    {
-      'title': 'Kitchen Suppression Systems',
-      'description':
-          'Fire suppression solutions for commercial kitchens, hoods, ducts, and cooking equipment.',
-      'icon': Icons.restaurant_outlined,
-    },
-    {
-      'title': 'Firefighting Equipment',
-      'description':
-          'Fire hoses, cabinets, hydrants, pumps, piping, and other firefighting equipment.',
-      'icon': Icons.settings_outlined,
-    },
-    {
-      'title': 'System Installation',
-      'description':
-          'Professional installation of fire-protection systems suited to your site requirements.',
-      'icon': Icons.construction_outlined,
-    },
-    {
-      'title': 'Maintenance & Inspection',
-      'description':
-          'Scheduled inspection, testing, repair, and preventive maintenance for existing systems.',
-      'icon': Icons.build_circle_outlined,
-    },
-    {
-      'title': 'Fire Safety Monitoring',
-      'description':
-          'Ongoing monitoring and support to help keep your fire-protection systems ready.',
-      'icon': Icons.visibility_outlined,
-    },
-  ];
+  List<Map<String, dynamic>> _services = [];
+  bool _isLoading = true;
+  String? _loadError;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchServices();
+  }
+
+  Future<void> _fetchServices() async {
+    setState(() {
+      _isLoading = true;
+      _loadError = null;
+    });
+    try {
+      final response = await ApiClient.get('/services');
+      if (!mounted) return;
+      setState(() {
+        _services = List<Map<String, dynamic>>.from(response);
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _loadError = error.toString());
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  IconData _serviceIcon(String category) {
+    return switch (category.toLowerCase()) {
+      'installation' => Icons.construction_outlined,
+      'inspection' || 'testing' => Icons.fact_check_outlined,
+      'repair' => Icons.build_circle_outlined,
+      'preventive maintenance' => Icons.settings_outlined,
+      _ => Icons.design_services_outlined,
+    };
+  }
 
   void _showServiceDetails(
     BuildContext context,
@@ -108,7 +97,10 @@ class _ServicesPageState extends State<ServicesPage> {
                   ),
                 ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.brandTint,
                   borderRadius: BorderRadius.circular(12),
@@ -158,11 +150,7 @@ class _ServicesPageState extends State<ServicesPage> {
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildHeaderSection(),
-          _buildServicesList(),
-          _buildFooter(),
-        ],
+        children: [_buildHeaderSection(), _buildServicesList(), _buildFooter()],
       ),
     );
   }
@@ -219,121 +207,164 @@ class _ServicesPageState extends State<ServicesPage> {
   }
 
   Widget _buildServicesList() {
+    if (_isLoading) {
+      return const Padding(
+        padding: EdgeInsets.all(32),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (_loadError != null) {
+      return Padding(
+        padding: const EdgeInsets.all(24),
+        child: Center(
+          child: Column(
+            children: [
+              Text('Unable to load services. $_loadError'),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: _fetchServices,
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    if (_services.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(24),
+        child: Center(child: Text('No services are currently available.')),
+      );
+    }
+
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: _services.map((service) {
-              final title = service['title'] as String;
-              final desc = service['description'] as String;
-              final serviceIcon = service['icon'] as IconData;
+          final title = service['service_name']?.toString() ?? '';
+          final desc = service['description']?.toString() ?? '';
+          final category = service['category']?.toString() ?? 'Service';
+          final serviceIcon = _serviceIcon(category);
 
-              return Container(
-                margin: const EdgeInsets.only(bottom: 16),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(KataUi.radiusCard),
-                  border: Border.all(color: AppColors.divider),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x0A12151C),
-                      blurRadius: 14,
-                      offset: Offset(0, 4),
-                    ),
-                  ],
+          return Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(KataUi.radiusCard),
+              border: Border.all(color: AppColors.divider),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x0A12151C),
+                  blurRadius: 14,
+                  offset: Offset(0, 4),
                 ),
-                child: Column(
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: const BoxDecoration(
-                            color: AppColors.brandTint,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            serviceIcon,
-                            color: AppColors.brand,
-                            size: 24,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                title,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                  color: AppColors.ink,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                desc,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: AppColors.inkMuted,
-                                  height: 1.4,
-                                ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: const BoxDecoration(
+                        color: AppColors.brandTint,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        serviceIcon,
+                        color: AppColors.brand,
+                        size: 24,
+                      ),
                     ),
-                    const SizedBox(height: 16),
-                    // IN-UPDATE NATIN ANG BUTTONS DITO PARA DALAWA NA
-                    Row(
-                      children: [
-                        Expanded(
-                          flex: 1,
-                          child: OutlinedButton(
-                            onPressed: () => _showServiceDetails(
-                              context,
-                              title,
-                              desc,
-                              'Fire Protection Service',
-                              '',
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: AppColors.ink,
                             ),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: AppColors.inkMuted,
-                              side: const BorderSide(color: AppColors.divider),
-                              shape: RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius.circular(KataTheme.radiusControl),
-                              ),
-                              textStyle: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                              ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            desc,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.inkMuted,
+                              height: 1.4,
                             ),
-                            child: const Text('Details'),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          flex: 2,
-                          child: ElevatedButton.icon(
-                            onPressed: widget
-                                .onStartInquiry, // ETO YUNG MAGBUBUKAS NG FORM
-                            icon: const Icon(Icons.arrow_forward, size: 16),
-                            label: const Text('Start service inquiry'),
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ],
                 ),
-              );
-            }).toList(),
+                const SizedBox(height: 16),
+                // IN-UPDATE NATIN ANG BUTTONS DITO PARA DALAWA NA
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final detailsButton = OutlinedButton(
+                      onPressed: () => _showServiceDetails(
+                        context,
+                        title,
+                        desc,
+                        category,
+                        '',
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.inkMuted,
+                        side: const BorderSide(color: AppColors.divider),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                            KataTheme.radiusControl,
+                          ),
+                        ),
+                        textStyle: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      child: const Text('Details'),
+                    );
+                    final inquiryButton = ElevatedButton.icon(
+                      onPressed: widget.onStartInquiry,
+                      icon: const Icon(Icons.arrow_forward, size: 16),
+                      label: const Text('Start service inquiry'),
+                    );
+
+                    if (constraints.maxWidth < 360) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          detailsButton,
+                          const SizedBox(height: 8),
+                          inquiryButton,
+                        ],
+                      );
+                    }
+
+                    return Row(
+                      children: [
+                        Expanded(child: detailsButton),
+                        const SizedBox(width: 8),
+                        Expanded(flex: 2, child: inquiryButton),
+                      ],
+                    );
+                  },
+                ),
+              ],
+            ),
+          );
+        }).toList(),
       ),
     );
   }

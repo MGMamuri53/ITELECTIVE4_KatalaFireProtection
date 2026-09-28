@@ -8,6 +8,7 @@ import 'admin_requests.dart';
 import 'admin_appointments.dart';
 import 'admin_customers.dart';
 import 'admin_accounts.dart';
+import 'admin_settings.dart';
 import 'package:katala/theme/app_theme.dart';
 
 class AdminLayout extends StatefulWidget {
@@ -32,12 +33,37 @@ class _AdminLayoutState extends State<AdminLayout> {
     {'icon': Icons.calendar_today_outlined, 'title': 'Appointments'},
     {'icon': Icons.people_outline, 'title': 'Customers'},
     {'icon': Icons.manage_accounts_outlined, 'title': 'Accounts'},
+    {'icon': Icons.settings_outlined, 'title': 'Account Settings'},
   ];
 
   @override
   void initState() {
     super.initState();
-    _checkAdminAccess();
+    _restoreSectionAndCheckAccess();
+  }
+
+  Future<void> _restoreSectionAndCheckAccess() async {
+    final role = await ApiClient.role();
+    if (role == null || !role.toLowerCase().contains('admin')) {
+      if (mounted) Navigator.pushReplacementNamed(context, '/');
+      return;
+    }
+    final section = await ApiClient.savedSection('Admin');
+    if (!mounted) return;
+    if (section >= 0 && section < _menuItems.length) {
+      setState(() => _selectedIndex = section);
+    }
+    await _checkAdminAccess();
+  }
+
+  Future<void> _selectAdminSection(int index) async {
+    if (index < 0 || index >= _menuItems.length) return;
+    setState(() => _selectedIndex = index);
+    try {
+      await ApiClient.saveSection('Admin', index);
+    } catch (error) {
+      debugPrint('Unable to save admin navigation state: $error');
+    }
   }
 
   Future<void> _checkAdminAccess() async {
@@ -49,6 +75,8 @@ class _AdminLayoutState extends State<AdminLayout> {
       if (!mounted) return;
 
       if (!role.contains('admin')) {
+        await ApiClient.clearSession();
+        if (!mounted) return;
         Navigator.pushReplacementNamed(context, '/');
         return;
       }
@@ -61,7 +89,16 @@ class _AdminLayoutState extends State<AdminLayout> {
       debugPrint('Admin authorization check failed: $e');
 
       if (mounted) {
-        Navigator.pushReplacementNamed(context, '/');
+        final savedRole = await ApiClient.role();
+        if (!mounted) return;
+        if (savedRole != null && savedRole.toLowerCase().contains('admin')) {
+          setState(() {
+            _isAuthorized = true;
+            _isCheckingAccess = false;
+          });
+        } else {
+          Navigator.pushReplacementNamed(context, '/');
+        }
       }
     }
   }
@@ -163,11 +200,14 @@ class _AdminLayoutState extends State<AdminLayout> {
               itemBuilder: (context, index) {
                 bool isSelected = _selectedIndex == index;
                 return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 3,
+                  ),
                   child: InkWell(
                     borderRadius: BorderRadius.circular(12),
                     onTap: () {
-                      setState(() => _selectedIndex = index);
+                      _selectAdminSection(index);
                       if (!isDesktop) {
                         Navigator.pop(context);
                       }
@@ -280,10 +320,7 @@ class _AdminLayoutState extends State<AdminLayout> {
               ),
               Text(
                 'Overview & management',
-                style: TextStyle(
-                  color: AppColors.inkMuted,
-                  fontSize: 12,
-                ),
+                style: TextStyle(color: AppColors.inkMuted, fontSize: 12),
               ),
             ],
           ),
@@ -336,7 +373,8 @@ class _AdminLayoutState extends State<AdminLayout> {
         return const AdminCustomers();
       case 7:
         return const AdminAccounts();
-      // TINANGGAL NA ANG CASE 8 (Settings)
+      case 8:
+        return const AdminSettings();
       default:
         return const AdminDashboard();
     }

@@ -13,6 +13,7 @@ class _AdminCustomersState extends State<AdminCustomers> {
   List<Map<String, dynamic>> _allCustomers = [];
   List<Map<String, dynamic>> _filteredCustomers = [];
   bool _isLoading = true;
+  bool _hasError = false;
   final TextEditingController _searchController = TextEditingController();
 
   @override
@@ -30,10 +31,16 @@ class _AdminCustomersState extends State<AdminCustomers> {
         setState(() {
           _allCustomers = List<Map<String, dynamic>>.from(response);
           _filteredCustomers = _allCustomers;
+          _hasError = false;
         });
       }
     } catch (e) {
-      debugPrint('Error fetching customers: $e');
+      if (mounted) {
+        setState(() => _hasError = true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Unable to load customer accounts: $e')),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -54,11 +61,15 @@ class _AdminCustomersState extends State<AdminCustomers> {
               .toString()
               .toLowerCase();
           final email = (customer['email'] ?? '').toString().toLowerCase();
+          final phone = (customer['contact_number'] ?? '')
+              .toString()
+              .toLowerCase();
           final searchLower = query.toLowerCase();
 
           return firstName.contains(searchLower) ||
               lastName.contains(searchLower) ||
-              email.contains(searchLower);
+              email.contains(searchLower) ||
+              phone.contains(searchLower);
         }).toList();
       }
     });
@@ -232,6 +243,13 @@ class _AdminCustomersState extends State<AdminCustomers> {
                                 color: AppColors.brand,
                               ),
                             )
+                          : _hasError
+                          ? Center(
+                              child: ElevatedButton(
+                                onPressed: _fetchCustomers,
+                                child: const Text('Retry'),
+                              ),
+                            )
                           : _filteredCustomers.isEmpty
                           ? const Center(
                               child: Text(
@@ -243,7 +261,8 @@ class _AdminCustomersState extends State<AdminCustomers> {
                               itemCount: _filteredCustomers.length,
                               itemBuilder: (context, index) {
                                 final customer = _filteredCustomers[index];
-                                final String id = customer['id'] ?? 'N/A';
+                                final String id =
+                                    customer['id']?.toString() ?? 'N/A';
                                 final String shortId = id.length > 8
                                     ? id.substring(0, 8).toUpperCase()
                                     : id;

@@ -45,6 +45,7 @@ class _AdminRequestsState extends State<AdminRequests> {
     setState(() => _isLoading = true);
     try {
       final response = await ApiClient.get('/admin/requests');
+      if (!mounted) return;
       setState(() {
         _requests = List<Map<String, dynamic>>.from(response);
       });
@@ -55,7 +56,7 @@ class _AdminRequestsState extends State<AdminRequests> {
         ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -85,7 +86,7 @@ class _AdminRequestsState extends State<AdminRequests> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Project ${request['reference_no']}',
+              'Request ${request['request_number'] ?? request['id']}',
               style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -97,7 +98,7 @@ class _AdminRequestsState extends State<AdminRequests> {
             _buildInfoRow('Email', request['email'] ?? 'N/A'),
             _buildInfoRow('Contact', request['contact_number'] ?? 'N/A'),
             _buildInfoRow('Location', request['location'] ?? 'N/A'),
-            _buildInfoRow('Service Req.', request['request_type'] ?? 'N/A'),
+            _buildInfoRow('Service Req.', request['service'] ?? 'N/A'),
             const SizedBox(height: 16),
             const Text(
               'Client Notes / Details:',
@@ -187,7 +188,7 @@ class _AdminRequestsState extends State<AdminRequests> {
                     try {
                       await ApiClient.put('/admin/requests/${request['id']}', {
                         'status': newStatus,
-                        'admin_response': responseController.text,
+                        'admin_response': responseController.text.trim(),
                       });
 
                       if (mounted) {
@@ -695,7 +696,7 @@ class _AdminRequestsState extends State<AdminRequests> {
                             Expanded(
                               flex: 2,
                               child: Text(
-                                req['reference_no'] ?? 'N/A',
+                                req['request_number'] ?? 'N/A',
                                 style: const TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
@@ -726,7 +727,7 @@ class _AdminRequestsState extends State<AdminRequests> {
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
-                                      req['request_type'] ?? 'General',
+                                      req['service'] ?? 'General',
                                       style: const TextStyle(
                                         fontSize: 13,
                                         color: AppColors.inkMuted,

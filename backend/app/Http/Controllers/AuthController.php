@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Support\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -95,6 +96,68 @@ class AuthController extends Controller
         ]);
     }
 
+    public function updateProfile(Request $request)
+    {
+        $validated = $request->validate([
+            'first_name' => 'required|string|max:100',
+            'last_name' => 'required|string|max:100',
+            'mobile_number' => 'nullable|string|max:30',
+        ]);
+
+        $user = $request->user();
+        $user->forceFill([
+            'v_firstName' => $validated['first_name'],
+            'v_lastName' => $validated['last_name'],
+            'v_mobileNumber' => $validated['mobile_number'] ?? null,
+            'v_updatedAt' => now(),
+        ])->save();
+
+        ActivityLogger::record(
+            (int) $user->v_userId,
+            'updated',
+            'tbl_user',
+            (int) $user->v_userId,
+            'Updated account profile.',
+            $request->ip(),
+        );
+
+        return response()->json([
+            'message' => 'Profile updated.',
+            'user' => $this->userPayload($user->refresh(), $this->roleName($user)),
+        ]);
+    }
+
+    public function updatePassword(Request $request)
+    {
+        $validated = $request->validate([
+            'current_password' => 'required|string',
+            'new_password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = $request->user();
+        if (!Hash::check($validated['current_password'], $user->v_passwordHash)) {
+            throw ValidationException::withMessages([
+                'current_password' => ['The current password is incorrect.'],
+            ]);
+        }
+
+        $user->forceFill([
+            'v_passwordHash' => Hash::make($validated['new_password']),
+            'v_updatedAt' => now(),
+        ])->save();
+
+        ActivityLogger::record(
+            (int) $user->v_userId,
+            'updated',
+            'tbl_user',
+            (int) $user->v_userId,
+            'Changed account password.',
+            $request->ip(),
+        );
+
+        return response()->json(['message' => 'Password updated.']);
+    }
+
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()?->delete();
@@ -113,5 +176,12 @@ class AuthController extends Controller
             'email' => $user->v_emailAddress,
             'contact_number' => $user->v_mobileNumber,
         ];
+    }
+
+    private function roleName(User $user): string
+    {
+        return DB::table('tbl_role')
+            ->where('v_roleId', $user->v_roleId)
+            ->value('v_roleName') ?? 'Customer';
     }
 }

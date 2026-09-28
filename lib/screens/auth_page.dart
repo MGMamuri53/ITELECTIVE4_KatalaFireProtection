@@ -40,10 +40,9 @@ class _AuthPageState extends State<AuthPage> {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) =>
-                  role.toLowerCase().contains('admin')
-                      ? const AdminLayout()
-                      : const MainLayout(),
+              builder: (context) => role.toLowerCase().contains('admin')
+                  ? const AdminLayout()
+                  : const MainLayout(),
             ),
           );
         }
@@ -149,11 +148,7 @@ class _AuthPageState extends State<AuthPage> {
               children: [
                 Row(
                   children: [
-                    const Icon(
-                      Icons.shield,
-                      color: AppColors.brand,
-                      size: 18,
-                    ),
+                    const Icon(Icons.shield, color: AppColors.brand, size: 18),
                     const SizedBox(width: 8),
                     const Text(
                       'Katala FireSafe',
@@ -176,7 +171,9 @@ class _AuthPageState extends State<AuthPage> {
                   decoration: BoxDecoration(
                     color: Colors.black.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.2),
+                    ),
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -223,6 +220,7 @@ class _AuthPageState extends State<AuthPage> {
   }
 
   Widget _buildAuthForm() {
+    final isNarrow = MediaQuery.of(context).size.width < 480;
     return Padding(
       padding: const EdgeInsets.all(32.0),
       child: Column(
@@ -257,25 +255,34 @@ class _AuthPageState extends State<AuthPage> {
           const SizedBox(height: 32),
 
           if (!_isLogin) ...[
-            Row(
-              children: [
-                Expanded(
-                  child: _buildTextField(
-                    'First Name',
-                    'Jane',
-                    _firstNameController,
+            if (isNarrow)
+              Column(
+                children: [
+                  _buildTextField('First Name', 'Jane', _firstNameController),
+                  const SizedBox(height: 16),
+                  _buildTextField('Last Name', 'Doe', _lastNameController),
+                ],
+              )
+            else
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildTextField(
+                      'First Name',
+                      'Jane',
+                      _firstNameController,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildTextField(
-                    'Last Name',
-                    'Doe',
-                    _lastNameController,
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _buildTextField(
+                      'Last Name',
+                      'Doe',
+                      _lastNameController,
+                    ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
             const SizedBox(height: 16),
           ],
 
@@ -298,27 +305,46 @@ class _AuthPageState extends State<AuthPage> {
           ],
 
           if (!_isLogin) ...[
-            Row(
-              children: [
-                Expanded(
-                  child: _buildTextField(
+            if (isNarrow)
+              Column(
+                children: [
+                  _buildTextField(
                     'Password',
                     '••••••••',
                     _passwordController,
                     isPassword: true,
                   ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildTextField(
+                  const SizedBox(height: 16),
+                  _buildTextField(
                     'Confirm Password',
                     '••••••••',
                     _confirmPasswordController,
                     isPassword: true,
                   ),
-                ),
-              ],
-            ),
+                ],
+              )
+            else
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildTextField(
+                      'Password',
+                      '••••••••',
+                      _passwordController,
+                      isPassword: true,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: _buildTextField(
+                      'Confirm Password',
+                      '••••••••',
+                      _confirmPasswordController,
+                      isPassword: true,
+                    ),
+                  ),
+                ],
+              ),
           ] else ...[
             _buildTextField(
               'Password',
@@ -435,9 +461,7 @@ class _AuthPageState extends State<AuthPage> {
           obscureText: isPassword,
           keyboardType: keyboardType,
           style: const TextStyle(fontSize: 14),
-          decoration: InputDecoration(
-            hintText: hint,
-          ),
+          decoration: InputDecoration(hintText: hint),
         ),
       ],
     );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/api_client.dart';
 import 'package:katala/theme/app_theme.dart';
 
 class AdminSettings extends StatefulWidget {
@@ -14,6 +15,11 @@ class _AdminSettingsState extends State<AdminSettings> {
   bool _emailNotifications = true;
   bool _pushNotifications = false;
   bool _isActionLoading = false;
+  String _firstName = '';
+  String _lastName = '';
+  String _email = '';
+  String _mobileNumber = '';
+  String _role = '';
 
   Future<void> _loadNotificationSettings() async {
     final prefs = await SharedPreferences.getInstance();
@@ -24,11 +30,34 @@ class _AdminSettingsState extends State<AdminSettings> {
       _emailNotifications = prefs.getBool('email_notifications') ?? true;
       _pushNotifications = prefs.getBool('push_notifications') ?? false;
     });
+
+    try {
+      final response = await ApiClient.get('/me');
+      final user = Map<String, dynamic>.from(response['user'] ?? {});
+      if (!mounted) return;
+      setState(() {
+        _firstName = user['first_name']?.toString() ?? '';
+        _lastName = user['last_name']?.toString() ?? '';
+        _email = user['email']?.toString() ?? '';
+        _mobileNumber = user['contact_number']?.toString() ?? '';
+        _role = user['role']?.toString() ?? '';
+      });
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Unable to load account profile: $error')),
+        );
+      }
+    }
   }
 
   // 1. CHANGE PASSWORD FUNCTION
   void _showChangePasswordDialog() {
+    final currentPasswordController = TextEditingController();
     final passwordController = TextEditingController();
+    final confirmationController = TextEditingController();
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
     bool isObscure = true;
 
     showDialog(
@@ -42,20 +71,43 @@ class _AdminSettingsState extends State<AdminSettings> {
                 'Change Password',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
-              content: TextField(
-                controller: passwordController,
-                obscureText: isObscure,
-                decoration: InputDecoration(
-                  labelText: 'New Password',
-                  border: const OutlineInputBorder(),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      isObscure ? Icons.visibility_off : Icons.visibility,
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: currentPasswordController,
+                    obscureText: isObscure,
+                    decoration: const InputDecoration(
+                      labelText: 'Current Password',
+                      border: OutlineInputBorder(),
                     ),
-                    onPressed: () =>
-                        setDialogState(() => isObscure = !isObscure),
                   ),
-                ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: passwordController,
+                    obscureText: isObscure,
+                    decoration: InputDecoration(
+                      labelText: 'New Password (at least 8 characters)',
+                      border: const OutlineInputBorder(),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          isObscure ? Icons.visibility_off : Icons.visibility,
+                        ),
+                        onPressed: () =>
+                            setDialogState(() => isObscure = !isObscure),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: confirmationController,
+                    obscureText: isObscure,
+                    decoration: const InputDecoration(
+                      labelText: 'Confirm New Password',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ],
               ),
               actions: [
                 TextButton(
@@ -67,11 +119,23 @@ class _AdminSettingsState extends State<AdminSettings> {
                 ),
                 ElevatedButton(
                   onPressed: () async {
-                    if (passwordController.text.length < 6) {
+                    if (passwordController.text.length < 8) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text(
-                            'Password must be at least 6 characters.',
+                            'Password must be at least 8 characters.',
+                          ),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                      return;
+                    }
+                    if (passwordController.text !=
+                        confirmationController.text) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'New password confirmation does not match.',
                           ),
                           backgroundColor: Colors.red,
                         ),
@@ -79,9 +143,15 @@ class _AdminSettingsState extends State<AdminSettings> {
                       return;
                     }
                     try {
+                      await ApiClient.put('/me/password', {
+                        'current_password': currentPasswordController.text,
+                        'new_password': passwordController.text,
+                        'new_password_confirmation':
+                            confirmationController.text,
+                      });
                       if (mounted) {
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
+                        navigator.pop();
+                        messenger.showSnackBar(
                           const SnackBar(
                             content: Text('Password updated successfully!'),
                             backgroundColor: Colors.green,
@@ -90,7 +160,7 @@ class _AdminSettingsState extends State<AdminSettings> {
                       }
                     } catch (e) {
                       if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
+                        messenger.showSnackBar(
                           SnackBar(
                             content: Text('Error: $e'),
                             backgroundColor: Colors.red,
@@ -117,7 +187,11 @@ class _AdminSettingsState extends State<AdminSettings> {
 
   // 2. EDIT PROFILE FUNCTION
   void _showEditProfileDialog() {
-    final nameController = TextEditingController();
+    final firstNameController = TextEditingController(text: _firstName);
+    final lastNameController = TextEditingController(text: _lastName);
+    final mobileController = TextEditingController(text: _mobileNumber);
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
 
     showDialog(
       context: context,
@@ -132,16 +206,31 @@ class _AdminSettingsState extends State<AdminSettings> {
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
-                controller: nameController,
+                controller: firstNameController,
                 decoration: const InputDecoration(
-                  labelText: 'Display Name',
+                  labelText: 'First name',
                   border: OutlineInputBorder(),
-                  prefixIcon: Icon(Icons.person_outline),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: lastNameController,
+                decoration: const InputDecoration(
+                  labelText: 'Last name',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: mobileController,
+                decoration: const InputDecoration(
+                  labelText: 'Mobile number',
+                  border: OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 16),
               const Text(
-                'Email cannot be changed directly for security reasons.',
+                'Email is managed by your account administrator.',
                 style: TextStyle(fontSize: 12, color: Colors.grey),
               ),
             ],
@@ -154,9 +243,22 @@ class _AdminSettingsState extends State<AdminSettings> {
             ElevatedButton(
               onPressed: () async {
                 try {
+                  final response = await ApiClient.put('/me/profile', {
+                    'first_name': firstNameController.text.trim(),
+                    'last_name': lastNameController.text.trim(),
+                    'mobile_number': mobileController.text.trim(),
+                  });
+                  final user = Map<String, dynamic>.from(
+                    response['user'] ?? {},
+                  );
                   if (mounted) {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    setState(() {
+                      _firstName = user['first_name']?.toString() ?? '';
+                      _lastName = user['last_name']?.toString() ?? '';
+                      _mobileNumber = user['contact_number']?.toString() ?? '';
+                    });
+                    navigator.pop();
+                    messenger.showSnackBar(
                       const SnackBar(
                         content: Text('Profile updated successfully!'),
                         backgroundColor: Colors.green,
@@ -164,12 +266,14 @@ class _AdminSettingsState extends State<AdminSettings> {
                     );
                   }
                 } catch (e) {
-                  debugPrint(e.toString());
+                  if (mounted) {
+                    messenger.showSnackBar(
+                      SnackBar(content: Text('Unable to update profile: $e')),
+                    );
+                  }
                 }
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.brand,
-              ),
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.brand),
               child: const Text(
                 'Save Changes',
                 style: TextStyle(color: Colors.white),
@@ -183,45 +287,31 @@ class _AdminSettingsState extends State<AdminSettings> {
 
   // 3. DATABASE BACKUP LOGIC
   Future<void> _runDatabaseBackup() async {
-    setState(() => _isActionLoading = true);
-
-    // Fake loading to simulate database fetching for all tables
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Generating database backup... Please wait.'),
-        duration: Duration(seconds: 2),
+        content: Text(
+          'Backups are managed from Supabase Dashboard → Database → Backups.',
+        ),
       ),
     );
+  }
 
-    await Future.delayed(const Duration(seconds: 3)); // Simulating API delay
-
-    if (mounted) {
-      setState(() => _isActionLoading = false);
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          backgroundColor: Colors.white,
-          title: const Row(
-            children: [
-              Icon(Icons.check_circle, color: Colors.green),
-              SizedBox(width: 8),
-              Text(
-                'Backup Complete',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-          content: const Text(
-            'Your database records have been successfully fetched. (CSV Download requires web file-saver package setup).',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Close', style: TextStyle(color: Colors.grey)),
-            ),
-          ],
-        ),
-      );
+  Future<void> _signOut() async {
+    setState(() => _isActionLoading = true);
+    try {
+      await ApiClient.post('/logout', {});
+      await ApiClient.clearSession();
+      if (mounted) {
+        Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Unable to sign out: $error')));
+      }
+    } finally {
+      if (mounted) setState(() => _isActionLoading = false);
     }
   }
 
@@ -272,23 +362,25 @@ class _AdminSettingsState extends State<AdminSettings> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    Text(
-                      'System Settings',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.ink,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text(
+                        'System Settings',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.ink,
+                        ),
                       ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      'Manage your account preferences and system configurations.',
-                      style: TextStyle(fontSize: 14, color: Colors.grey),
-                    ),
-                  ],
+                      SizedBox(height: 4),
+                      Text(
+                        'Manage the signed-in account and its preferences.',
+                        style: TextStyle(fontSize: 14, color: Colors.grey),
+                      ),
+                    ],
+                  ),
                 ),
                 if (_isActionLoading)
                   const CircularProgressIndicator(color: AppColors.brand),
@@ -302,7 +394,7 @@ class _AdminSettingsState extends State<AdminSettings> {
                 _buildSettingsTile(
                   Icons.person_outline,
                   'Edit Profile',
-                  'Update your personal information and display picture.',
+                  '$_role • $_email',
                   onTap: _showEditProfileDialog, // CONNECTED NA!
                 ),
                 _buildSettingsTile(
@@ -344,7 +436,7 @@ class _AdminSettingsState extends State<AdminSettings> {
                 _buildSettingsTile(
                   Icons.backup_outlined,
                   'Database Backup',
-                  'Export all records to a CSV file.',
+                  'Manage backups in the Supabase dashboard.',
                   onTap: _runDatabaseBackup, // CONNECTED NA!
                 ),
                 _buildSettingsTile(
@@ -352,6 +444,12 @@ class _AdminSettingsState extends State<AdminSettings> {
                   'Theme Customization',
                   'Switch between Light and Dark mode.',
                   onTap: _showThemeSettings, // CONNECTED NA!
+                ),
+                _buildSettingsTile(
+                  Icons.logout,
+                  'Sign out',
+                  'Revoke this session and return to sign in.',
+                  onTap: _signOut,
                 ),
               ],
             ),

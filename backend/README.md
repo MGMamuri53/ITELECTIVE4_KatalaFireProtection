@@ -77,6 +77,22 @@ pooler endpoint configured in `.env.example` for typical IPv4 networks.
 6. From the Flutter project root, run
    `flutter run -d chrome --dart-define=API_BASE_URL=http://127.0.0.1:8000/api`.
 
+## Project portfolio images
+
+Project photos are uploaded by the Laravel API to Supabase Storage and served
+from a public bucket so customer portfolio pages can display them after reload.
+
+1. In Supabase Dashboard → Storage, create a **public** bucket named
+   `project-images` (or set `SUPABASE_STORAGE_BUCKET` to your chosen bucket).
+2. In the backend `.env`, set `SUPABASE_URL` to the project URL and
+   `SUPABASE_SERVICE_ROLE_KEY` to the project's server-side service-role key.
+   Never place that key in Flutter, commit it, or expose it to the browser.
+3. Run `php artisan config:clear` and restart the Laravel server.
+
+Uploads are limited to JPEG, PNG, or WebP images up to 10 MB. The object path
+is based on the project ID, so replacing its cover image keeps the URL stable
+while the API adds a version query to refresh browser caches.
+
 For Android emulator testing, use
 `--dart-define=API_BASE_URL=http://10.0.2.2:8000/api` instead. For a physical
 device, use the computer's LAN IP address and allow port 8000 through the

@@ -13,7 +13,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
   int _totalProducts = 0;
   int _totalServices = 0;
   int _pendingRequests = 0;
+  int _totalCustomers = 0;
   List<Map<String, dynamic>> _recentActivities = [];
+  List<Map<String, dynamic>> _requestVolume = [];
+  List<Map<String, dynamic>> _requestStatuses = [];
+  List<Map<String, dynamic>> _upcomingAppointments = [];
   bool _isLoading = true;
   bool _hasError = false;
 
@@ -31,9 +35,19 @@ class _AdminDashboardState extends State<AdminDashboard> {
       _totalProducts = response['total_products'] ?? 0;
       _totalServices = response['total_services'] ?? 0;
       _pendingRequests = response['pending_quotes'] ?? 0;
+      _totalCustomers = response['total_customers'] ?? 0;
 
       if (mounted) {
         setState(() {
+          _requestVolume = List<Map<String, dynamic>>.from(
+            response['request_volume'] ?? [],
+          );
+          _requestStatuses = List<Map<String, dynamic>>.from(
+            response['request_statuses'] ?? [],
+          );
+          _upcomingAppointments = List<Map<String, dynamic>>.from(
+            response['upcoming_appointments'] ?? [],
+          );
           _recentActivities = List<Map<String, dynamic>>.from(
             response['recent_activities'] ?? [],
           );
@@ -45,7 +59,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
         setState(() => _hasError = true);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Unable to load dashboard data. Please check your internet connection.'),
+            content: Text(
+              'Unable to load dashboard data. Please check your internet connection.',
+            ),
             backgroundColor: Colors.orange,
           ),
         );
@@ -79,11 +95,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
               ? Center(
                   child: Column(
                     children: [
-                      Icon(
-                        Icons.cloud_off,
-                        size: 64,
-                        color: Colors.grey[400],
-                      ),
+                      Icon(Icons.cloud_off, size: 64, color: Colors.grey[400]),
                       const SizedBox(height: 16),
                       const Text(
                         'Unable to load dashboard data',
@@ -121,22 +133,16 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 ? Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        flex: 2,
-                        child: _buildPlaceholderChart('Request Volume Trend'),
-                      ),
+                      Expanded(flex: 2, child: _buildRequestVolumeChart()),
                       const SizedBox(width: 24),
-                      Expanded(
-                        flex: 1,
-                        child: _buildPlaceholderChart('Status Distribution'),
-                      ),
+                      Expanded(flex: 1, child: _buildRequestStatusChart()),
                     ],
                   )
                 : Column(
                     children: [
-                      _buildPlaceholderChart('Request Volume Trend'),
+                      _buildRequestVolumeChart(),
                       const SizedBox(height: 16),
-                      _buildPlaceholderChart('Status Distribution'),
+                      _buildRequestStatusChart(),
                     ],
                   ),
             const SizedBox(height: 32),
@@ -146,17 +152,14 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 ? Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        flex: 2,
-                        child: _buildPlaceholderTable('Upcoming Appointments'),
-                      ),
+                      Expanded(flex: 2, child: _buildUpcomingAppointments()),
                       const SizedBox(width: 24),
                       Expanded(flex: 1, child: _buildRecentActivity()),
                     ],
                   )
                 : Column(
                     children: [
-                      _buildPlaceholderTable('Upcoming Appointments'),
+                      _buildUpcomingAppointments(),
                       const SizedBox(height: 16),
                       _buildRecentActivity(),
                     ],
@@ -234,7 +237,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
           ),
           const SizedBox(width: 16),
           Expanded(
-            child: _buildStatCard('TOTAL CUSTOMERS', '0', Icons.people_outline),
+            child: _buildStatCard(
+              'TOTAL CUSTOMERS',
+              _totalCustomers.toString(),
+              Icons.people_outline,
+            ),
           ),
         ],
       );
@@ -262,7 +269,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
             isHighlight: true,
           ),
           const SizedBox(height: 16),
-          _buildStatCard('TOTAL CUSTOMERS', '0', Icons.people_outline),
+          _buildStatCard(
+            'TOTAL CUSTOMERS',
+            _totalCustomers.toString(),
+            Icons.people_outline,
+          ),
         ],
       );
     }
@@ -316,8 +327,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                 background: isHighlight
                     ? AppColors.brandTint
                     : AppColors.surfaceMuted,
-                foreground:
-                    isHighlight ? AppColors.brand : AppColors.inkMuted,
+                foreground: isHighlight ? AppColors.brand : AppColors.inkMuted,
               ),
             ],
           ),
@@ -383,7 +393,10 @@ class _AdminDashboardState extends State<AdminDashboard> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'New quotation requested by ${activity['customer_name']}',
+                            activity['description']?.toString().isNotEmpty ==
+                                    true
+                                ? activity['description'].toString()
+                                : '${activity['action_type']} ${activity['table_name']}',
                             style: const TextStyle(
                               fontSize: 13,
                               color: AppColors.inkSoft,
@@ -391,7 +404,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            activity['date_submitted']?.toString().substring(
+                            activity['created_at']?.toString().substring(
                                   0,
                                   10,
                                 ) ??
@@ -413,7 +426,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  Widget _buildPlaceholderChart(String title) {
+  Widget _buildRequestVolumeChart() {
+    final maximum = _requestVolume.fold<int>(1, (value, item) {
+      final count = int.tryParse(item['count'].toString()) ?? 0;
+      return count > value ? count : value;
+    });
     return Container(
       height: 250,
       width: double.infinity,
@@ -422,28 +439,72 @@ class _AdminDashboardState extends State<AdminDashboard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.2,
-            ),
+          const Text(
+            'Request Volume Trend',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
           ),
-          const Expanded(
-            child: Center(
-              child: Text(
-                'Chart Visualization UI Pending',
-                style: TextStyle(color: AppColors.inkMuted),
-              ),
-            ),
+          const SizedBox(height: 14),
+          Expanded(
+            child: _requestVolume.isEmpty
+                ? const Center(
+                    child: Text(
+                      'No request history available.',
+                      style: TextStyle(color: AppColors.inkMuted),
+                    ),
+                  )
+                : Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: _requestVolume.map((item) {
+                      final count = int.tryParse(item['count'].toString()) ?? 0;
+                      return Row(
+                        children: [
+                          SizedBox(
+                            width: 38,
+                            child: Text(
+                              item['month']?.toString() ?? '',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: AppColors.inkMuted,
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(4),
+                              child: LinearProgressIndicator(
+                                value: count / maximum,
+                                minHeight: 12,
+                                backgroundColor: AppColors.surfaceMuted,
+                                color: AppColors.brand,
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            width: 34,
+                            child: Text(
+                              '$count',
+                              textAlign: TextAlign.right,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: AppColors.inkSoft,
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    }).toList(),
+                  ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildPlaceholderTable(String title) {
+  Widget _buildRequestStatusChart() {
+    final total = _requestStatuses.fold<int>(
+      0,
+      (sum, item) => sum + (int.tryParse(item['count'].toString()) ?? 0),
+    );
     return Container(
       height: 250,
       width: double.infinity,
@@ -452,21 +513,119 @@ class _AdminDashboardState extends State<AdminDashboard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.2,
-            ),
+          const Text(
+            'Request Status Distribution',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
           ),
-          const Expanded(
-            child: Center(
-              child: Text(
-                'Table UI Pending',
-                style: TextStyle(color: AppColors.inkMuted),
-              ),
-            ),
+          const SizedBox(height: 14),
+          Expanded(
+            child: _requestStatuses.isEmpty
+                ? const Center(
+                    child: Text(
+                      'No service requests available.',
+                      style: TextStyle(color: AppColors.inkMuted),
+                    ),
+                  )
+                : ListView(
+                    children: _requestStatuses.map((item) {
+                      final count = int.tryParse(item['count'].toString()) ?? 0;
+                      final ratio = total == 0 ? 0.0 : count / total;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    item['status']?.toString() ?? 'Unknown',
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(fontSize: 11),
+                                  ),
+                                ),
+                                Text(
+                                  '$count',
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            LinearProgressIndicator(
+                              value: ratio,
+                              minHeight: 6,
+                              backgroundColor: AppColors.surfaceMuted,
+                              color: AppColors.brand,
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUpcomingAppointments() {
+    return Container(
+      height: 250,
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: KataUi.cardBox(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Upcoming Appointments',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 12),
+          Expanded(
+            child: _upcomingAppointments.isEmpty
+                ? const Center(
+                    child: Text(
+                      'No upcoming appointments.',
+                      style: TextStyle(color: AppColors.inkMuted),
+                    ),
+                  )
+                : ListView.separated(
+                    itemCount: _upcomingAppointments.length,
+                    separatorBuilder: (_, _) => const Divider(height: 1),
+                    itemBuilder: (context, index) {
+                      final appointment = _upcomingAppointments[index];
+                      final date = DateTime.tryParse(
+                        appointment['scheduled_date'].toString(),
+                      );
+                      final dateLabel = date == null
+                          ? 'Date TBD'
+                          : '${date.month}/${date.day}/${date.year} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+                      return ListTile(
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(
+                          appointment['project_name']?.toString() ??
+                              'Project visit',
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        subtitle: Text(
+                          '${appointment['customer_name'] ?? 'Customer'} • $dateLabel',
+                        ),
+                        trailing: Text(
+                          appointment['status']?.toString() ?? '',
+                          style: const TextStyle(
+                            color: AppColors.brand,
+                            fontSize: 11,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
           ),
         ],
       ),

@@ -166,8 +166,10 @@ class Homepage extends StatelessWidget {
                 const SizedBox(height: 32),
 
                 // Trust Badges (REVISED TO REMOVE UNVERIFIED CLAIMS)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  spacing: 12,
+                  runSpacing: 12,
                   children: [
                     _buildTrustBadge(Icons.verified_outlined, 'SEC Registered'),
                     _buildTrustBadge(

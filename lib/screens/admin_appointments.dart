@@ -11,6 +11,7 @@ class AdminAppointments extends StatefulWidget {
 
 class _AdminAppointmentsState extends State<AdminAppointments> {
   List<Map<String, dynamic>> _appointments = [];
+  List<Map<String, dynamic>> _projects = [];
   bool _isLoading = true;
   int _selectedTab = 0;
   final List<String> _tabs = [
@@ -31,8 +32,11 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
     setState(() => _isLoading = true);
     try {
       final response = await ApiClient.get('/admin/appointments');
+      final projectsResponse = await ApiClient.get('/admin/projects');
+      if (!mounted) return;
       setState(() {
         _appointments = List<Map<String, dynamic>>.from(response);
+        _projects = List<Map<String, dynamic>>.from(projectsResponse);
       });
     } catch (e) {
       if (mounted) {
@@ -41,16 +45,19 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
         ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   // BAGONG DIALOG PARA MAG-ADD NG APPOINTMENT NA NAKA-LINK SA PROJECT
   void _showAddAppointmentDialog() {
-    final clientController = TextEditingController();
-    final projectRefController = TextEditingController();
     final dateController = TextEditingController();
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
     String selectedType = 'Site Consultation';
+    int? selectedProjectId = _projects.isEmpty
+        ? null
+        : int.tryParse(_projects.first['id'].toString());
 
     showDialog(
       context: context,
@@ -68,20 +75,23 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                TextField(
-                  controller: projectRefController,
+                DropdownButtonFormField<int>(
+                  initialValue: selectedProjectId,
                   decoration: const InputDecoration(
-                    labelText: 'Project Reference (e.g. REQ-1234)',
+                    labelText: 'Project',
                     border: OutlineInputBorder(),
                   ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: clientController,
-                  decoration: const InputDecoration(
-                    labelText: 'Client Name',
-                    border: OutlineInputBorder(),
-                  ),
+                  items: _projects.map((project) {
+                    final id = int.tryParse(project['id'].toString());
+                    return DropdownMenuItem<int>(
+                      value: id,
+                      child: Text(
+                        '${project['project_number'] ?? project['id']} — ${project['project_name'] ?? 'Project'}',
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (value) => selectedProjectId = value,
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
@@ -110,7 +120,7 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
                 TextField(
                   controller: dateController,
                   decoration: const InputDecoration(
-                    labelText: 'Date & Time (e.g. 2026-08-30 10:00 AM)',
+                    labelText: 'Date & Time (YYYY-MM-DDTHH:MM)',
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -124,19 +134,44 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
             ),
             ElevatedButton(
               onPressed: () async {
-                if (projectRefController.text.isEmpty ||
-                    clientController.text.isEmpty) {
+                if (selectedProjectId == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Create or select a project first.'),
+                    ),
+                  );
                   return;
                 }
 
-                try {
-                  throw Exception(
-                    'Appointments are not available in the Laravel schema yet.',
+                final scheduledDate = DateTime.tryParse(
+                  dateController.text.trim(),
+                );
+                if (scheduledDate == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Enter a valid date and time, for example 2026-08-30T10:00.',
+                      ),
+                    ),
                   );
+                  return;
+                }
+                final project = _projects.firstWhere(
+                  (item) =>
+                      item['id'].toString() == selectedProjectId.toString(),
+                );
+                try {
+                  await ApiClient.post('/admin/appointments', {
+                    'customer_id': int.parse(project['customer_id'].toString()),
+                    'project_id': selectedProjectId,
+                    'service_id': project['service_id'],
+                    'type': selectedType,
+                    'scheduled_date': scheduledDate.toIso8601String(),
+                  });
                   if (mounted) {
-                    Navigator.pop(context);
+                    navigator.pop();
                     _fetchAppointments();
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    messenger.showSnackBar(
                       const SnackBar(
                         content: Text('Appointment Scheduled!'),
                         backgroundColor: Colors.green,
@@ -145,7 +180,7 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
                   }
                 } catch (e) {
                   if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    messenger.showSnackBar(
                       SnackBar(
                         content: Text('Error: $e'),
                         backgroundColor: Colors.red,
@@ -154,9 +189,7 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
                   }
                 }
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.brand,
-              ),
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.brand),
               child: const Text('Save', style: TextStyle(color: Colors.white)),
             ),
           ],
@@ -167,6 +200,8 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
 
   void _showUpdateStatusDialog(String id, String currentStatus) {
     String newStatus = currentStatus;
+    final messenger = ScaffoldMessenger.of(context);
+    final navigator = Navigator.of(context);
     showDialog(
       context: context,
       builder: (context) {
@@ -204,13 +239,13 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
             ElevatedButton(
               onPressed: () async {
                 try {
-                  throw Exception(
-                    'Appointments are not available in the Laravel schema yet.',
-                  );
+                  await ApiClient.put('/admin/appointments/$id', {
+                    'status': newStatus,
+                  });
                   if (mounted) {
-                    Navigator.pop(context);
+                    navigator.pop();
                     _fetchAppointments();
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    messenger.showSnackBar(
                       const SnackBar(
                         content: Text('Status Updated!'),
                         backgroundColor: Colors.blue,
@@ -219,7 +254,7 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
                   }
                 } catch (e) {
                   if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    messenger.showSnackBar(
                       SnackBar(
                         content: Text('Error: $e'),
                         backgroundColor: Colors.red,
@@ -228,9 +263,7 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
                   }
                 }
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.brand,
-              ),
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.brand),
               child: const Text(
                 'Update',
                 style: TextStyle(color: Colors.white),
@@ -288,8 +321,9 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
                   ),
                 ],
               ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
+              Wrap(
+                spacing: 12,
+                runSpacing: 8,
                 children: [
                   OutlinedButton.icon(
                     onPressed: _fetchAppointments,
@@ -306,7 +340,6 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
                       side: const BorderSide(color: AppColors.brand),
                     ),
                   ),
-                  const SizedBox(width: 12),
                   ElevatedButton.icon(
                     onPressed: _showAddAppointmentDialog,
                     icon: const Icon(Icons.add, color: Colors.white, size: 18),
@@ -370,9 +403,7 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
             decoration: BoxDecoration(
               border: Border(
                 bottom: BorderSide(
-                  color: isSelected
-                      ? AppColors.brand
-                      : Colors.transparent,
+                  color: isSelected ? AppColors.brand : Colors.transparent,
                   width: 2,
                 ),
               ),
@@ -480,9 +511,7 @@ class _AdminAppointmentsState extends State<AdminAppointments> {
             Expanded(
               child: _isLoading
                   ? const Center(
-                      child: CircularProgressIndicator(
-                        color: AppColors.brand,
-                      ),
+                      child: CircularProgressIndicator(color: AppColors.brand),
                     )
                   : appointments.isEmpty
                   ? const Center(

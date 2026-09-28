@@ -175,12 +175,16 @@ class _CustomerOrdersState extends State<CustomerOrders> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              order['v_orderNumber'] ?? 'N/A',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                                color: AppColors.brand,
+                            Expanded(
+                              child: Text(
+                                order['v_orderNumber'] ?? 'N/A',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                  color: AppColors.brand,
+                                ),
                               ),
                             ),
                             Container(

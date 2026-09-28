@@ -11,16 +11,40 @@ class PortfolioPage extends StatefulWidget {
 
 class _PortfolioPageState extends State<PortfolioPage> {
   String _selectedSector = 'All';
-  final List<String> _sectors = [
-    'All',
-    'Commercial',
-    'Industrial',
-    'Residential',
-  ];
+  List<String> _sectors = ['All'];
+  late Future<List<Map<String, dynamic>>> _projectsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _projectsFuture = _fetchProjects();
+  }
 
   Future<List<Map<String, dynamic>>> _fetchProjects() async {
-    final response = await ApiClient.get('/admin/projects');
-    return List<Map<String, dynamic>>.from(response);
+    final response = await ApiClient.get('/projects');
+    final projects = List<Map<String, dynamic>>.from(response);
+    final categories =
+        projects
+            .map((project) => project['category']?.toString().trim() ?? '')
+            .where(
+              (category) => category.isNotEmpty && category != 'Uncategorized',
+            )
+            .toSet()
+            .toList()
+          ..sort();
+    if (mounted) {
+      setState(() {
+        _sectors = ['All', ...categories];
+        if (!_sectors.contains(_selectedSector)) _selectedSector = 'All';
+      });
+    }
+    return projects;
+  }
+
+  void _refreshProjects() {
+    setState(() {
+      _projectsFuture = _fetchProjects();
+    });
   }
 
   void _showCaseStudy(
@@ -30,7 +54,10 @@ class _PortfolioPageState extends State<PortfolioPage> {
     String location,
     String date,
     String imageUrl,
+    String description,
   ) {
+    final isCompact = MediaQuery.of(context).size.width < 520;
+
     showDialog(
       context: context,
       builder: (context) {
@@ -86,7 +113,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                   ],
                 ),
                 Padding(
-                  padding: const EdgeInsets.all(24.0),
+                  padding: EdgeInsets.all(isCompact ? 16.0 : 24.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -126,11 +153,14 @@ class _PortfolioPageState extends State<PortfolioPage> {
                             color: Colors.grey,
                           ),
                           const SizedBox(width: 8),
-                          Text(
-                            location,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: AppColors.inkMuted,
+                          Expanded(
+                            child: Text(
+                              location,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: AppColors.inkMuted,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
@@ -144,11 +174,14 @@ class _PortfolioPageState extends State<PortfolioPage> {
                             color: Colors.grey,
                           ),
                           const SizedBox(width: 8),
-                          Text(
-                            'Completed: $date',
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: AppColors.inkMuted,
+                          Expanded(
+                            child: Text(
+                              'Completed: $date',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: AppColors.inkMuted,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ],
@@ -162,9 +195,11 @@ class _PortfolioPageState extends State<PortfolioPage> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
-                        'This fire protection system was engineered and installed in compliance with the highest safety standards to ensure uncompromising reliability for the client\'s critical infrastructure.',
-                        style: TextStyle(
+                      Text(
+                        description.isNotEmpty
+                            ? description
+                            : 'Project details are not available.',
+                        style: const TextStyle(
                           fontSize: 12,
                           color: Colors.grey,
                           height: 1.5,
@@ -199,26 +234,38 @@ class _PortfolioPageState extends State<PortfolioPage> {
   Widget _buildHeaderSection() {
     return Padding(
       padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: const [
-          Text(
-            'Project Portfolio',
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w900,
-              color: AppColors.ink,
-              height: 1.2,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Project Portfolio',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.ink,
+                    height: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Documenting our commitment to life-safety infrastructure.',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.inkMuted,
+                    height: 1.4,
+                  ),
+                ),
+              ],
             ),
           ),
-          SizedBox(height: 8),
-          Text(
-            'Documenting our commitment to life-safety infrastructure.',
-            style: TextStyle(
-              fontSize: 12,
-              color: AppColors.inkMuted,
-              height: 1.4,
-            ),
+          IconButton(
+            tooltip: 'Refresh portfolio',
+            onPressed: _refreshProjects,
+            icon: Icon(Icons.refresh, color: AppColors.brand),
           ),
         ],
       ),
@@ -231,7 +278,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
       child: Row(
         children: [
           const Text(
-            'SECTOR:',
+            'PROJECT TYPE:',
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.bold,
@@ -254,14 +301,10 @@ class _PortfolioPageState extends State<PortfolioPage> {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: isActive
-                            ? AppColors.brandTint
-                            : Colors.white,
+                        color: isActive ? AppColors.brandTint : Colors.white,
                         borderRadius: BorderRadius.circular(4),
                         border: Border.all(
-                          color: isActive
-                              ? AppColors.brand
-                              : AppColors.divider,
+                          color: isActive ? AppColors.brand : AppColors.divider,
                         ),
                       ),
                       child: Text(
@@ -289,7 +332,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
 
   Widget _buildProjectList() {
     return FutureBuilder<List<Map<String, dynamic>>>(
-      future: _fetchProjects(),
+      future: _projectsFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Padding(
@@ -299,12 +342,23 @@ class _PortfolioPageState extends State<PortfolioPage> {
             ),
           );
         }
-        if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
+        if (snapshot.hasError) {
           return const Padding(
             padding: EdgeInsets.symmetric(vertical: 40.0),
             child: Center(
               child: Text(
-                'No projects available.',
+                'Unable to load the project portfolio.',
+                style: TextStyle(color: Colors.grey),
+              ),
+            ),
+          );
+        }
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 40.0),
+            child: Center(
+              child: Text(
+                'No projects have been published yet.',
                 style: TextStyle(color: Colors.grey),
               ),
             ),
@@ -336,8 +390,13 @@ class _PortfolioPageState extends State<PortfolioPage> {
               final title = project['project_name'] ?? 'Unknown Project';
               final category = project['category'] ?? 'General';
               final location = project['location'] ?? 'Undisclosed Location';
-              final date = project['completion_date'] ?? 'Ongoing';
-              final imageUrl = project['image_url'] ?? '';
+              final status = project['status']?.toString() ?? 'In Progress';
+              final completionDate = project['completion_date']?.toString();
+              final projectProgress = status == 'Completed'
+                  ? 'Completed${completionDate == null ? '' : ': ${completionDate.substring(0, 10)}'}'
+                  : status;
+              final imageUrl = project['image_url']?.toString() ?? '';
+              final description = project['description']?.toString() ?? '';
 
               return Container(
                 margin: const EdgeInsets.only(bottom: 24),
@@ -384,9 +443,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                             decoration: BoxDecoration(
                               color: AppColors.surfaceMuted,
                               borderRadius: BorderRadius.circular(4),
-                              border: Border.all(
-                                color: AppColors.divider,
-                              ),
+                              border: Border.all(color: AppColors.divider),
                             ),
                             child: Text(
                               category,
@@ -414,11 +471,14 @@ class _PortfolioPageState extends State<PortfolioPage> {
                                 color: Colors.grey,
                               ),
                               const SizedBox(width: 8),
-                              Text(
-                                location,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: AppColors.inkMuted,
+                              Expanded(
+                                child: Text(
+                                  location,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: AppColors.inkMuted,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ],
@@ -432,11 +492,16 @@ class _PortfolioPageState extends State<PortfolioPage> {
                                 color: Colors.grey,
                               ),
                               const SizedBox(width: 8),
-                              Text(
-                                'Completed: $date',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: AppColors.inkMuted,
+                              Expanded(
+                                child: Text(
+                                  status == 'Completed'
+                                      ? projectProgress
+                                      : 'Status: $status',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: AppColors.inkMuted,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ],
@@ -449,8 +514,9 @@ class _PortfolioPageState extends State<PortfolioPage> {
                               title,
                               category,
                               location,
-                              date,
+                              projectProgress,
                               imageUrl,
+                              description,
                             ),
                             child: Row(
                               children: const [

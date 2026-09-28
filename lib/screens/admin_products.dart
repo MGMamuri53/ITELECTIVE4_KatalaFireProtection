@@ -1,3 +1,6 @@
+import 'dart:typed_data';
+
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter/material.dart';
 import '../services/api_client.dart';
 import 'package:katala/theme/app_theme.dart';
@@ -43,11 +46,11 @@ class _AdminProductsState extends State<AdminProducts> {
     } catch (e) {
       if (mounted) {
         setState(() => _hasError = true);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Unable to load products. Please check your internet connection.'),
+            content: Text(
+              'Unable to load products. Please check your internet connection.',
+            ),
             backgroundColor: Colors.orange,
           ),
         );
@@ -61,13 +64,15 @@ class _AdminProductsState extends State<AdminProducts> {
 
   void _filterProducts(String query) {
     if (_hasError) return; // Don't filter if there's an error
-    
+
     setState(() {
       if (query.isEmpty) {
         _filteredProducts = _allProducts;
       } else {
         _filteredProducts = _allProducts.where((product) {
-          final name = (product['v_productName'] ?? '').toString().toLowerCase();
+          final name = (product['v_productName'] ?? '')
+              .toString()
+              .toLowerCase();
           final sku = (product['v_productCode'] ?? '').toString().toLowerCase();
           final searchLower = query.toLowerCase();
           return name.contains(searchLower) || sku.contains(searchLower);
@@ -88,148 +93,245 @@ class _AdminProductsState extends State<AdminProducts> {
     final priceController = TextEditingController(
       text: isEditing ? (product['v_currentPrice']?.toString() ?? '0') : '',
     );
+    final quantityController = TextEditingController(
+      text: isEditing ? (product['v_quantityOnHand']?.toString() ?? '0') : '0',
+    );
 
     String selectedCategory =
         (isEditing && _productCategories.contains(product['v_productCategory']))
         ? product['v_productCategory']
         : _productCategories.first;
-
-    String selectedStatus = isEditing ? _statusFor(product) : 'IN STOCK';
+    Uint8List? selectedImageBytes;
+    String? selectedImageName;
+    bool isSaving = false;
+    final imagePicker = ImagePicker();
 
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          backgroundColor: Colors.white,
-          title: Text(
-            isEditing ? 'Edit Product' : 'Add New Product',
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: skuController,
-                  decoration: const InputDecoration(
-                    labelText: 'SKU (e.g. EXT-01)',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Product Name',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                // BAGONG TEXTFIELD PARA SA PRICE
-                TextField(
-                  controller: priceController,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  decoration: const InputDecoration(
-                    labelText: 'Price (₱)',
-                    border: OutlineInputBorder(),
-                    prefixText: '₱ ',
-                  ),
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  initialValue: selectedCategory,
-                  decoration: const InputDecoration(
-                    labelText: 'Category',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: _productCategories.map((category) {
-                    return DropdownMenuItem(
-                      value: category,
-                      child: Text(category),
-                    );
-                  }).toList(),
-                  onChanged: (val) {
-                    if (val != null) selectedCategory = val;
-                  },
-                ),
-                const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  initialValue: selectedStatus,
-                  decoration: const InputDecoration(
-                    labelText: 'Stock Status',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: ['IN STOCK', 'LOW STOCK', 'OUT OF STOCK'].map((
-                    status,
-                  ) {
-                    return DropdownMenuItem(value: status, child: Text(status));
-                  }).toList(),
-                  onChanged: (val) {
-                    if (val != null) selectedStatus = val;
-                  },
-                ),
-              ],
+        return StatefulBuilder(
+          builder: (context, setDialogState) => AlertDialog(
+            backgroundColor: Colors.white,
+            title: Text(
+              isEditing ? 'Edit Product' : 'Add New Product',
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (nameController.text.isEmpty || skuController.text.isEmpty) {
-                  return;
-                }
-
-                // KINUHA NA NATIN YUNG PRICE AT GINAWANG NUMBER
-                final double parsedPrice =
-                    double.tryParse(priceController.text) ?? 0.0;
-
-                final data = {
-                  'sku': skuController.text,
-                  'name': nameController.text,
-                  'price': parsedPrice, // ISINAMA NA ANG PRICE SA DATABASE
-                  'category': selectedCategory,
-                  'stock_status': selectedStatus,
-                };
-
-                try {
-                  if (isEditing) {
-                    await ApiClient.put(
-                      '/admin/products/${product['v_productId']}',
-                      data,
-                    );
-                  } else {
-                    await ApiClient.post('/admin/products', data);
-                  }
-                  if (mounted) {
-                    Navigator.pop(context);
-                    _fetchProducts();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          isEditing ? 'Product Updated!' : 'Product Added!',
-                        ),
-                        backgroundColor: Colors.green,
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: skuController,
+                    decoration: const InputDecoration(
+                      labelText: 'SKU (e.g. EXT-01)',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: nameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Product Name',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // BAGONG TEXTFIELD PARA SA PRICE
+                  TextField(
+                    controller: priceController,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    decoration: const InputDecoration(
+                      labelText: 'Price (₱)',
+                      border: OutlineInputBorder(),
+                      prefixText: '₱ ',
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    initialValue: selectedCategory,
+                    decoration: const InputDecoration(
+                      labelText: 'Category',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: _productCategories.map((category) {
+                      return DropdownMenuItem(
+                        value: category,
+                        child: Text(category),
+                      );
+                    }).toList(),
+                    onChanged: (val) {
+                      if (val != null) selectedCategory = val;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: quantityController,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    decoration: const InputDecoration(
+                      labelText: 'Quantity on hand',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  OutlinedButton.icon(
+                    onPressed: () async {
+                      final image = await imagePicker.pickImage(
+                        source: ImageSource.gallery,
+                        imageQuality: 85,
+                        maxWidth: 1600,
+                      );
+                      if (image == null) return;
+                      final bytes = await image.readAsBytes();
+                      setDialogState(() {
+                        selectedImageBytes = bytes;
+                        selectedImageName = image.name;
+                      });
+                    },
+                    icon: const Icon(Icons.add_photo_alternate_outlined),
+                    label: Text(selectedImageName ?? 'Choose product picture'),
+                  ),
+                  if (selectedImageBytes != null) ...[
+                    const SizedBox(height: 12),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.memory(
+                        selectedImageBytes!,
+                        height: 120,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
                       ),
-                    );
-                  }
-                } catch (e) {
-                  debugPrint(e.toString());
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.brand,
-              ),
-              child: Text(
-                isEditing ? 'Update' : 'Save',
-                style: const TextStyle(color: Colors.white),
+                    ),
+                  ],
+                ],
               ),
             ),
-          ],
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: isSaving
+                    ? null
+                    : () async {
+                        if (nameController.text.isEmpty ||
+                            skuController.text.isEmpty) {
+                          return;
+                        }
+
+                        // KINUHA NA NATIN YUNG PRICE AT GINAWANG NUMBER
+                        final double parsedPrice =
+                            double.tryParse(priceController.text) ?? 0.0;
+                        final quantityOnHand = double.tryParse(
+                          quantityController.text,
+                        );
+                        if (quantityOnHand == null || quantityOnHand < 0) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Enter a valid non-negative stock quantity.',
+                              ),
+                            ),
+                          );
+                          return;
+                        }
+
+                        final data = {
+                          'sku': skuController.text.trim(),
+                          'name': nameController.text.trim(),
+                          'price':
+                              parsedPrice, // ISINAMA NA ANG PRICE SA DATABASE
+                          'category': selectedCategory,
+                          'quantity_on_hand': quantityOnHand,
+                        };
+
+                        var wasProductSaved = false;
+                        try {
+                          setDialogState(() => isSaving = true);
+                          String productId;
+                          if (isEditing) {
+                            productId = product['v_productId'].toString();
+                            await ApiClient.put(
+                              '/admin/products/$productId',
+                              data,
+                            );
+                          } else {
+                            final response = await ApiClient.post(
+                              '/admin/products',
+                              data,
+                            );
+                            productId = response['id'].toString();
+                          }
+                          wasProductSaved = true;
+                          if (selectedImageBytes != null) {
+                            await ApiClient.uploadImage(
+                              '/admin/products/$productId/image',
+                              selectedImageBytes!,
+                              selectedImageName ?? 'product-image.jpg',
+                            );
+                          }
+                          if (mounted) {
+                            Navigator.pop(context);
+                            _fetchProducts();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  isEditing
+                                      ? 'Product Updated!'
+                                      : 'Product Added!',
+                                ),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          if (wasProductSaved && mounted) {
+                            Navigator.pop(context);
+                            _fetchProducts();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Product saved, but its image upload failed: $e',
+                                ),
+                              ),
+                            );
+                          } else {
+                            setDialogState(() => isSaving = false);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Unable to save product: $e'),
+                                ),
+                              );
+                            }
+                          }
+                        }
+                      },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.brand,
+                ),
+                child: isSaving
+                    ? const SizedBox.square(
+                        dimension: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Text(
+                        isEditing ? 'Update' : 'Save',
+                        style: const TextStyle(color: Colors.white),
+                      ),
+              ),
+            ],
+          ),
         );
       },
     );
@@ -237,18 +339,49 @@ class _AdminProductsState extends State<AdminProducts> {
 
   void _deleteProduct(String id) async {
     try {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Archive product?'),
+          content: const Text(
+            'The product will be hidden from active catalog listings. Its order history will be retained.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Archive'),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true) return;
       await ApiClient.delete('/admin/products/$id');
-      _fetchProducts();
+      await _fetchProducts();
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Product archived.')));
+      }
     } catch (e) {
-      debugPrint(e.toString());
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Unable to archive product: $e')),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = MediaQuery.of(context).size.width > 800;
+
     return Container(
-      margin: const EdgeInsets.all(24.0),
-      padding: const EdgeInsets.all(32.0),
+      margin: EdgeInsets.all(isDesktop ? 24.0 : 16.0),
+      padding: EdgeInsets.all(isDesktop ? 32.0 : 16.0),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -399,7 +532,7 @@ class _AdminProductsState extends State<AdminProducts> {
                             ),
                           ),
                           Expanded(
-                            flex: 1,
+                            flex: 2,
                             child: Text(
                               'ACTIONS',
                               style: TextStyle(
@@ -470,12 +603,12 @@ class _AdminProductsState extends State<AdminProducts> {
                               itemCount: _filteredProducts.length,
                               itemBuilder: (context, index) {
                                 final product = _filteredProducts[index];
-                                final status =
-                                    _statusFor(product);
+                                final status = _statusFor(product);
                                 // KUNIN ANG PRICE PARA IDISPLAY
                                 final double price =
                                     double.tryParse(
-                                      product['v_currentPrice']?.toString() ?? '0',
+                                      product['v_currentPrice']?.toString() ??
+                                          '0',
                                     ) ??
                                     0.0;
 
@@ -572,7 +705,7 @@ class _AdminProductsState extends State<AdminProducts> {
                                         ),
                                       ),
                                       Expanded(
-                                        flex: 1,
+                                        flex: 2,
                                         child: Row(
                                           mainAxisAlignment:
                                               MainAxisAlignment.end,
@@ -594,11 +727,10 @@ class _AdminProductsState extends State<AdminProducts> {
                                                 color: Colors.red,
                                                 size: 18,
                                               ),
-                                              onPressed: () =>
-                                                  _deleteProduct(
-                                                    product['v_productId']
-                                                        .toString(),
-                                                  ),
+                                              onPressed: () => _deleteProduct(
+                                                product['v_productId']
+                                                    .toString(),
+                                              ),
                                             ),
                                           ],
                                         ),
@@ -620,10 +752,8 @@ class _AdminProductsState extends State<AdminProducts> {
   }
 
   String _statusFor(Map<String, dynamic> product) {
-    final quantity = double.tryParse(
-          product['v_quantityAvailable']?.toString() ?? '0',
-        ) ??
-        0;
+    final quantity =
+        double.tryParse(product['v_quantityAvailable']?.toString() ?? '0') ?? 0;
 
     if (quantity <= 0) return 'OUT OF STOCK';
     if (quantity <= 5) return 'LOW STOCK';

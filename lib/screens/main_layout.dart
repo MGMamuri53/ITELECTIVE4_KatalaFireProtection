@@ -19,14 +19,57 @@ class MainLayout extends StatefulWidget {
 class _MainLayoutState extends State<MainLayout> {
   int _currentIndex = 0;
 
+  @override
+  void initState() {
+    super.initState();
+    _restoreSection();
+  }
+
+  Future<void> _restoreSection() async {
+    final section = await ApiClient.savedSection('Customer');
+    if (!mounted || section < 0 || section > 6) return;
+    setState(() => _currentIndex = section);
+  }
+
+  Future<void> _selectSection(int index) async {
+    if (index < 0 || index > 6) return;
+    setState(() => _currentIndex = index);
+    try {
+      await ApiClient.saveSection('Customer', index);
+    } catch (error) {
+      debugPrint('Unable to save customer navigation state: $error');
+    }
+  }
+
   // UPDATED: DETAILED REQUEST QUOTE FORM
-  void _showRequestQuoteDialog(BuildContext context) {
+  Future<void> _showRequestQuoteDialog(BuildContext context) async {
+    final List<Map<String, dynamic>> services;
+    try {
+      services = List<Map<String, dynamic>>.from(
+        await ApiClient.get('/services'),
+      );
+    } catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Unable to load services: $error')),
+        );
+      }
+      return;
+    }
+    if (!context.mounted) return;
+    if (services.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No services are currently available.')),
+      );
+      return;
+    }
+
     final nameController = TextEditingController();
     final emailController = TextEditingController();
     final phoneController = TextEditingController();
     final locationController = TextEditingController();
     final detailsController = TextEditingController();
-    String selectedService = 'System Installation'; // Default dropdown
+    String selectedService = services.first['service_name'].toString();
 
     showDialog(
       context: context,
@@ -72,32 +115,51 @@ class _MainLayoutState extends State<MainLayout> {
                   TextField(
                     controller: nameController,
                     decoration: const InputDecoration(
-                      labelText: 'Full Name / Company Name',
+                      labelText: 'Project / Company Name',
                     ),
                   ),
                   const SizedBox(height: 16),
 
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
+                  if (MediaQuery.of(context).size.width < 600)
+                    Column(
+                      children: [
+                        TextField(
                           controller: emailController,
                           decoration: const InputDecoration(
                             labelText: 'Email Address',
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: TextField(
+                        const SizedBox(height: 16),
+                        TextField(
                           controller: phoneController,
                           decoration: const InputDecoration(
                             labelText: 'Contact Number',
                           ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    )
+                  else
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: emailController,
+                            decoration: const InputDecoration(
+                              labelText: 'Email Address',
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: TextField(
+                            controller: phoneController,
+                            decoration: const InputDecoration(
+                              labelText: 'Contact Number',
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   const SizedBox(height: 16),
 
                   DropdownButtonFormField<String>(
@@ -105,18 +167,13 @@ class _MainLayoutState extends State<MainLayout> {
                     decoration: const InputDecoration(
                       labelText: 'Primary Service Needed',
                     ),
-                    items:
-                        [
-                              'System Installation',
-                              'Preventive Maintenance',
-                              'Safety Inspection',
-                              'Equipment Supply',
-                              'System Repair',
-                            ]
-                            .map(
-                              (s) => DropdownMenuItem(value: s, child: Text(s)),
-                            )
-                            .toList(),
+                    items: services.map((service) {
+                      final serviceName = service['service_name'].toString();
+                      return DropdownMenuItem(
+                        value: serviceName,
+                        child: Text(serviceName),
+                      );
+                    }).toList(),
                     onChanged: (val) {
                       if (val != null) selectedService = val;
                     },
@@ -260,15 +317,12 @@ class _MainLayoutState extends State<MainLayout> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        // Back from a section returns to Homepage instead of leaving the
-        // main layout and revealing the login page.
-        if (_currentIndex != 0) {
-          setState(() => _currentIndex = 0);
-          return false;
+    return PopScope(
+      canPop: _currentIndex == 0,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop && _currentIndex != 0) {
+          _selectSection(0);
         }
-        return true;
       },
       child: Scaffold(
         backgroundColor: AppColors.canvas,
@@ -286,7 +340,7 @@ class _MainLayoutState extends State<MainLayout> {
           : IconButton(
               tooltip: 'Back to Homepage',
               icon: const Icon(Icons.arrow_back, color: AppColors.brand),
-              onPressed: () => setState(() => _currentIndex = 0),
+              onPressed: () => _selectSection(0),
             ),
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -528,7 +582,7 @@ class _MainLayoutState extends State<MainLayout> {
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () {
-          setState(() => _currentIndex = index);
+          _selectSection(index);
           Navigator.pop(context);
         },
         child: AnimatedContainer(
@@ -600,8 +654,8 @@ class _MainLayoutState extends State<MainLayout> {
       case 0:
         return Homepage(
           onRequestQuote: () => _showRequestQuoteDialog(context),
-          onExploreServices: () => setState(() => _currentIndex = 2),
-          onViewCatalog: () => setState(() => _currentIndex = 1),
+          onExploreServices: () => _selectSection(2),
+          onViewCatalog: () => _selectSection(1),
         );
       case 1:
         return const ProductCatalog();
@@ -623,8 +677,8 @@ class _MainLayoutState extends State<MainLayout> {
       default:
         return Homepage(
           onRequestQuote: () => _showRequestQuoteDialog(context),
-          onExploreServices: () => setState(() => _currentIndex = 2),
-          onViewCatalog: () => setState(() => _currentIndex = 1),
+          onExploreServices: () => _selectSection(2),
+          onViewCatalog: () => _selectSection(1),
         );
     }
   }

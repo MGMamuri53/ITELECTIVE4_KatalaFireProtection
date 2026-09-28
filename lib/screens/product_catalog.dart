@@ -62,8 +62,9 @@ class _ProductCatalogState extends State<ProductCatalog> {
       status = 'AVAILABLE';
     }
 
-    final String imageUrl =
-        'https://upload.wikimedia.org/wikipedia/commons/7/7e/A_Fire_Extinguisher.jpg';
+    final String imageUrl = product['image_url']?.toString().isNotEmpty == true
+        ? product['image_url'].toString()
+        : 'https://upload.wikimedia.org/wikipedia/commons/7/7e/A_Fire_Extinguisher.jpg';
 
     showDialog(
       context: context,
@@ -73,9 +74,15 @@ class _ProductCatalogState extends State<ProductCatalog> {
             double totalPrice = price * quantity;
 
             return Dialog(
+              insetPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 24,
+              ),
               child: SingleChildScrollView(
                 child: Padding(
-                  padding: const EdgeInsets.all(24.0),
+                  padding: EdgeInsets.all(
+                    MediaQuery.of(context).size.width < 520 ? 16.0 : 24.0,
+                  ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -651,15 +658,24 @@ class _ProductCatalogState extends State<ProductCatalog> {
 
   Widget _buildDetailRow(String label, String value) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.bold,
-            color: AppColors.inkSoft,
+        Expanded(
+          child: Text(
+            label,
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            value,
+            textAlign: TextAlign.right,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              color: AppColors.inkSoft,
+            ),
           ),
         ),
       ],
@@ -915,7 +931,9 @@ class _ProductCatalogState extends State<ProductCatalog> {
                   0.0;
 
               final imageUrl =
-                  'https://upload.wikimedia.org/wikipedia/commons/7/7e/A_Fire_Extinguisher.jpg';
+                  product['image_url']?.toString().isNotEmpty == true
+                  ? product['image_url'].toString()
+                  : 'https://upload.wikimedia.org/wikipedia/commons/7/7e/A_Fire_Extinguisher.jpg';
 
               Color statusColor = AppColors.inkMuted;
 
