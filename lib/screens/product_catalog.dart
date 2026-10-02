@@ -12,26 +12,59 @@ class ProductCatalog extends StatefulWidget {
 class _ProductCatalogState extends State<ProductCatalog> {
   String _selectedCategory = 'All';
   String _searchQuery = '';
+  late final Future<List<Map<String, dynamic>>> _productsFuture =
+      _fetchProducts();
 
-  final List<Map<String, dynamic>> _categories = [
+  List<Map<String, dynamic>> _categories = [
     {'name': 'All', 'icon': Icons.apps},
-    {'name': 'Extinguishers', 'icon': Icons.fire_extinguisher},
-    {
-      'name': 'Fire Alarms & Panels',
-      'icon': Icons.notifications_active_outlined,
-    },
-    {'name': 'Sprinkler Systems', 'icon': Icons.shower_outlined},
-    {'name': 'Pumps & Piping', 'icon': Icons.water_damage_outlined},
   ];
 
   Future<List<Map<String, dynamic>>> _fetchProducts() async {
     try {
       final data = await ApiClient.get('/products');
-      return List<Map<String, dynamic>>.from(data);
+      final products = List<Map<String, dynamic>>.from(data);
+      final categories = products
+          .map((product) => product['v_productCategory']?.toString().trim())
+          .whereType<String>()
+          .where((category) => category.isNotEmpty)
+          .toSet()
+          .toList()
+        ..sort();
+      if (mounted) {
+        setState(() {
+          _categories = [
+            {'name': 'All', 'icon': Icons.apps},
+            ...categories.map(
+              (category) => {
+                'name': category,
+                'icon': _categoryIcon(category),
+              },
+            ),
+          ];
+          if (_selectedCategory != 'All' &&
+              !categories.contains(_selectedCategory)) {
+            _selectedCategory = 'All';
+          }
+        });
+      }
+      return products;
     } catch (e) {
       debugPrint('Error fetching products: $e');
       return [];
     }
+  }
+
+  IconData _categoryIcon(String category) {
+    final normalized = category.toLowerCase();
+    if (normalized.contains('extinguisher')) return Icons.fire_extinguisher;
+    if (normalized.contains('alarm') || normalized.contains('panel')) {
+      return Icons.notifications_active_outlined;
+    }
+    if (normalized.contains('sprinkler')) return Icons.shower_outlined;
+    if (normalized.contains('pump') || normalized.contains('pipe')) {
+      return Icons.water_damage_outlined;
+    }
+    return Icons.inventory_2_outlined;
   }
 
   // 1. PRODUCT DETAILS WITH QUANTITY AND FULFILLMENT SELECTION
@@ -807,7 +840,7 @@ class _ProductCatalogState extends State<ProductCatalog> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: FutureBuilder<List<Map<String, dynamic>>>(
-        future: _fetchProducts(),
+        future: _productsFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Padding(

@@ -18,6 +18,59 @@ class MainLayout extends StatefulWidget {
 
 class _MainLayoutState extends State<MainLayout> {
   int _currentIndex = 0;
+  static const Map<String, List<String>> _provinceCities = {
+    'Batangas': [
+      'Batangas City',
+      'Lipa City',
+      'Tanauan City',
+      'Sto. Tomas City',
+      'Bauan',
+      'Nasugbu',
+    ],
+    'Bulacan': [
+      'Malolos City',
+      'Meycauayan City',
+      'San Jose del Monte City',
+      'Bocaue',
+      'Marilao',
+      'Santa Maria',
+    ],
+    'Cavite': [
+      'Bacoor City',
+      'Cavite City',
+      'Dasmarinas City',
+      'General Trias City',
+      'Imus City',
+      'Tagaytay City',
+      'Trece Martires City',
+    ],
+    'Laguna': [
+      'Binan City',
+      'Calamba City',
+      'San Pablo City',
+      'Santa Rosa City',
+      'Los Banos',
+      'San Pedro City',
+    ],
+    'Metro Manila': [
+      'Caloocan City',
+      'Las Pinas City',
+      'Makati City',
+      'Manila City',
+      'Muntinlupa City',
+      'Paranaque City',
+      'Pasig City',
+      'Quezon City',
+      'Taguig City',
+    ],
+    'Rizal': [
+      'Antipolo City',
+      'Cainta',
+      'Rodriguez',
+      'San Mateo',
+      'Taytay',
+    ],
+  };
 
   @override
   void initState() {
@@ -67,207 +120,278 @@ class _MainLayoutState extends State<MainLayout> {
     final nameController = TextEditingController();
     final emailController = TextEditingController();
     final phoneController = TextEditingController();
-    final locationController = TextEditingController();
     final detailsController = TextEditingController();
     String selectedService = services.first['service_name'].toString();
+    String? selectedProvince;
+    String? selectedCity;
+
+    try {
+      final profileResponse = await ApiClient.get('/me');
+      final user = Map<String, dynamic>.from(profileResponse['user'] ?? {});
+      emailController.text = user['email']?.toString() ?? '';
+      phoneController.text = user['contact_number']?.toString() ?? '';
+    } catch (error) {
+      debugPrint('Unable to prefill quote contact info: $error');
+    }
 
     showDialog(
       context: context,
       builder: (context) {
-        return Dialog(
-          insetPadding: const EdgeInsets.all(16),
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            final cities = selectedProvince == null
+                ? const <String>[]
+                : _provinceCities[selectedProvince] ?? const <String>[];
+
+            return Dialog(
+              insetPadding: const EdgeInsets.all(16),
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Request a Quote',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 20,
+                              letterSpacing: -0.3,
+                              color: AppColors.ink,
+                            ),
+                          ),
+                          InkWell(
+                            borderRadius: BorderRadius.circular(12),
+                            onTap: () => Navigator.pop(context),
+                            child: const Icon(
+                              Icons.close,
+                              color: AppColors.inkMuted,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
                       const Text(
-                        'Request a Quote',
+                        'Provide detailed information for our safety engineers to evaluate your requirements accurately.',
                         style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 20,
-                          letterSpacing: -0.3,
-                          color: AppColors.ink,
+                          fontSize: 12,
+                          color: AppColors.inkMuted,
                         ),
                       ),
-                      InkWell(
-                        borderRadius: BorderRadius.circular(12),
-                        onTap: () => Navigator.pop(context),
-                        child: const Icon(
-                          Icons.close,
-                          color: AppColors.inkMuted,
+                      const SizedBox(height: 24),
+                      TextField(
+                        controller: nameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Project / Company Name',
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      if (MediaQuery.of(context).size.width < 600)
+                        Column(
+                          children: [
+                            TextField(
+                              controller: emailController,
+                              decoration: const InputDecoration(
+                                labelText: 'Email Address',
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            TextField(
+                              controller: phoneController,
+                              decoration: const InputDecoration(
+                                labelText: 'Contact Number',
+                              ),
+                            ),
+                          ],
+                        )
+                      else
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: emailController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Email Address',
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: TextField(
+                                controller: phoneController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Contact Number',
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<String>(
+                        initialValue: selectedService,
+                        decoration: const InputDecoration(
+                          labelText: 'Primary Service Needed',
+                        ),
+                        items: services.map((service) {
+                          final serviceName = service['service_name']
+                              .toString();
+                          return DropdownMenuItem(
+                            value: serviceName,
+                            child: Text(serviceName),
+                          );
+                        }).toList(),
+                        onChanged: (val) {
+                          if (val != null) selectedService = val;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<String>(
+                        initialValue: selectedProvince,
+                        decoration: const InputDecoration(
+                          labelText: 'Province',
+                        ),
+                        items: _provinceCities.keys.map((province) {
+                          return DropdownMenuItem(
+                            value: province,
+                            child: Text(province),
+                          );
+                        }).toList(),
+                        onChanged: (val) {
+                          setDialogState(() {
+                            selectedProvince = val;
+                            selectedCity = null;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<String>(
+                        initialValue: selectedCity,
+                        decoration: const InputDecoration(
+                          labelText: 'City / Municipality',
+                        ),
+                        items: cities.map((city) {
+                          return DropdownMenuItem(
+                            value: city,
+                            child: Text(city),
+                          );
+                        }).toList(),
+                        onChanged: selectedProvince == null
+                            ? null
+                            : (val) {
+                                setDialogState(() => selectedCity = val);
+                              },
+                      ),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: detailsController,
+                        maxLines: 4,
+                        decoration: const InputDecoration(
+                          labelText: 'Project Details & Specifications',
+                          hintText:
+                              'Describe the facility size, specific hazards, or current systems installed...',
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            final missingFields = <String>[];
+                            if (nameController.text.trim().isEmpty) {
+                              missingFields.add('Project / Company Name');
+                            }
+                            if (emailController.text.trim().isEmpty) {
+                              missingFields.add('Email');
+                            }
+                            if (phoneController.text.trim().isEmpty) {
+                              missingFields.add('Contact Number');
+                            }
+                            if (selectedService.trim().isEmpty) {
+                              missingFields.add('Service');
+                            }
+                            if (selectedProvince == null) {
+                              missingFields.add('Province');
+                            }
+                            if (selectedCity == null) {
+                              missingFields.add('City / Municipality');
+                            }
+                            if (detailsController.text.trim().isEmpty) {
+                              missingFields.add('Project Details');
+                            }
+                            if (missingFields.isNotEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Please complete: ${missingFields.join(', ')}.',
+                                  ),
+                                ),
+                              );
+                              return;
+                            }
+
+                            final accessToken = await ApiClient.token();
+                            if (!context.mounted) return;
+
+                            if (accessToken == null || accessToken.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Please sign in before requesting a quote.',
+                                  ),
+                                  backgroundColor: AppColors.danger,
+                                ),
+                              );
+                              return;
+                            }
+
+                            final projectLocation =
+                                '$selectedCity, $selectedProvince';
+
+                            try {
+                              await ApiClient.post('/service-requests', {
+                                'name': nameController.text.trim(),
+                                'email': emailController.text.trim(),
+                                'contact_number': phoneController.text.trim(),
+                                'service': selectedService,
+                                'location': projectLocation,
+                                'details': detailsController.text.trim(),
+                              });
+
+                              if (context.mounted) {
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Request Submitted! We will email you shortly.',
+                                    ),
+                                    backgroundColor: AppColors.success,
+                                  ),
+                                );
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('Request failed: $e'),
+                                    backgroundColor: AppColors.danger,
+                                  ),
+                                );
+                              }
+                            }
+                          },
+                          child: const Text('Submit Detailed Request'),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Provide detailed information for our safety engineers to evaluate your requirements accurately.',
-                    style: TextStyle(fontSize: 12, color: AppColors.inkMuted),
-                  ),
-                  const SizedBox(height: 24),
-
-                  TextField(
-                    controller: nameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Project / Company Name',
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  if (MediaQuery.of(context).size.width < 600)
-                    Column(
-                      children: [
-                        TextField(
-                          controller: emailController,
-                          decoration: const InputDecoration(
-                            labelText: 'Email Address',
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        TextField(
-                          controller: phoneController,
-                          decoration: const InputDecoration(
-                            labelText: 'Contact Number',
-                          ),
-                        ),
-                      ],
-                    )
-                  else
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: emailController,
-                            decoration: const InputDecoration(
-                              labelText: 'Email Address',
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: TextField(
-                            controller: phoneController,
-                            decoration: const InputDecoration(
-                              labelText: 'Contact Number',
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  const SizedBox(height: 16),
-
-                  DropdownButtonFormField<String>(
-                    initialValue: selectedService,
-                    decoration: const InputDecoration(
-                      labelText: 'Primary Service Needed',
-                    ),
-                    items: services.map((service) {
-                      final serviceName = service['service_name'].toString();
-                      return DropdownMenuItem(
-                        value: serviceName,
-                        child: Text(serviceName),
-                      );
-                    }).toList(),
-                    onChanged: (val) {
-                      if (val != null) selectedService = val;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-
-                  TextField(
-                    controller: locationController,
-                    decoration: const InputDecoration(
-                      labelText: 'Project Location (City, Province)',
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  TextField(
-                    controller: detailsController,
-                    maxLines: 4,
-                    decoration: const InputDecoration(
-                      labelText: 'Project Details & Specifications',
-                      hintText:
-                          'Describe the facility size, specific hazards, or current systems installed...',
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        if (nameController.text.isEmpty ||
-                            emailController.text.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Name and Email are required.'),
-                            ),
-                          );
-                          return;
-                        }
-
-                        final accessToken = await ApiClient.token();
-                        if (!context.mounted) return;
-
-                        if (accessToken == null || accessToken.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Please sign in before requesting a quote.',
-                              ),
-                              backgroundColor: AppColors.danger,
-                            ),
-                          );
-                          return;
-                        }
-
-                        try {
-                          await ApiClient.post('/service-requests', {
-                            'name': nameController.text.trim(),
-                            'email': emailController.text.trim(),
-                            'contact_number': phoneController.text.trim(),
-                            'service': selectedService,
-                            'location': locationController.text.trim(),
-                            'details': detailsController.text.trim(),
-                          });
-
-                          if (context.mounted) {
-                            Navigator.pop(context);
-
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Request Submitted! We will email you shortly.',
-                                ),
-                                backgroundColor: AppColors.success,
-                              ),
-                            );
-                          }
-                        } catch (e) {
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Request failed: $e'),
-                                backgroundColor: AppColors.danger,
-                              ),
-                            );
-                          }
-                        }
-                      },
-                      child: const Text('Submit Detailed Request'),
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
-          ),
+            );
+          },
         );
       },
     );

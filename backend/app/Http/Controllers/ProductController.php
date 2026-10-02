@@ -13,28 +13,42 @@ class ProductController extends Controller
 {
     public function index()
     {
-        $products = Product::query()
-            ->leftJoin(
-                'tbl_inventory',
-                'tbl_product.v_productId',
-                '=',
-                'tbl_inventory.v_productId'
-            )
+        $variantSummary = DB::table('tbl_productvariant')
             ->select(
-                'tbl_product.*',
-                'tbl_inventory.v_quantityOnHand',
-                'tbl_inventory.v_quantityAvailable'
+                'v_productid',
+                DB::raw('MIN("v_minprice") as min_price'),
+                DB::raw('MAX("v_maxprice") as max_price'),
+                DB::raw('SUM(COALESCE("v_stockquantity", 0)) as stock_quantity'),
+                DB::raw('MIN("v_productcode") as first_variant_code'),
+                DB::raw('MIN("v_variantimageurl") as first_variant_image_url')
             )
-            ->where('tbl_product.v_isActive', 1)
-            ->orderBy('tbl_product.v_createdAt', 'desc')
-            ->get();
+            ->where('v_isactive', true)
+            ->groupBy('v_productid');
 
-        $products->each(function ($product) {
-            $product->image_url = $this->productImageUrl(
-                $product->v_productId,
-                $product->v_updatedAt,
-            );
-        });
+        $products = DB::table('tbl_product as p')
+            ->leftJoin('tbl_inventory as i', 'p.v_productId', '=', 'i.v_productId')
+            ->leftJoin('tbl_productcategory as pc', 'p.v_productcategoryid', '=', 'pc.v_productcategoryid')
+            ->leftJoinSub($variantSummary, 'pv', function ($join) {
+                $join->on('p.v_productid', '=', 'pv.v_productid');
+            })
+            ->where(function ($query) {
+                $query->where('p.v_isActive', true)
+                    ->orWhere('p.v_isactive', true);
+            })
+            ->orderByRaw('COALESCE("p"."v_createdat", "p"."v_createdAt") DESC')
+            ->select(
+                'p.*',
+                'i.v_quantityOnHand',
+                'i.v_quantityAvailable',
+                'pv.min_price',
+                'pv.max_price',
+                'pv.stock_quantity',
+                'pv.first_variant_code',
+                'pv.first_variant_image_url',
+                'pc.v_categoryname as category_name'
+            )
+            ->get()
+            ->map(fn ($product) => $this->productPayload($product));
 
         return response()->json($products);
     }
@@ -109,6 +123,43 @@ class ProductController extends Controller
         }
 
         return $url;
+    }
+
+    private function productPayload($product): array
+    {
+        $id = $product->v_productId ?? $product->v_productid;
+        $updatedAt = $product->v_updatedAt ?? $product->v_updatedat ?? null;
+        $price = $product->v_currentPrice
+            ?? $product->min_price
+            ?? $product->max_price;
+        $imageUrl = $product->v_productimageurl
+            ?? $product->first_variant_image_url
+            ?? $this->productImageUrl($id, $updatedAt);
+        $stockQuantity = $product->v_quantityAvailable
+            ?? $product->stock_quantity
+            ?? 0;
+
+        return [
+            'v_productId' => $product->v_productId,
+            'v_productid' => $product->v_productid,
+            'id' => $id,
+            'v_productCode' => $product->v_productCode ?? $product->first_variant_code,
+            'v_productName' => $product->v_productName ?? $product->v_productname,
+            'v_productCategory' => $product->v_productCategory
+                ?? $product->v_productcategory
+                ?? $product->category_name,
+            'v_productDescription' => $product->v_productDescription
+                ?? $product->v_productdescription,
+            'v_currentPrice' => $price,
+            'v_minprice' => $product->min_price,
+            'v_maxprice' => $product->max_price,
+            'v_quantityOnHand' => $product->v_quantityOnHand ?? $stockQuantity,
+            'v_quantityAvailable' => $stockQuantity,
+            'image_url' => $imageUrl,
+            'v_productimageurl' => $product->v_productimageurl,
+            'v_createdAt' => $product->v_createdAt ?? $product->v_createdat,
+            'v_updatedAt' => $updatedAt,
+        ];
     }
 
     public function store(Request $request)

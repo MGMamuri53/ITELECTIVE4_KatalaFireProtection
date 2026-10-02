@@ -57,6 +57,9 @@ class _ServicesPageState extends State<ServicesPage> {
     String description,
     String category,
     String imageUrl,
+    String priceLabel,
+    String duration,
+    String requirements,
   ) {
     showDialog(
       context: context,
@@ -124,6 +127,33 @@ class _ServicesPageState extends State<ServicesPage> {
                   height: 1.5,
                 ),
               ),
+              if (priceLabel.isNotEmpty || duration.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                if (priceLabel.isNotEmpty)
+                  _buildInfoRow('Price range', priceLabel),
+                if (duration.isNotEmpty)
+                  _buildInfoRow('Estimated duration', duration),
+              ],
+              if (requirements.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                const Text(
+                  'Requirements',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.ink,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  requirements,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppColors.inkSoft,
+                    height: 1.5,
+                  ),
+                ),
+              ],
             ],
           ),
           actions: [
@@ -143,6 +173,47 @@ class _ServicesPageState extends State<ServicesPage> {
         );
       },
     );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(fontSize: 12, color: AppColors.inkMuted),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: AppColors.ink,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _servicePriceLabel(Map<String, dynamic> service) {
+    final minPrice = double.tryParse(service['min_price']?.toString() ?? '');
+    final maxPrice = double.tryParse(service['max_price']?.toString() ?? '');
+    final basePrice = double.tryParse(service['base_price']?.toString() ?? '');
+
+    if (minPrice != null && maxPrice != null && minPrice != maxPrice) {
+      return 'PHP ${minPrice.toStringAsFixed(2)} - ${maxPrice.toStringAsFixed(2)}';
+    }
+    final price = minPrice ?? maxPrice ?? basePrice;
+    if (price == null || price <= 0) return '';
+    return 'PHP ${price.toStringAsFixed(2)}';
   }
 
   @override
@@ -244,6 +315,10 @@ class _ServicesPageState extends State<ServicesPage> {
           final title = service['service_name']?.toString() ?? '';
           final desc = service['description']?.toString() ?? '';
           final category = service['category']?.toString() ?? 'Service';
+          final imageUrl = service['image_url']?.toString() ?? '';
+          final priceLabel = _servicePriceLabel(service);
+          final duration = service['estimated_duration']?.toString() ?? '';
+          final requirements = service['requirements']?.toString() ?? '';
           final serviceIcon = _serviceIcon(category);
 
           return Container(
@@ -303,6 +378,17 @@ class _ServicesPageState extends State<ServicesPage> {
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
+                          if (priceLabel.isNotEmpty) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              priceLabel,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: AppColors.brand,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -318,7 +404,10 @@ class _ServicesPageState extends State<ServicesPage> {
                         title,
                         desc,
                         category,
-                        '',
+                        imageUrl,
+                        priceLabel,
+                        duration,
+                        requirements,
                       ),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppColors.inkMuted,

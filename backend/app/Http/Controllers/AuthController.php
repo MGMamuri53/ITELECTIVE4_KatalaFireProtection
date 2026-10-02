@@ -23,13 +23,17 @@ class AuthController extends Controller
             ->where('v_isActive', 1)
             ->first();
 
-        if (!$user || !Hash::check($validated['password'], $user->v_passwordHash)) {
+        if (!$user || !$this->passwordMatches($validated['password'], $user->v_passwordHash)) {
             throw ValidationException::withMessages([
                 'email' => ['Invalid email or password.'],
             ]);
         }
 
-        $user->forceFill(['v_lastLoginAt' => now()])->save();
+        $updates = ['v_lastLoginAt' => now()];
+        if (Hash::needsRehash($user->v_passwordHash)) {
+            $updates['v_passwordHash'] = Hash::make($validated['password']);
+        }
+        $user->forceFill($updates)->save();
 
         $role = DB::table('tbl_role')
             ->where('v_roleId', $user->v_roleId)
@@ -135,7 +139,7 @@ class AuthController extends Controller
         ]);
 
         $user = $request->user();
-        if (!Hash::check($validated['current_password'], $user->v_passwordHash)) {
+        if (!$this->passwordMatches($validated['current_password'], $user->v_passwordHash)) {
             throw ValidationException::withMessages([
                 'current_password' => ['The current password is incorrect.'],
             ]);
@@ -183,5 +187,23 @@ class AuthController extends Controller
         return DB::table('tbl_role')
             ->where('v_roleId', $user->v_roleId)
             ->value('v_roleName') ?? 'Customer';
+    }
+
+    private function passwordMatches(string $plainTextPassword, ?string $storedHash): bool
+    {
+        if (!$storedHash) {
+            return false;
+        }
+
+        try {
+            if (Hash::check($plainTextPassword, $storedHash)) {
+                return true;
+            }
+        } catch (\RuntimeException) {
+            // Some imported Supabase records use $2b$ bcrypt hashes. PHP can
+            // verify those even when Laravel's strict hasher rejects the marker.
+        }
+
+        return password_verify($plainTextPassword, $storedHash);
     }
 }

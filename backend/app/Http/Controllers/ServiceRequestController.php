@@ -8,6 +8,31 @@ use Illuminate\Support\Facades\DB;
 
 class ServiceRequestController extends Controller
 {
+    public function myRequests(Request $request)
+    {
+        $customerId = $request->user()->v_customerId;
+
+        $requests = DB::table('tbl_serviceRequest as sr')
+            ->leftJoin('tbl_service as s', 'sr.v_serviceId', '=', 's.v_serviceId')
+            ->where('sr.v_customerId', $customerId)
+            ->orderBy('sr.v_createdAt', 'desc')
+            ->select(
+                'sr.v_serviceRequestId as id',
+                'sr.v_serviceRequestNumber as request_number',
+                'sr.v_projectName as project_name',
+                'sr.v_projectType as project_type',
+                'sr.v_projectLocation as location',
+                'sr.v_projectRequirements as details',
+                'sr.v_requestStatus as status',
+                'sr.v_createdAt as created_at',
+                's.v_serviceName as service_name',
+                's.v_serviceCategory as category'
+            )
+            ->get();
+
+        return response()->json($requests);
+    }
+
     public function store(Request $request)
     {
         $request->merge([

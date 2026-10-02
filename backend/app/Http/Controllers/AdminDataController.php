@@ -90,9 +90,14 @@ class AdminDataController extends Controller
     public function services()
     {
         return response()->json(
-            DB::table('tbl_service')
-                ->where('v_isActive', 1)
-                ->orderBy('v_createdAt', 'desc')
+            DB::table('tbl_service as s')
+                ->leftJoin('tbl_servicecategory as sc', 's.v_servicecategoryid', '=', 'sc.v_servicecategoryid')
+                ->where(function ($query) {
+                    $query->where('s.v_isActive', true)
+                        ->orWhere('s.v_isactive', true);
+                })
+                ->orderByRaw('COALESCE("s"."v_createdat", "s"."v_createdAt") DESC')
+                ->select('s.*', 'sc.v_categoryname as category_name')
                 ->get()
                 ->map(fn ($service) => $this->servicePayload($service))
         );
@@ -654,14 +659,32 @@ class AdminDataController extends Controller
 
     private function servicePayload($service): array
     {
+        $id = $service->v_serviceId ?? $service->v_serviceid;
+        $serviceName = $service->v_serviceName ?? $service->v_servicename;
+        $category = $service->v_serviceCategory
+            ?? $service->v_servicecategory
+            ?? $service->category_name;
+        $description = $service->v_serviceDescription
+            ?? $service->v_servicedescription;
+        $basePrice = $service->v_basePrice
+            ?? $service->v_minprice
+            ?? $service->v_maxprice;
+
         return [
-            'id' => $service->v_serviceId,
-            'service_name' => $service->v_serviceName,
-            'category' => $service->v_serviceCategory,
-            'description' => $service->v_serviceDescription,
-            'base_price' => $service->v_basePrice,
-            'created_at' => $service->v_createdAt,
-            'image_url' => null,
+            'id' => $id,
+            'v_serviceId' => $service->v_serviceId,
+            'v_serviceid' => $service->v_serviceid,
+            'service_name' => $serviceName,
+            'category' => $category,
+            'description' => $description,
+            'requirements' => $service->v_servicerequirements,
+            'estimated_duration' => $service->v_estimatedduration,
+            'base_price' => $basePrice,
+            'min_price' => $service->v_minprice,
+            'max_price' => $service->v_maxprice,
+            'is_inspection_required' => (bool) ($service->v_isinspectionrequired ?? false),
+            'created_at' => $service->v_createdAt ?? $service->v_createdat,
+            'image_url' => $service->v_serviceimageurl,
         ];
     }
 }

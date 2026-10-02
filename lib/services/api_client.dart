@@ -10,7 +10,7 @@ class ApiClient {
   static const Duration _imageUploadTimeout = Duration(seconds: 60);
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://127.0.0.1:8000/api',
+    defaultValue: 'http://127.0.0.1:8001/api',
   );
   static const String _tokenKey = 'katala_api_token';
   static const String _roleKey = 'katala_user_role';
