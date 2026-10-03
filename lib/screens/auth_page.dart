@@ -34,7 +34,7 @@ class _AuthPageState extends State<AuthPage> {
         final token = response['token']?.toString() ?? '';
         final user = Map<String, dynamic>.from(response['user'] ?? {});
         final role = user['role']?.toString() ?? 'Customer';
-        await ApiClient.saveSession(token, role);
+        await ApiClient.saveSession(token, role, user: user);
 
         if (mounted) {
           Navigator.pushReplacement(

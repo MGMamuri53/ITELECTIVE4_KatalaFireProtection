@@ -35,12 +35,7 @@ class ServiceRequestController extends Controller
 
     public function store(Request $request)
     {
-        $request->merge([
-            'customer_id' => $request->user()->v_customerId,
-        ]);
-
         $validated = $request->validate([
-            'customer_id' => 'required|integer',
             'name' => 'required|string',
             'email' => 'required|email',
             'contact_number' => 'nullable|string',
@@ -48,6 +43,12 @@ class ServiceRequestController extends Controller
             'location' => 'nullable|string',
             'details' => 'nullable|string',
         ]);
+
+        $customerId = $request->user()->v_customerId;
+        if (!$customerId) {
+            $customerId = $this->resolveCustomerIdForUser($request, $validated);
+        }
+        $validated['customer_id'] = $customerId;
 
         $customer = DB::table('tbl_customer')
             ->where('v_customerId', $validated['customer_id'])
@@ -95,5 +96,40 @@ class ServiceRequestController extends Controller
             'request_number' => $requestNumber,
             'request_id' => $serviceRequestId,
         ], 201);
+    }
+
+    private function resolveCustomerIdForUser(Request $request, array $validated): ?int
+    {
+        $user = $request->user();
+        $email = $validated['email'] ?: $user->v_emailAddress;
+        $name = trim((string) $validated['name']);
+
+        $customer = DB::table('tbl_customer')
+            ->where('v_emailAddress', $email)
+            ->where('v_isActive', 1)
+            ->first();
+
+        if ($customer) {
+            $user->forceFill(['v_customerId' => $customer->v_customerId])->save();
+
+            return (int) $customer->v_customerId;
+        }
+
+        $nameParts = preg_split('/\s+/', $name, 2, PREG_SPLIT_NO_EMPTY) ?: [];
+        $firstName = $user->v_firstName ?: ($nameParts[0] ?? 'Customer');
+        $lastName = $user->v_lastName ?: ($nameParts[1] ?? 'Account');
+
+        $customerId = DB::table('tbl_customer')->insertGetId([
+            'v_customerType' => 'Individual',
+            'v_firstName' => $firstName,
+            'v_lastName' => $lastName,
+            'v_emailAddress' => $email,
+            'v_mobileNumber' => ($validated['contact_number'] ?? null) ?: $user->v_mobileNumber,
+            'v_isActive' => 1,
+        ], 'v_customerId');
+
+        $user->forceFill(['v_customerId' => $customerId])->save();
+
+        return (int) $customerId;
     }
 }

@@ -14,6 +14,7 @@ class ApiClient {
   );
   static const String _tokenKey = 'katala_api_token';
   static const String _roleKey = 'katala_user_role';
+  static const String _userKey = 'katala_user_profile';
   static const String _customerSectionKey = 'katala_customer_section';
   static const String _adminSectionKey = 'katala_admin_section';
 
@@ -27,16 +28,51 @@ class ApiClient {
     return prefs.getString(_roleKey);
   }
 
-  static Future<void> saveSession(String token, String role) async {
+  static Future<void> saveSession(
+    String token,
+    String role, {
+    Map<String, dynamic>? user,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_tokenKey, token);
     await prefs.setString(_roleKey, role);
+    if (user != null) {
+      await saveCurrentUser(user);
+    }
+  }
+
+  static Future<void> saveCurrentUser(Map<String, dynamic> user) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_userKey, jsonEncode(user));
+  }
+
+  static Future<Map<String, dynamic>?> currentUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    final encodedUser = prefs.getString(_userKey);
+    if (encodedUser == null || encodedUser.isEmpty) {
+      return null;
+    }
+
+    try {
+      final decoded = jsonDecode(encodedUser);
+      if (decoded is Map<String, dynamic>) {
+        return decoded;
+      }
+      if (decoded is Map) {
+        return Map<String, dynamic>.from(decoded);
+      }
+    } on FormatException {
+      await prefs.remove(_userKey);
+    }
+
+    return null;
   }
 
   static Future<void> clearSession() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_tokenKey);
     await prefs.remove(_roleKey);
+    await prefs.remove(_userKey);
     await prefs.remove(_customerSectionKey);
     await prefs.remove(_adminSectionKey);
   }
@@ -179,9 +215,25 @@ class ApiClient {
       }
     }
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      final message = decoded is Map<String, dynamic>
-          ? decoded['message']?.toString()
-          : null;
+      String? message;
+      if (decoded is Map<String, dynamic>) {
+        message = decoded['message']?.toString();
+        final errors = decoded['errors'];
+        if (errors is Map && errors.isNotEmpty) {
+          final details = errors.values
+              .expand(
+                (value) => value is List
+                    ? value.map((item) => item.toString())
+                    : [value.toString()],
+              )
+              .join('\n');
+          if (details.isNotEmpty) {
+            message = message == null || message.isEmpty
+                ? details
+                : '$message\n$details';
+          }
+        }
+      }
       throw Exception(message ?? 'Request failed with ${response.statusCode}');
     }
 

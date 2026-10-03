@@ -60,19 +60,44 @@ class OrderController extends Controller
                 ], 404);
             }
 
+            $unitPrice = $this->productUnitPrice($product);
+            if ($unitPrice === null) {
+                return response()->json([
+                    'message' => 'This product does not have a price configured.'
+                ], 422);
+            }
+
             $inventory = DB::table('tbl_inventory')
                 ->where('v_productId', $validated['product_id'])
                 ->lockForUpdate()
                 ->first();
 
-            $quantityAvailable = (float) ($inventory->v_quantityAvailable ?? 0);
+            $variantProductId = $product->v_productid ?? null;
+            $variantStockAvailable = $variantProductId
+                ? (float) DB::table('tbl_productvariant')
+                    ->where('v_productid', $variantProductId)
+                    ->where('v_isactive', true)
+                    ->sum('v_stockquantity')
+                : 0;
+
+            $inventoryAvailable = $inventory
+                ? (float) (
+                    $inventory->v_quantityAvailable ??
+                    max(
+                        0,
+                        (float) ($inventory->v_quantityOnHand ?? 0) -
+                            (float) ($inventory->v_quantityReserved ?? 0)
+                    )
+                )
+                : 0;
+            $quantityAvailable = max($inventoryAvailable, $variantStockAvailable);
             if ($quantityAvailable < (float) $validated['quantity']) {
                 return response()->json([
                     'message' => 'Insufficient product stock.'
                 ], 422);
             }
 
-            $total = $product->v_currentPrice * $validated['quantity'];
+            $total = $unitPrice * $validated['quantity'];
 
             // Create order
             $orderNumber = 'ORD-' . strtoupper(uniqid());
@@ -89,14 +114,23 @@ class OrderController extends Controller
             DB::table('tbl_orderItem')->insert([
                 'v_orderId' => $orderId,
                 'v_productId' => $validated['product_id'],
-                'v_productNameSnapshot' => $product->v_productName,
+                'v_productNameSnapshot' => $product->v_productName
+                    ?? $product->v_productname
+                    ?? 'Product',
                 'v_quantity' => $validated['quantity'],
-                'v_unitPrice' => $product->v_currentPrice,
+                'v_unitPrice' => $unitPrice,
             ]);
 
-            DB::table('tbl_inventory')
-                ->where('v_productId', $validated['product_id'])
-                ->increment('v_quantityReserved', $validated['quantity']);
+            if ($inventory && $inventoryAvailable >= (float) $validated['quantity']) {
+                DB::table('tbl_inventory')
+                    ->where('v_productId', $validated['product_id'])
+                    ->increment('v_quantityReserved', $validated['quantity']);
+            } else {
+                $this->reserveVariantStock(
+                    $variantProductId,
+                    $validated['quantity']
+                );
+            }
 
             // Create delivery/pickup record
             DB::table('tbl_deliveryPickup')->insert([
@@ -124,6 +158,62 @@ class OrderController extends Controller
                 'total_amount' => $total,
             ], 201);
         });
+    }
+
+    private function productUnitPrice($product): ?float
+    {
+        $price = $product->v_currentPrice
+            ?? $product->v_currentprice
+            ?? null;
+
+        if ($price === null && ($product->v_productid ?? null)) {
+            $price = DB::table('tbl_productvariant')
+                ->where('v_productid', $product->v_productid)
+                ->where('v_isactive', true)
+                ->min('v_minprice');
+        }
+
+        if ($price === null) {
+            return null;
+        }
+
+        return (float) $price;
+    }
+
+    private function reserveVariantStock($variantProductId, int $quantity): void
+    {
+        if (!$variantProductId) {
+            return;
+        }
+
+        $remainingQuantity = $quantity;
+        $variants = DB::table('tbl_productvariant')
+            ->where('v_productid', $variantProductId)
+            ->where('v_isactive', true)
+            ->where('v_stockquantity', '>', 0)
+            ->orderBy('v_stockquantity', 'desc')
+            ->lockForUpdate()
+            ->get();
+
+        foreach ($variants as $variant) {
+            if ($remainingQuantity <= 0) {
+                return;
+            }
+
+            $variantId = $variant->v_productvariantid
+                ?? $variant->v_productVariantId
+                ?? null;
+            if ($variantId === null) {
+                continue;
+            }
+
+            $stockQuantity = (int) $variant->v_stockquantity;
+            $quantityToReserve = min($stockQuantity, $remainingQuantity);
+            DB::table('tbl_productvariant')
+                ->where('v_productvariantid', $variantId)
+                ->decrement('v_stockquantity', $quantityToReserve);
+            $remainingQuantity -= $quantityToReserve;
+        }
     }
 
     public function customerOrders($customerId)

@@ -348,13 +348,37 @@ class _ProductCatalogState extends State<ProductCatalog> {
     String fulfillment,
     double totalPrice,
   ) {
-    final nameController = TextEditingController();
+    final lastNameController = TextEditingController();
+    final firstNameController = TextEditingController();
     final emailController = TextEditingController();
     final phoneController = TextEditingController();
     final addressController = TextEditingController();
     String paymentMethod = 'Bank Transfer';
     bool showValidationError = false;
     bool isPlacingOrder = false;
+
+    Future<void> autofillContactInformation() async {
+      try {
+        var user = await ApiClient.currentUser();
+        if (user == null) {
+          final accessToken = await ApiClient.token();
+          if (accessToken != null && accessToken.isNotEmpty) {
+            final response = await ApiClient.get('/me');
+            user = Map<String, dynamic>.from(response['user'] ?? {});
+            await ApiClient.saveCurrentUser(user);
+          }
+        }
+        if (user == null) return;
+        lastNameController.text = user['last_name']?.toString() ?? '';
+        firstNameController.text = user['first_name']?.toString() ?? '';
+        emailController.text = user['email']?.toString() ?? '';
+        phoneController.text = user['contact_number']?.toString() ?? '';
+      } catch (_) {
+        // Customers can still enter contact details manually if autofill fails.
+      }
+    }
+
+    autofillContactInformation();
 
     showDialog(
       context: context,
@@ -481,16 +505,50 @@ class _ProductCatalogState extends State<ProductCatalog> {
                               ),
                             ),
                             const SizedBox(height: 12),
-                            TextField(
-                              controller: nameController,
-                              decoration: const InputDecoration(
-                                labelText: 'Full Name',
-                                border: OutlineInputBorder(),
-                              ),
+                            LayoutBuilder(
+                              builder: (context, constraints) {
+                                final isNarrow = constraints.maxWidth < 520;
+                                final lastNameField = TextField(
+                                  controller: lastNameController,
+                                  textInputAction: TextInputAction.next,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Last Name',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                );
+                                final firstNameField = TextField(
+                                  controller: firstNameController,
+                                  textInputAction: TextInputAction.next,
+                                  decoration: const InputDecoration(
+                                    labelText: 'First Name',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                );
+
+                                if (isNarrow) {
+                                  return Column(
+                                    children: [
+                                      lastNameField,
+                                      const SizedBox(height: 16),
+                                      firstNameField,
+                                    ],
+                                  );
+                                }
+
+                                return Row(
+                                  children: [
+                                    Expanded(child: lastNameField),
+                                    const SizedBox(width: 16),
+                                    Expanded(child: firstNameField),
+                                  ],
+                                );
+                              },
                             ),
                             const SizedBox(height: 16),
                             TextField(
                               controller: emailController,
+                              keyboardType: TextInputType.emailAddress,
+                              textInputAction: TextInputAction.next,
                               decoration: const InputDecoration(
                                 labelText: 'Email Address',
                                 border: OutlineInputBorder(),
@@ -499,6 +557,10 @@ class _ProductCatalogState extends State<ProductCatalog> {
                             const SizedBox(height: 16),
                             TextField(
                               controller: phoneController,
+                              keyboardType: TextInputType.phone,
+                              textInputAction: fulfillment == 'Delivery'
+                                  ? TextInputAction.next
+                                  : TextInputAction.done,
                               decoration: const InputDecoration(
                                 labelText: 'Phone Number',
                                 border: OutlineInputBorder(),
@@ -548,9 +610,11 @@ class _ProductCatalogState extends State<ProductCatalog> {
                             ),
                             if (showValidationError) ...[
                               const SizedBox(height: 12),
-                              const Text(
-                                'Please fill in your Name and Phone Number.',
-                                style: TextStyle(
+                              Text(
+                                fulfillment == 'Delivery'
+                                    ? 'Please fill in your Last Name, First Name, Phone Number, and Delivery Address.'
+                                    : 'Please fill in your Last Name, First Name, and Phone Number.',
+                                style: const TextStyle(
                                   color: Colors.red,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -580,8 +644,17 @@ class _ProductCatalogState extends State<ProductCatalog> {
                           onPressed: isPlacingOrder
                               ? null
                               : () async {
-                                  if (nameController.text.isEmpty ||
-                                      phoneController.text.isEmpty) {
+                                  if (lastNameController.text
+                                          .trim()
+                                          .isEmpty ||
+                                      firstNameController.text
+                                          .trim()
+                                          .isEmpty ||
+                                      phoneController.text.trim().isEmpty ||
+                                      (fulfillment == 'Delivery' &&
+                                          addressController.text
+                                              .trim()
+                                              .isEmpty)) {
                                     setCheckoutState(() {
                                       showValidationError = true;
                                     });
@@ -616,11 +689,17 @@ class _ProductCatalogState extends State<ProductCatalog> {
                                     final orderData = await ApiClient.post(
                                       '/orders',
                                       {
-                                        'product_id': product['v_productId'],
-                                        'customer_name': nameController.text,
-                                        'email': emailController.text,
-                                        'contact_number': phoneController.text,
-                                        'address': addressController.text,
+                                        'product_id':
+                                            product['v_productId'] ??
+                                            product['v_productid'] ??
+                                            product['id'],
+                                        'customer_name':
+                                            '${lastNameController.text.trim()}, ${firstNameController.text.trim()}',
+                                        'email': emailController.text.trim(),
+                                        'contact_number':
+                                            phoneController.text.trim(),
+                                        'address':
+                                            addressController.text.trim(),
                                         'quantity': quantity,
                                         'fulfillment_method': fulfillment,
                                         'payment_method': paymentMethod,
