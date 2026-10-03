@@ -14,6 +14,9 @@ class _CustomerOrdersState extends State<CustomerOrders> {
   List<Map<String, dynamic>> _serviceRequests = [];
   bool _isLoading = true;
   bool _hasError = false;
+  int _selectedFilter = 0;
+
+  static const _filters = ['All activity', 'Purchases', 'Services', 'Completed'];
 
   @override
   void initState() {
@@ -127,6 +130,23 @@ class _CustomerOrdersState extends State<CustomerOrders> {
       final bDate = _itemDate(b);
       return bDate.compareTo(aDate);
     });
+    if (_selectedFilter == 1) {
+      return items.where((item) => item['type'] == 'product').toList();
+    }
+    if (_selectedFilter == 2) {
+      return items.where((item) => item['type'] == 'service').toList();
+    }
+    if (_selectedFilter == 3) {
+      return items.where((item) {
+        final data = item['data'] as Map<String, dynamic>;
+        final status = (item['type'] == 'service'
+                ? data['status']
+                : data['v_orderStatus'])
+            ?.toString()
+            .toLowerCase();
+        return status == 'completed' || status == 'delivered';
+      }).toList();
+    }
     return items;
   }
 
@@ -438,44 +458,77 @@ class _CustomerOrdersState extends State<CustomerOrders> {
                 ],
               ),
             )
-          : _combinedItems.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+          : RefreshIndicator(
+              color: AppColors.brand,
+              onRefresh: _fetchMyOrders,
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(16, 18, 16, 24),
                 children: [
-                  Icon(
-                    Icons.shopping_bag_outlined,
-                    size: 64,
-                    color: Colors.grey[400],
-                  ),
-                  const SizedBox(height: 16),
                   const Text(
-                    'No orders found',
+                    'Activity & History',
                     style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.inkSoft,
+                      fontSize: 24,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.ink,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
                   const Text(
-                    'Looks like you haven\'t placed any orders or service requests yet.',
-                    style: TextStyle(color: Colors.grey),
+                    'View your previous purchases and service requests in one place.',
+                    style: TextStyle(color: AppColors.inkMuted, fontSize: 13),
                   ),
+                  const SizedBox(height: 18),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: List.generate(_filters.length, (index) {
+                        final selected = _selectedFilter == index;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: ChoiceChip(
+                            label: Text(_filters[index]),
+                            selected: selected,
+                            selectedColor: AppColors.brand,
+                            labelStyle: TextStyle(
+                              color: selected ? Colors.white : AppColors.ink,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            onSelected: (_) => setState(() => _selectedFilter = index),
+                          ),
+                        );
+                      }),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  if (_combinedItems.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 80),
+                      child: Column(
+                        children: [
+                          Icon(Icons.history_outlined, size: 64, color: Colors.grey[400]),
+                          const SizedBox(height: 16),
+                          Text(
+                            _selectedFilter == 3 ? 'No completed activity' : 'No activity found',
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.inkSoft),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Your past purchases and service requests will appear here.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    ..._combinedItems.map((item) {
+                      final data = item['data'] as Map<String, dynamic>;
+                      return item['type'] == 'service'
+                          ? _buildServiceRequestCard(data)
+                          : _buildProductOrderCard(data);
+                    }),
                 ],
               ),
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: _combinedItems.length,
-              itemBuilder: (context, index) {
-                final item = _combinedItems[index];
-                final data = item['data'] as Map<String, dynamic>;
-                if (item['type'] == 'service') {
-                  return _buildServiceRequestCard(data);
-                }
-                return _buildProductOrderCard(data);
-              },
             ),
     );
   }

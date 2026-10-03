@@ -607,7 +607,7 @@ class _MainLayoutState extends State<MainLayout> {
                 ),
                 _buildMenuItem(
                   icon: Icons.shopping_bag_outlined,
-                  title: 'My Orders',
+                  title: 'Activity & History',
                   index: 6,
                 ),
                 const SizedBox(height: 12),
